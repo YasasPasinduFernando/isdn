@@ -1,0 +1,21 @@
+{
+  "name": "ISDN - Sales Distribution Network",
+  "short_name": "ISDN",
+  "start_url": "./index.php",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#764ba2",
+  "icons": [
+    {
+      "src": "assets/images/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "assets/images/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

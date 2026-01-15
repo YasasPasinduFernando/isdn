@@ -10,6 +10,11 @@ require_once __DIR__ . '/../config/config.php';
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/custom.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="<?php echo BASE_PATH; ?>/manifest.json">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.svg">
     <style>
         /* Gradient animations */
         @keyframes gradient {

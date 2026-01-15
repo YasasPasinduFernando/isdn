@@ -2,10 +2,10 @@
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+<div class="min-h-screen flex items-center justify-center py-10 sm:py-12 px-4" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
     <div class="max-w-md w-full">
         <!-- Register Card -->
-        <div class="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 transform hover:scale-105 transition duration-300">
             <!-- Icon Header -->
             <div class="text-center mb-8">
                 <div class="inline-block bg-gradient-to-r from-green-500 to-teal-600 p-4 rounded-full shadow-lg mb-4">
@@ -98,7 +98,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <!-- Social Register Buttons -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button class="flex items-center justify-center space-x-2 border-2 border-gray-300 rounded-lg py-2 hover:bg-gray-50 transition">
                     <i class="fab fa-google text-red-500"></i>
                     <span class="text-gray-700 font-semibold">Google</span>
@@ -119,7 +119,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
 
         <!-- Benefits -->
-        <div class="mt-8 grid grid-cols-3 gap-4 text-center text-white">
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center text-white">
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
                 <i class="fas fa-shipping-fast text-2xl mb-2"></i>
                 <p class="text-sm font-semibold">Fast Delivery</p>

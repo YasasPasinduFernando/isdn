@@ -2,14 +2,14 @@
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen py-8">
+<div class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen py-6 sm:py-8">
     <div class="container mx-auto px-4">
         
         <!-- Page Header -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-8 mb-6 sm:mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-800 flex items-center">
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center">
                         <i class="fas fa-shopping-bag text-purple-600 mr-4"></i>
                         Our Products
                     </h1>
@@ -23,7 +23,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
 
         <!-- Filter & Search Section -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search -->
                 <div class="md:col-span-2 relative">
@@ -59,7 +59,7 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
 
         <!-- Products Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Product Card 1 -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
@@ -219,14 +219,14 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <!-- Pagination -->
         <div class="flex justify-center mt-12">
-            <div class="flex space-x-2">
-                <button class="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">
+            <div class="flex flex-wrap justify-center gap-2">
+                <button class="px-3 py-2 sm:px-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <button class="px-4 py-2 bg-purple-600 text-white rounded-lg">1</button>
-                <button class="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">2</button>
-                <button class="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">3</button>
-                <button class="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">
+                <button class="px-3 py-2 sm:px-4 bg-purple-600 text-white rounded-lg">1</button>
+                <button class="px-3 py-2 sm:px-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">2</button>
+                <button class="px-3 py-2 sm:px-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">3</button>
+                <button class="px-3 py-2 sm:px-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>

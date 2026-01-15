@@ -2,14 +2,14 @@
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen py-8">
+<div class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen py-6 sm:py-8">
     <div class="container mx-auto px-4">
         
         <!-- Welcome Header -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-8 mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-800">
+                    <h1 class="text-2xl sm:text-4xl font-bold text-gray-800">
                         Welcome Back, <span class="text-purple-600"><?php echo $_SESSION['username']; ?>!</span> 👋
                     </h1>
                     <p class="text-gray-600 mt-2">Here's what's happening with your orders today</p>
@@ -26,10 +26,10 @@ require_once __DIR__ . '/../../includes/header.php';
         <?php display_flash(); ?>
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Orders Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-2xl transition transform hover:-translate-y-1">
-                <div class="flex items-center justify-between">
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-blue-500 hover:shadow-2xl transition transform hover:-translate-y-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold uppercase">Total Orders</p>
                         <h3 class="text-3xl font-bold text-gray-800 mt-2">124</h3>
@@ -44,8 +44,8 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <!-- Pending Orders Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-2xl transition transform hover:-translate-y-1">
-                <div class="flex items-center justify-between">
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-yellow-500 hover:shadow-2xl transition transform hover:-translate-y-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold uppercase">Pending</p>
                         <h3 class="text-3xl font-bold text-gray-800 mt-2">8</h3>
@@ -60,8 +60,8 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <!-- In Transit Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-2xl transition transform hover:-translate-y-1">
-                <div class="flex items-center justify-between">
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-purple-500 hover:shadow-2xl transition transform hover:-translate-y-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold uppercase">In Transit</p>
                         <h3 class="text-3xl font-bold text-gray-800 mt-2">15</h3>
@@ -76,8 +76,8 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <!-- Delivered Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-2xl transition transform hover:-translate-y-1">
-                <div class="flex items-center justify-between">
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-green-500 hover:shadow-2xl transition transform hover:-translate-y-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold uppercase">Delivered</p>
                         <h3 class="text-3xl font-bold text-gray-800 mt-2">101</h3>
@@ -97,7 +97,7 @@ require_once __DIR__ . '/../../includes/header.php';
             
             <!-- Quick Actions -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-2xl shadow-xl p-6">
+                <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <i class="fas fa-bolt text-yellow-500 mr-3"></i>Quick Actions
                     </h2>
@@ -160,8 +160,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
             <!-- Recent Orders -->
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-2xl shadow-xl p-6">
-                    <div class="flex items-center justify-between mb-6">
+                <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                         <h2 class="text-2xl font-bold text-gray-800 flex items-center">
                             <i class="fas fa-history text-blue-600 mr-3"></i>Recent Orders
                         </h2>
@@ -173,7 +173,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="space-y-4">
                         <!-- Order Item 1 -->
                         <div class="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div class="flex items-center space-x-4">
                                     <div class="bg-blue-100 p-3 rounded-lg">
                                         <i class="fas fa-box text-blue-600 text-xl"></i>
@@ -194,7 +194,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                         <!-- Order Item 2 -->
                         <div class="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div class="flex items-center space-x-4">
                                     <div class="bg-purple-100 p-3 rounded-lg">
                                         <i class="fas fa-box text-purple-600 text-xl"></i>
@@ -215,7 +215,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                         <!-- Order Item 3 -->
                         <div class="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div class="flex items-center space-x-4">
                                     <div class="bg-yellow-100 p-3 rounded-lg">
                                         <i class="fas fa-box text-yellow-600 text-xl"></i>

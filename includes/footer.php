@@ -1,87 +1,84 @@
 <!-- Sticky Bottom Footer -->
-    <footer class="bg-gray-900 text-white mt-auto">
-        <div class="container mx-auto px-4 py-8">
+    <footer class="bg-gray-900 text-white mt-auto border-t border-gray-800">
+        <div class="container mx-auto px-4 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- About Section -->
                 <div>
                     <div class="flex items-center space-x-2 mb-4">
-                        <i class="fas fa-truck-fast text-purple-400 text-2xl"></i>
-                        <h3 class="text-xl font-bold">ISDN</h3>
+                        <div class="bg-gradient-to-br from-teal-500 to-emerald-600 p-1.5 rounded-lg text-white flex items-center justify-center">
+                            <span class="material-symbols-rounded text-lg">local_shipping</span>
+                        </div>
+                        <h3 class="text-xl font-bold font-['Outfit']">ISDN</h3>
                     </div>
-                    <p class="text-gray-400 text-sm">
-                        IslandLink Sales Distribution Network - Your trusted partner for wholesale and retail distribution across the island.
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        IslandLink Sales Distribution Network - Your trusted partner for modern wholesale and retail distribution.
                     </p>
                 </div>
 
                 <!-- Quick Links -->
                 <div>
-                    <h4 class="text-lg font-semibold mb-4 text-purple-400">Quick Links</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=products" class="text-gray-400 hover:text-white transition"><i class="fas fa-chevron-right text-xs mr-2"></i>Products</a></li>
-                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=about" class="text-gray-400 hover:text-white transition"><i class="fas fa-chevron-right text-xs mr-2"></i>About Us</a></li>
-                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=contact" class="text-gray-400 hover:text-white transition"><i class="fas fa-chevron-right text-xs mr-2"></i>Contact</a></li>
-                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=faq" class="text-gray-400 hover:text-white transition"><i class="fas fa-chevron-right text-xs mr-2"></i>FAQ</a></li>
+                    <h4 class="text-lg font-semibold mb-6 text-white">Quick Links</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=products" class="text-gray-400 hover:text-teal-400 transition flex items-center"><span class="material-symbols-rounded text-[16px] mr-2 opacity-50">navigate_next</span>Products</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=about" class="text-gray-400 hover:text-teal-400 transition flex items-center"><span class="material-symbols-rounded text-[16px] mr-2 opacity-50">navigate_next</span>About Us</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=contact" class="text-gray-400 hover:text-teal-400 transition flex items-center"><span class="material-symbols-rounded text-[16px] mr-2 opacity-50">navigate_next</span>Contact</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/index.php?page=faq" class="text-gray-400 hover:text-teal-400 transition flex items-center"><span class="material-symbols-rounded text-[16px] mr-2 opacity-50">navigate_next</span>FAQ</a></li>
                     </ul>
                 </div>
 
-                <!-- Regional Distribution Centers -->
+                <!-- RDC Locations -->
                 <div>
-                    <h4 class="text-lg font-semibold mb-4 text-purple-400">RDC Locations</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>Central Region - Colombo</li>
-                        <li><i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>Northern Region - Jaffna</li>
-                        <li><i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>Southern Region - Galle</li>
-                        <li><i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>Eastern Region - Batticaloa</li>
-                        <li><i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>Western Region - Negombo</li>
+                    <h4 class="text-lg font-semibold mb-6 text-white">RDC Locations</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Central Region - Colombo</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Northern Region - Jaffna</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Southern Region - Galle</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Eastern Region - Batticaloa</span></li>
                     </ul>
                 </div>
 
                 <!-- Contact Info -->
                 <div>
-                    <h4 class="text-lg font-semibold mb-4 text-purple-400">Contact Us</h4>
-                    <ul class="space-y-3 text-sm text-gray-400">
+                    <h4 class="text-lg font-semibold mb-6 text-white">Contact Us</h4>
+                    <ul class="space-y-4 text-sm text-gray-400">
                         <li class="flex items-center">
-                            <i class="fas fa-phone text-purple-400 mr-3"></i>
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-3 text-teal-500">
+                                <span class="material-symbols-rounded text-[18px]">call</span>
+                            </div>
                             <span>+94 11 234 5678</span>
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-envelope text-purple-400 mr-3"></i>
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mr-3 text-teal-500">
+                                <span class="material-symbols-rounded text-[18px]">mail</span>
+                            </div>
                             <span>info@isdn.lk</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-clock text-purple-400 mr-3"></i>
-                            <span>Mon - Sat: 8:00 AM - 6:00 PM</span>
                         </li>
                     </ul>
 
                     <!-- Social Media -->
-                    <div class="flex space-x-4 mt-4">
-                        <a href="#" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition">
-                            <i class="fab fa-facebook-f"></i>
+                    <div class="flex space-x-3 mt-6">
+                        <a href="#" class="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 text-gray-400">
+                            <i class="fab fa-facebook-f text-sm"></i>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition">
-                            <i class="fab fa-twitter"></i>
+                        <a href="#" class="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 text-gray-400">
+                            <i class="fab fa-twitter text-sm"></i>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700 transition">
-                            <i class="fab fa-linkedin-in"></i>
+                        <a href="#" class="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 text-gray-400">
+                            <i class="fab fa-instagram text-sm"></i>
                         </a>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Bar -->
-            <div class="border-t border-gray-800 mt-8 pt-6">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-400 text-sm">
+            <div class="border-t border-gray-800 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-gray-500 text-sm">
                         &copy; 2025 <?php echo APP_NAME; ?>. All rights reserved.
                     </p>
-                    <div class="flex space-x-6 mt-4 md:mt-0 text-sm">
-                        <a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">Sitemap</a>
+                    <div class="flex space-x-6 text-sm">
+                        <a href="#" class="text-gray-500 hover:text-teal-400 transition">Privacy Policy</a>
+                        <a href="#" class="text-gray-500 hover:text-teal-400 transition">Terms</a>
                     </div>
                 </div>
             </div>
@@ -89,8 +86,8 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button onclick="scrollToTop()" id="backToTop" class="fixed bottom-8 right-8 bg-purple-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-purple-700 transition opacity-0 invisible">
-        <i class="fas fa-arrow-up"></i>
+    <button onclick="scrollToTop()" id="backToTop" class="fixed bottom-8 right-8 bg-teal-600 text-white w-10 h-10 rounded-full shadow-lg hover:bg-teal-700 transition opacity-0 invisible flex items-center justify-center transform hover:scale-110 z-50">
+        <span class="material-symbols-rounded text-xl">arrow_upward</span>
     </button>
 
     <script src="<?php echo BASE_PATH; ?>/assets/js/main.js"></script>

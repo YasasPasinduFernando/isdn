@@ -19,6 +19,13 @@
    - create_products_table.sql
    - create_orders_table.sql
 
+ ### Optional step for step 3
+Create the SQL file with 001,002, 003,... prefix order that you want to run the migration
+ Then run
+ ```
+ php database/migrations/migrate.php
+ ```
+
 ### Step 4: Access the Application
 Open browser: **http://localhost/isdn**
 

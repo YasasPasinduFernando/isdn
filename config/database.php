@@ -1,14 +1,21 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
+define('DB_PORT', '3306');
 define('DB_NAME', 'isdn_db');
 define('DB_USER', 'root');
 define('DB_PASS', '123456');
 define('DB_CHARSET', 'utf8mb4');
 
 try {
+    $dsn = "mysql:host=" . DB_HOST;
+    if (defined('DB_PORT') && DB_PORT !== '') {
+        $dsn .= ";port=" . DB_PORT;
+    }
+    $dsn .= ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+
     $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET,
+        $dsn,
         DB_USER,
         DB_PASS,
         [

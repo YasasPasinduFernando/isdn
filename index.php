@@ -26,16 +26,18 @@ switch ($page) {
         require __DIR__ . '/views/customer/dashboard.php';
         break;
     case 'products':
-        require __DIR__ . '/views/customer/products.php';
-        break;
+        require_once __DIR__ . '/controllers/ProductController.php';
     case 'cart':
-        require __DIR__ . '/views/customer/cart.php';
+        require_once __DIR__ . '/controllers/CartController.php';
         break;
     case 'orders':
         require __DIR__ . '/views/customer/orders.php';
         break;
     case 'tracking':
         require __DIR__ . '/views/customer/tracking.php';
+        break;
+    case 'payment':
+        require __DIR__ . '/views/customer/payment.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

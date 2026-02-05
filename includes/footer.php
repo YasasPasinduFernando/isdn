@@ -90,7 +90,7 @@
         <span class="material-symbols-rounded text-xl">arrow_upward</span>
     </button>
 
-    <script src="<?php echo BASE_PATH; ?>/assets/js/main.js"></script>
+    <script src="<?php echo BASE_PATH; ?>/assets/js/main.js?v=<?= time() ?>"></script>
     <script>
         // Mobile menu toggle
         function toggleMobileMenu() {
@@ -112,5 +112,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
+        <script src="js/product.js?v=<?= time() ?>"></script>
+        <script src="js/shopping_cart.js?v=<?= time() ?>"></script>
 </body>
 </html>

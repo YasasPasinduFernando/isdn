@@ -101,6 +101,9 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
             
             <!-- Product Card 1 -->
+
+            <?php foreach ($products as $product): ?>
+
             <div class="glass-card rounded-2xl overflow-hidden hover-lift group border border-white/40">
                 <div class="relative">
                     <div class="bg-gradient-to-br from-red-400 to-red-600 h-56 flex items-center justify-center group-hover:scale-105 transition duration-700">
@@ -114,9 +117,9 @@ require_once __DIR__ . '/../../includes/header.php';
                     </span>
                 </div>
                 <div class="p-5">
-                    <span class="text-xs font-bold text-teal-600 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-md">Beverages</span>
-                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']">Coca Cola 1L</h3>
-                    <p class="text-sm text-gray-500 mt-1">Original Coca-Cola soft drink in 1 liter bottle</p>
+                    <span class="text-xs font-bold text-teal-600 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-md"><?php echo $product['category'] ?></span>
+                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']"><?php echo $product['name'] ?></h3>
+                    <p class="text-sm text-gray-500 mt-1"><?php echo $product['description'] ?></p>
                     
                     <div class="flex items-center mt-3 space-x-1 text-yellow-400">
                         <span class="material-symbols-rounded text-lg">star</span>
@@ -129,139 +132,37 @@ require_once __DIR__ . '/../../includes/header.php';
 
                     <div class="flex items-center justify-between mt-4">
                         <div>
-                            <span class="text-gray-400 line-through text-sm">Rs. 295</span>
-                            <span class="text-2xl font-bold text-teal-600 block leading-none mt-1">Rs. 250</span>
+                            <span class="text-2xl font-bold text-teal-600 block leading-none mt-1"><?php echo $product['unit_price'] ?></span>
                         </div>
+                        <div class="flex items-center border rounded-lg overflow-hidden">
+                <button onclick="changeQty(this, -1)"
+                        class="px-3 py-1 bg-gray-100 hover:bg-gray-200">
+                    <i class="fas fa-minus text-sm"></i>
+                </button>
+
+                <span class="px-4 font-semibold qty">1</span>
+
+                <button onclick="changeQty(this, 1)"
+                        class="px-3 py-1 bg-gray-100 hover:bg-gray-200">
+                    <i class="fas fa-plus text-sm"></i>
+                </button>
+            </div>
                         <button class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 shadow-sm border border-teal-100">
                             <span class="material-symbols-rounded">favorite</span>
                         </button>
                     </div>
 
-                    <button class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-3 rounded-xl font-bold mt-5 hover:from-teal-600 hover:to-emerald-700 transition duration-300 shadow-lg shadow-teal-500/20 flex items-center justify-center group-hover:translate-y-[-2px]">
-                        <span class="material-symbols-rounded mr-2">add_shopping_cart</span> Add to Cart
+                    <button 
+                        class="add-to-cart-btn w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg"
+                        data-id="<?php echo $product['id']; ?>"
+                        data-name="<?php echo $product['name']; ?>"
+                        data-price="<?php echo $product['unit_price']; ?>">
+                        <i class="fas fa-cart-plus mr-2"></i>Add to Cart
                     </button>
                 </div>
             </div>
-
+            <?php endforeach;?>
             <!-- Product Card 2 -->
-            <div class="glass-card rounded-2xl overflow-hidden hover-lift group border border-white/40">
-                <div class="relative">
-                    <div class="bg-gradient-to-br from-blue-400 to-blue-600 h-56 flex items-center justify-center group-hover:scale-105 transition duration-700">
-                        <span class="material-symbols-rounded text-white text-7xl drop-shadow-lg">cookie</span>
-                    </div>
-                    <span class="absolute top-3 right-3 bg-emerald-500/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                        In Stock
-                    </span>
-                </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded-md">Food Items</span>
-                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']">Marie Biscuits 400g</h3>
-                    <p class="text-sm text-gray-500 mt-1">Delicious marie biscuits family pack</p>
-                    
-                    <div class="flex items-center mt-3 space-x-1 text-yellow-400">
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg text-gray-300">star</span>
-                        <span class="text-gray-400 text-xs ml-2 font-medium">(4.0)</span>
-                    </div>
-
-                    <div class="flex items-center justify-between mt-4">
-                        <div>
-                            <span class="text-2xl font-bold text-teal-600 block leading-none mt-1">Rs. 380</span>
-                        </div>
-                        <button class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 shadow-sm border border-teal-100">
-                            <span class="material-symbols-rounded">favorite</span>
-                        </button>
-                    </div>
-
-                    <button class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-3 rounded-xl font-bold mt-5 hover:from-teal-600 hover:to-emerald-700 transition duration-300 shadow-lg shadow-teal-500/20 flex items-center justify-center group-hover:translate-y-[-2px]">
-                        <span class="material-symbols-rounded mr-2">add_shopping_cart</span> Add to Cart
-                    </button>
-                </div>
-            </div>
-
-            <!-- Product Card 3 -->
-            <div class="glass-card rounded-2xl overflow-hidden hover-lift group border border-white/40">
-                <div class="relative">
-                    <div class="bg-gradient-to-br from-green-400 to-green-600 h-56 flex items-center justify-center group-hover:scale-105 transition duration-700">
-                        <span class="material-symbols-rounded text-white text-7xl drop-shadow-lg">soap</span>
-                    </div>
-                    <span class="absolute top-3 right-3 bg-emerald-500/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                        In Stock
-                    </span>
-                    <span class="absolute top-3 left-3 bg-red-500/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                        HOT
-                    </span>
-                </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-green-600 uppercase tracking-wider bg-green-50 px-2 py-1 rounded-md">Personal Care</span>
-                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']">Lux Soap 100g</h3>
-                    <p class="text-sm text-gray-500 mt-1">Premium beauty soap with moisturizing cream</p>
-                    
-                    <div class="flex items-center mt-3 space-x-1 text-yellow-400">
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="text-gray-400 text-xs ml-2 font-medium">(5.0)</span>
-                    </div>
-
-                    <div class="flex items-center justify-between mt-4">
-                        <div>
-                            <span class="text-2xl font-bold text-teal-600 block leading-none mt-1">Rs. 120</span>
-                        </div>
-                        <button class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 shadow-sm border border-teal-100">
-                            <span class="material-symbols-rounded">favorite</span>
-                        </button>
-                    </div>
-
-                    <button class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-3 rounded-xl font-bold mt-5 hover:from-teal-600 hover:to-emerald-700 transition duration-300 shadow-lg shadow-teal-500/20 flex items-center justify-center group-hover:translate-y-[-2px]">
-                        <span class="material-symbols-rounded mr-2">add_shopping_cart</span> Add to Cart
-                    </button>
-                </div>
-            </div>
-
-            <!-- Product Card 4 -->
-            <div class="glass-card rounded-2xl overflow-hidden hover-lift group border border-white/40">
-                <div class="relative">
-                    <div class="bg-gradient-to-br from-orange-400 to-orange-600 h-56 flex items-center justify-center group-hover:scale-105 transition duration-700">
-                        <span class="material-symbols-rounded text-white text-7xl drop-shadow-lg">cleaning_services</span>
-                    </div>
-                    <span class="absolute top-3 right-3 bg-red-500/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                        Low Stock
-                    </span>
-                </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-orange-600 uppercase tracking-wider bg-orange-50 px-2 py-1 rounded-md">Home Cleaning</span>
-                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']">Harpic Cleaner 500ml</h3>
-                    <p class="text-sm text-gray-500 mt-1">Powerful toilet bowl cleaner</p>
-                    
-                    <div class="flex items-center mt-3 space-x-1 text-yellow-400">
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star</span>
-                        <span class="material-symbols-rounded text-lg">star_half</span>
-                        <span class="text-gray-400 text-xs ml-2 font-medium">(4.7)</span>
-                    </div>
-
-                    <div class="flex items-center justify-between mt-4">
-                        <div>
-                            <span class="text-2xl font-bold text-teal-600 block leading-none mt-1">Rs. 450</span>
-                        </div>
-                        <button class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-600 hover:text-white transition duration-300 shadow-sm border border-teal-100">
-                            <span class="material-symbols-rounded">favorite</span>
-                        </button>
-                    </div>
-
-                    <button class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-3 rounded-xl font-bold mt-5 hover:from-teal-600 hover:to-emerald-700 transition duration-300 shadow-lg shadow-teal-500/20 flex items-center justify-center group-hover:translate-y-[-2px]">
-                        <span class="material-symbols-rounded mr-2">add_shopping_cart</span> Add to Cart
-                    </button>
-                </div>
-            </div>
             
         </div>
 

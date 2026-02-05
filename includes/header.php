@@ -7,13 +7,13 @@ require_once __DIR__ . '/../config/config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/style.css">
-    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/custom.css">
+    <script src="https://cdn.tailwindcss.com "></script>
+    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/style.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/custom.css?v=<?= time() ?>">
     <!-- Google Material Symbols Rounded -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Keep FontAwesome for Social Brand Icons if needed, otherwise optional. Retaining for safety if referenced elsewhere for brands. -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=<?= time() ?>">
     <link rel="manifest" href="<?php echo BASE_PATH; ?>/manifest.json">
     <meta name="theme-color" content="#0d9488">
     <meta name="mobile-web-app-capable" content="yes">

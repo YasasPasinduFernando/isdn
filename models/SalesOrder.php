@@ -6,114 +6,64 @@ class SalesOrder {
         $this->pdo = $pdo;
     }
 
-    /* ===========================
-       Fetch Orders
-    ============================ */
+    public function placeOrder(int $customerId, int $placedBy, array $items) {
 
-    public function findAllOrders() {
-        $stmt = $this->pdo->prepare("
-            SELECT *
-            FROM orders
-            ORDER BY date DESC
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+        try {
+            $this->pdo->beginTransaction();
 
-    public function findById(int $id) {
-        $stmt = $this->pdo->prepare("
-            SELECT *
-            FROM orders
-            WHERE id = :id
-        ");
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+            // Calculate order total
+            $total = 0;
+            foreach ($items as $item) {
+                $total += $item['price'] * $item['qty'];
+            }
 
-    public function findByCustomer(int $customerId) {
-        $stmt = $this->pdo->prepare("
-            SELECT *
-            FROM orders
-            WHERE customer_id = :customer_id
-            ORDER BY date DESC
-        ");
-        $stmt->execute(['customer_id' => $customerId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+            // Insert order
+            $orderStmt = $this->pdo->prepare("
+                INSERT INTO orders 
+                (date, customer_id, placed_by, amount, status, order_number, last_updated)
+                VALUES 
+                (NOW(), :customer_id, :placed_by, :amount, 'PENDING', :order_number, NOW())
+            ");
 
-    /* ===========================
-       Create Order
-    ============================ */
+            $orderNumber = 'ORD' . date('ymd') . rand(100, 999);
 
-    public function createOrder(
-        int $customerId,
-        int $placedBy,
-        float $amount,
-        string $status = 'PENDING'
-    ) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO orders 
-            (date, customer_id, placed_by, amount, status, order_number, last_updated)
-            VALUES 
-            (NOW(), :customer_id, :placed_by, :amount, :status, :order_number, NOW())
-        ");
+            $orderStmt->execute([
+                'customer_id' => $customerId,
+                'placed_by'   => $placedBy,
+                'amount'      => $total,
+                'order_number'=> $orderNumber
+            ]);
 
-        return $stmt->execute([
-            'customer_id'  => $customerId,
-            'placed_by'    => $placedBy,
-            'amount'       => $amount,
-            'status'       => $status,
-            'order_number' => $this->generateOrderNumber()
-        ]);
-    }
+            $orderId = $this->pdo->lastInsertId();
 
-    /* ===========================
-       Update Operations
-    ============================ */
+            // Insert order items
+            $itemStmt = $this->pdo->prepare("
+                INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+                VALUES (:order_id, :product_id, :quantity, :unit_price)
+            ");
 
-    public function updateStatus(int $orderId, string $status) {
-        $stmt = $this->pdo->prepare("
-            UPDATE orders
-            SET status = :status,
-                last_updated = NOW()
-            WHERE id = :id
-        ");
-        return $stmt->execute([
-            'status' => $status,
-            'id'     => $orderId
-        ]);
-    }
+            foreach ($items as $item) {
+                $itemStmt->execute([
+                    'order_id'   => $orderId,
+                    'product_id'=> $item['product_id'],
+                    'quantity'  => $item['qty'],
+                    'unit_price'=> $item['price']
+                ]);
+            }
 
-    public function updateEstimatedDate(int $orderId, string $date) {
-        $stmt = $this->pdo->prepare("
-            UPDATE orders
-            SET estimated_date = :estimated_date,
-                last_updated = NOW()
-            WHERE id = :id
-        ");
-        return $stmt->execute([
-            'estimated_date' => $date,
-            'id'             => $orderId
-        ]);
-    }
+            // Clear shopping cart
+            $clearStmt = $this->pdo->prepare(
+                "DELETE FROM shopping_cart WHERE user_id = :user_id"
+            );
+            $clearStmt->execute(['user_id' => $customerId]);
 
-    /* ===========================
-       Delete Order (optional)
-    ============================ */
+            $this->pdo->commit();
+            return $orderId;
 
-    public function deleteOrder(int $orderId) {
-        $stmt = $this->pdo->prepare("
-            DELETE FROM orders WHERE id = :id
-        ");
-        return $stmt->execute(['id' => $orderId]);
-    }
-
-    /* ===========================
-       Helpers
-    ============================ */
-
-    private function generateOrderNumber(): string {
-        return 'ORD' . date('ymd') . rand(100, 999);
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 }
 ?>

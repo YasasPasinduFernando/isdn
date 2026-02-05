@@ -114,5 +114,6 @@
     </script>
         <script src="js/product.js?v=<?= time() ?>"></script>
         <script src="js/shopping_cart.js?v=<?= time() ?>"></script>
+        <script src="js/sales_order.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -112,7 +112,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         </div>
                     </div>
 
-                    <button class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-teal-500/30 hover:shadow-xl transform hover:scale-[1.02] transition duration-300">
+                    <button id="checkoutBtn" class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-teal-500/30 hover:shadow-xl transform hover:scale-[1.02] transition duration-300">
                         Proceed to Checkout
                     </button>
                     

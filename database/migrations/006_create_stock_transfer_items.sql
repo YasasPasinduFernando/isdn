@@ -2,8 +2,6 @@
 -- Stock Transfer Items (Multiple Products)
 -- ============================================
 
-use isdn_db;
-
 CREATE TABLE IF NOT EXISTS stock_transfer_items (
     item_id INT PRIMARY KEY AUTO_INCREMENT,
     transfer_id INT NOT NULL,

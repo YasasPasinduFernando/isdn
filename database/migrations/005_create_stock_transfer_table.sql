@@ -2,8 +2,6 @@
 -- Stock Transfers Table
 -- ============================================
 
-USE isdn_db;
-
 CREATE TABLE IF NOT EXISTS stock_transfers (
     transfer_id INT PRIMARY KEY AUTO_INCREMENT,
     transfer_number VARCHAR(50) UNIQUE NOT NULL,

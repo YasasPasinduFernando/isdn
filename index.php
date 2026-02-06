@@ -7,7 +7,7 @@ require_once __DIR__ . '/includes/functions.php';
 $page = $_GET['page'] ?? 'home';
 
 // Check if user is logged in for protected pages
-$protected_pages = ['dashboard', 'products', 'cart', 'orders', 'tracking', 'rdc-clerk-dashboard', 'request-product-units'];
+$protected_pages = ['dashboard', 'products', 'cart', 'orders', 'tracking', 'rdc-manager-dashboard', 'rdc-clerk-dashboard', 'request-product-units'];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');
 }
@@ -38,6 +38,10 @@ switch ($page) {
         break;
     case 'payment':
         require __DIR__ . '/views/customer/payment.php';
+        break;
+    case 'rdc-manager-dashboard':
+        require __DIR__ . '/views/rdc-manager/dashboard.php';
+        break;
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;

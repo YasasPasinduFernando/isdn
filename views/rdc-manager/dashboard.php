@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl sm:text-4xl font-bold text-gray-800">
-                        Welcome, RDC Clerk <span class="text-purple-600"><?php echo $_SESSION['username']; ?>!</span>
+                        Welcome, RDC Manager <span class="text-purple-600"><?php echo $_SESSION['username']; ?>!</span>
                     </h1>
                     <p class="text-gray-600 mt-2">Here's what's happening with your orders today</p>
                 </div>

@@ -217,33 +217,6 @@ $pending_transfers = [
     </style>
 </head>
 
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-4">
-                    <div class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        ISDN
-                    </div>
-                    <div class="hidden md:block h-6 w-px bg-gray-300"></div>
-                    <div class="hidden md:block">
-                        <span class="text-sm text-gray-500">Request Product Units</span>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-sm font-semibold text-gray-900"><?php echo $current_user['name']; ?></div>
-                        <div class="text-xs text-gray-500"><?php echo $current_user['rdc_name']; ?> • <?php echo $current_user['role']; ?></div>
-                    </div>
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                        <?php echo strtoupper(substr($current_user['name'], 0, 1)); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- Pending Transfers Alert Banner -->

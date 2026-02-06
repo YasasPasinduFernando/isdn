@@ -17,18 +17,10 @@ CREATE TABLE IF NOT EXISTS stock_transfers (
     is_urgent BOOLEAN DEFAULT FALSE,
     
     -- Approval Info
-    approval_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') DEFAULT 'PENDING',
+    approval_status ENUM('CLERK_REQUESTED', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'RECEIVED') DEFAULT 'CLERK_REQUESTED',
     approved_by INT,
     approval_date TIMESTAMP NULL,
     approval_remarks TEXT,
-    
-    -- Status Tracking
-    transfer_status ENUM(
-        'PENDING_APPROVAL',
-        'DISPATCHED',
-        'DELIVERED',
-        'CANCELLED'
-    ) DEFAULT 'PENDING_APPROVAL',
     
     current_status_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     

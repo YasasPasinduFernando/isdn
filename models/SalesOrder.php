@@ -20,26 +20,27 @@ class SalesOrder {
             // Insert order
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders 
-                (date, customer_id, placed_by, amount, status, order_number, last_updated)
+                (date, customer_id, placed_by, amount, status, last_updated, estimated_date)
                 VALUES 
-                (NOW(), :customer_id, :placed_by, :amount, 'PENDING', :order_number, NOW())
+                (NOW(), :customer_id, :placed_by, :amount, 'PENDING_RDC_CLERK', NOW(), NOW())
             ");
 
-            $orderNumber = 'ORD' . date('ymd') . rand(100, 999);
+            $orderNumber = 'ORD' .'-'. 'RDC'.date('ymd') . rand(100, 999);
 
             $orderStmt->execute([
                 'customer_id' => $customerId,
                 'placed_by'   => $placedBy,
                 'amount'      => $total,
-                'order_number'=> $orderNumber
+                'status'      => $total,
+                'estimated_date'=> $orderNumber,
             ]);
 
             $orderId = $this->pdo->lastInsertId();
 
             // Insert order items
             $itemStmt = $this->pdo->prepare("
-                INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-                VALUES (:order_id, :product_id, :quantity, :unit_price)
+                INSERT INTO order_items (order_id, product_id, quantity, selling_price, discount)
+                VALUES (:order_id, :product_id, :quantity, :selling_price, :discount)
             ");
 
             foreach ($items as $item) {
@@ -47,7 +48,8 @@ class SalesOrder {
                     'order_id'   => $orderId,
                     'product_id'=> $item['product_id'],
                     'quantity'  => $item['qty'],
-                    'unit_price'=> $item['price']
+                    'selling_price'=> $item['price'],
+                    'discount'=> $item['price']
                 ]);
             }
 

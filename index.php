@@ -46,7 +46,10 @@ switch ($page) {
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
     case 'request-product-units':
-        require __DIR__ . '/views/stock-management/request_product_unit.php';
+        require __DIR__ . '/views/stock-management/request_product_units.php';
+        break;
+    case 'send-product-units':
+        require __DIR__ . '/views/stock-management/send_product_units.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

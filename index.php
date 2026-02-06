@@ -7,7 +7,7 @@ require_once __DIR__ . '/includes/functions.php';
 $page = $_GET['page'] ?? 'home';
 
 // Check if user is logged in for protected pages
-$protected_pages = ['dashboard', 'products', 'cart', 'orders', 'tracking', 'rdc-clerk-dashboard', 'request-product-units'];
+$protected_pages = ['dashboard', 'products', 'cart', 'orders', 'tracking', 'rdc-manager-dashboard', 'rdc-clerk-dashboard', 'request-product-units', 'stock-reports'];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');
 }
@@ -38,11 +38,21 @@ switch ($page) {
         break;
     case 'payment':
         require __DIR__ . '/views/customer/payment.php';
+        break;
+    case 'rdc-manager-dashboard':
+        require __DIR__ . '/views/rdc-manager/dashboard.php';
+        break;
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
     case 'request-product-units':
-        require __DIR__ . '/views/stock-management/request_product_unit.php';
+        require __DIR__ . '/views/stock-management/request_product_units.php';
+        break;
+    case 'send-product-units':
+        require __DIR__ . '/views/stock-management/send_product_units.php';
+        break;
+    case 'stock-reports':
+        require __DIR__ . '/views/stock-management/stock_reports.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

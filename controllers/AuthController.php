@@ -47,7 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role'] = $user['role'];
             
             flash_message('Login successful!', 'success');
-            redirect('/index.php?page=dashboard');
+
+            if ($user['role'] === 'rdc_manager') {
+                redirect('/index.php?page=rdc-manager-dashboard');
+            } elseif ($user['role'] === 'rdc_clerk') {
+                redirect('/index.php?page=rdc-clerk-dashboard');
+            } else {
+                redirect('/index.php?page=dashboard');
+            }
         } else {
             flash_message('Invalid email or password!', 'error');
             redirect('/index.php?page=login');

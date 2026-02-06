@@ -138,16 +138,55 @@ INSERT INTO payments (order_id,amount,payment_date,payment_method) VALUES
 -- =====================================================
 
 INSERT INTO stock_transfers
-(transfer_number,source_rdc_id,destination_rdc_id,requested_by,request_reason,is_urgent,approval_status,transfer_status)
+(transfer_number,source_rdc_id,destination_rdc_id,requested_by,requested_by_role,request_reason,is_urgent,approval_status)
 VALUES
-('TR-1001',1,2,3,'Low cement stock',1,'APPROVED','DISPATCHED'),
-('TR-1002',2,3,4,'Steel requirement',0,'PENDING','PENDING_APPROVAL');
+('TR-1001',1,2,3,'RDC_MANAGER','Low cement stock',1,'APPROVED'),
+('TR-1002',2,3,4,'RDC_MANAGER','Steel requirement',0,'PENDING');
 
-INSERT INTO stock_transfer_items (transfer_id,product_id,requested_quantity,remarks) VALUES
-(1,1,100,'Urgent transfer'),
-(2,2,50,'Normal stock transfer');
+INSERT INTO stock_transfer_items (transfer_id,product_id,requested_quantity) VALUES
+(1,1,100),
+(2,2,50);
 
-INSERT INTO transfer_status_logs (transfer_id,previous_status,new_status,changed_by,remarks) VALUES
-(1,'PENDING_APPROVAL','DISPATCHED',3,'Approved and dispatched');
+INSERT INTO transfer_status_logs (transfer_id,previous_status,new_status,changed_by, change_by_role, change_by_name) VALUES
+(1,'PENDING_APPROVAL','DISPATCHED',3,'RDC_MANAGER','North Manager');
+
+
+INSERT INTO `stock_movement_logs` (
+    rdc_id,
+    product_id,
+    movement_type,
+    quantity,
+    previous_quantity,
+    new_quantity,
+    created_by,
+    created_by_role,
+    created_by_name,
+    note
+) VALUES
+(
+    1,                  
+    1,                      
+    'STOCK_IN',             
+    100,    
+    400,                    
+    500,                    
+    1,                      
+    'RDC_MANAGER',          
+    'North Manager',        
+    'New stock received at RDC'
+),
+(
+    1,                      
+    2,                      
+    'STOCK_OUT',            
+    100,
+    900,                    
+    800,                    
+    1,                      
+    'RDC_MANAGER',          
+    'North Manager',        
+    'Stock issued for customer orders'
+);
+
 
 SET foreign_key_checks = 1;

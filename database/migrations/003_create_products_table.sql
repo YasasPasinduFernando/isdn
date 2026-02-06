@@ -1,7 +1,6 @@
 -- ============================================
 -- Products Table
 -- ============================================
-USE isdn_db;
 
 CREATE TABLE IF NOT EXISTS products (
     product_id INT PRIMARY KEY AUTO_INCREMENT,

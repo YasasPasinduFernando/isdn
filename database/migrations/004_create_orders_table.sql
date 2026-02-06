@@ -1,4 +1,6 @@
-USE isdn_db;
+-- ============================================
+-- Orders Table
+-- ============================================
 
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,

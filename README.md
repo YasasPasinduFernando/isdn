@@ -21,10 +21,15 @@
 
  ### Optional step for step 3
 Create the SQL file with 001,002, 003,... prefix order that you want to run the migration
- Then run
+ Then run. This will run fresh migration. Ensure all data backup before run this.
  ```
  php database/migrations/migrate.php
  ```
+
+If you want to run the migration with seeder then run 
+```
+php database/migrations/migration.php --seed=seeder.sql
+```
 
 ### Step 4: Access the Application
 Open browser: **http://localhost/isdn**

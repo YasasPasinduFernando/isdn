@@ -2,9 +2,7 @@
 -- Transfer Status Log (Audit Trail)
 -- ============================================
 
-use isdn_db;
-
-CREATE TABLE IF NOT EXISTS transfer_status_log (
+CREATE TABLE IF NOT EXISTS transfer_status_logs (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
     transfer_id INT NOT NULL,
     previous_status VARCHAR(50),

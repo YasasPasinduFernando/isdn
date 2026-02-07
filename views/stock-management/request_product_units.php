@@ -232,7 +232,7 @@ $pending_transfers = [
                             Active Transfer Requests
                         </h3>
                         <div class="space-y-2">
-                            <?php foreach ($pending_transfers as $transfer): ?>
+                            <?php $transfer_index = 0; foreach ($pending_transfers as $transfer): ?>
                             <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
                                 <div class="flex items-center space-x-3">
                                     <span class="mono text-xs font-semibold text-gray-700"><?php echo $transfer['transfer_number']; ?></span>
@@ -246,15 +246,16 @@ $pending_transfers = [
                                     <?php endif; ?>
                                 </div>
                                 <div class="flex items-center space-x-3">
-                                    <span class="px-3 py-1 text-xs font-semibold rounded-full <?php 
-                                        echo $transfer['status'] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
-                                    ?>">
-                                        <?php echo str_replace('_', ' ', $transfer['status']); ?>
-                                    </span>
-                                    <button class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                        View Details <i class="fas fa-arrow-right text-xs ml-1"></i>
-                                    </button>
-                                </div>
+                                            <span class="transfer-status px-3 py-1 text-xs font-semibold rounded-full <?php 
+                                                echo $transfer['status'] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
+                                            ?>">
+                                                <?php echo str_replace('_', ' ', $transfer['status']); ?>
+                                            </span>
+                                            <?php /* add data-index to hook JS and class to open modal */ ?>
+                                            <button class="view-transfer-btn text-blue-600 hover:text-blue-700 text-sm font-medium" data-index="<?php echo $transfer_index++; ?>">
+                                                View Details <i class="fas fa-arrow-right text-xs ml-1"></i>
+                                            </button>
+                                        </div>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -546,7 +547,135 @@ $pending_transfers = [
     </div>
 
     <!-- JavaScript -->
+    
+    <!-- Transfer Details Modal -->
+    <div id="transfer-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+            <div class="flex items-center justify-between p-4 border-b border-gray-100">
+                <h3 id="modal-title" class="text-lg font-semibold text-gray-900">Transfer Details</h3>
+                <button id="modal-close" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <div class="text-xs text-gray-500">Transfer Number</div>
+                        <div id="modal-transfer-number" class="font-bold text-gray-900"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Source RDC</div>
+                        <div id="modal-source-rdc" class="font-bold text-gray-900"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Requested Date</div>
+                        <div id="modal-requested-date" class="font-medium text-gray-900"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Items / Units</div>
+                        <div id="modal-items-count" class="font-medium text-gray-900"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-xs text-gray-500 mb-2">Products</div>
+                    <div id="modal-items-list" class="bg-gray-50 p-3 rounded border border-gray-200 text-sm text-gray-700">(No item details available in dummy data)</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-700 mb-1">Status</label>
+                    <select disabled id="modal-status" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="CLERK_REQUESTED">CLERK REQUESTED</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REJECTED">REJECTED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                        <option value="RECEIVED">RECEIVED</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center justify-end p-4 border-t border-gray-100 space-x-2">
+                // Only show for requeted and pending status only
+                <button id="modal-cancel-btn" class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200">Cancel Transfer</button>
+                <button id="modal-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Transfers data (from PHP) — used to populate the modal
+        const transfers = <?php echo json_encode($pending_transfers); ?>;
+        let currentTransferIndex = null;
+
+        // Helper: open/close modal
+        function openTransferModal(index) {
+            currentTransferIndex = index;
+            const t = transfers[index];
+            if (!t) return;
+            document.getElementById('modal-transfer-number').textContent = t.transfer_number || '-';
+            document.getElementById('modal-source-rdc').textContent = t.source_rdc || '-';
+            document.getElementById('modal-requested-date').textContent = t.requested_date || '-';
+            document.getElementById('modal-items-count').textContent = (t.product_count || 0) + ' products (' + (t.total_items || 0) + ' units)';
+            document.getElementById('modal-status').value = t.status || 'PENDING_APPROVAL';
+            // For dummy data, show some placeholder product lines
+            let itemsHtml = '';
+            for (let i = 1; i <= (t.product_count || 0); i++) {
+                itemsHtml += '<div class="py-1 border-b border-gray-100">Product ' + i + ' — Qty: ' + Math.max(1, Math.round((t.total_items || 0) / Math.max(1, (t.product_count || 1)))) + '</div>';
+            }
+            if (itemsHtml === '') itemsHtml = '<div class="text-gray-500">No product details available (dummy data)</div>';
+            document.getElementById('modal-items-list').innerHTML = itemsHtml;
+
+            document.getElementById('transfer-modal').classList.remove('hidden');
+            document.getElementById('transfer-modal').classList.add('flex');
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transfer-modal').classList.remove('flex');
+            document.getElementById('transfer-modal').classList.add('hidden');
+            currentTransferIndex = null;
+        }
+
+        // Attach click handlers for dynamically created buttons after DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.view-transfer-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    openTransferModal(idx);
+                });
+            });
+
+            document.getElementById('modal-close').addEventListener('click', closeTransferModal);
+            // Cancel Transfer button sets status to CANCELLED
+            document.getElementById('modal-cancel-btn').addEventListener('click', function() {
+                document.getElementById('modal-status').value = 'CANCELLED';
+            });
+            // Save button applies status to the dummy transfer and updates UI
+            document.getElementById('modal-save-btn').addEventListener('click', function() {
+                if (currentTransferIndex === null) return closeTransferModal();
+                const newStatus = document.getElementById('modal-status').value;
+                // Update in-memory transfers (dummy behaviour)
+                transfers[currentTransferIndex].status = newStatus;
+
+                // Update the status badge in the list
+                const btn = document.querySelector('.view-transfer-btn[data-index="' + currentTransferIndex + '"]');
+                if (btn) {
+                    const statusSpan = btn.closest('.flex.items-center').querySelector('.transfer-status');
+                    if (statusSpan) {
+                        statusSpan.textContent = newStatus.replace(/_/g, ' ');
+                        // update classes
+                        statusSpan.classList.remove('bg-yellow-100','text-yellow-700','bg-green-100','text-green-700');
+                        if (newStatus === 'CLERK_REQUESTED' || newStatus === 'PENDING') {
+                            statusSpan.classList.add('bg-yellow-100','text-yellow-700');
+                        } else {
+                            statusSpan.classList.add('bg-green-100','text-green-700');
+                        }
+                    }
+                }
+
+                closeTransferModal();
+            });
+        });
+
         // Dummy stock data for other RDCs (in real app, this would come from AJAX)
         const otherRDCStock = {
             1: { // North RDC

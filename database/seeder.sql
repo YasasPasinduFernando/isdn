@@ -138,10 +138,10 @@ INSERT INTO payments (order_id,amount,payment_date,payment_method) VALUES
 -- =====================================================
 
 INSERT INTO stock_transfers
-(transfer_number,source_rdc_id,destination_rdc_id,requested_by,request_reason,is_urgent,approval_status)
+(transfer_number,source_rdc_id,destination_rdc_id,requested_by,requested_by_role,request_reason,is_urgent,approval_status)
 VALUES
-('TR-1001',1,2,3,'Low cement stock',1,'APPROVED'),
-('TR-1002',2,3,4,'Steel requirement',0,'PENDING');
+('TR-1001',1,2,3,'RDC_MANAGER','Low cement stock',1,'APPROVED'),
+('TR-1002',2,3,4,'RDC_MANAGER','Steel requirement',0,'PENDING');
 
 INSERT INTO stock_transfer_items (transfer_id,product_id,requested_quantity) VALUES
 (1,1,100),

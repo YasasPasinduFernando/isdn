@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <div class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen py-6 sm:py-8">
     <div class="container mx-auto px-4">
-        
+
         <!-- Welcome Header -->
         <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-8 mb-6 sm:mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -23,8 +23,9 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
         <div>
             <a href="/index.php?page=request-product-units" class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition">Request Product Units</a>
+            <a href="/index.php?page=send-product-units" class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition">Send Product Units</a>
         </div>
-       
+
     </div>
 </div>
 

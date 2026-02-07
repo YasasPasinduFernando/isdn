@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS stock_transfers (
     
     -- Request Info
     requested_by INT NOT NULL,
+    requested_by_role ENUM('RDC_CLERK', 'RDC_MANAGER') NOT NULL,
     requested_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     request_reason TEXT,
     is_urgent BOOLEAN DEFAULT FALSE,

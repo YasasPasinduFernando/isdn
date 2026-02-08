@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/SalesOrder.php';
+require_once __DIR__ . '/../models/ShoppingCart.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && isset($_GET['action'])
@@ -15,11 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 
     $userId = $_SESSION['user_id'] ?? 1; // demo user
-    $items  = $data['items'];
+
 
     try {
         $orderModel = new SalesOrder($pdo);
-        $orderId = $orderModel->placeOrder($userId, $userId, $items);
+        $userCartItems = new ShoppingCart($pdo);
+        $userCartItems = $userCartItems->getUserCart($userId);
+
+        $orderId = $orderModel->placeOrder($userId, $userId, $userCartItems);
 
         echo json_encode([
             'success' => true,
@@ -28,10 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         exit;
 
     } catch (Exception $e) {
+        echo $e;
         echo json_encode([
             'success' => false,
             'message' => 'Order processing failed'
         ]);
         exit;
+    }
+    }
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    $page = $_GET['page'] ?? '';
+
+    if ($page === 'sales-orders') {
+        $userId = $_SESSION['user_id'] ?? 1;
+        $orderModel = new SalesOrder($pdo);
+        $userOrders = $orderModel->getUserOrders($userId);
+        require_once __DIR__ . '/../views/customer/orders.php';
     }
 }

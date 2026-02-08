@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        fetch('index.php?page=sales-order&action=place', {
+        fetch('index.php?page=sales-orders&action=place', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items })

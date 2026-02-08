@@ -5,34 +5,36 @@ class SalesOrder {
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
     }
+    
 
     public function placeOrder(int $customerId, int $placedBy, array $items) {
 
         try {
             $this->pdo->beginTransaction();
 
-            // Calculate order total
+                        // Calculate order total
             $total = 0;
             foreach ($items as $item) {
-                $total += $item['price'] * $item['qty'];
+                $total += $item['unit_price'] * $item['quantity'];
             }
 
             // Insert order
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders 
-                (date, customer_id, placed_by, amount, status, last_updated, estimated_date)
+                (date, customer_id, placed_by, amount, status, order_number, last_updated, estimated_date)
                 VALUES 
-                (NOW(), :customer_id, :placed_by, :amount, 'PENDING_RDC_CLERK', NOW(), NOW())
+                (NOW(), :customer_id, :placed_by, :amount, :status, :order_number ,NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY))
             ");
 
-            $orderNumber = 'ORD' .'-'. 'RDC'.date('ymd') . rand(100, 999);
+            $status = 'PENDING_RDC_CLERK';
+            $orderNumber = 'ORD' .'-'. 'RDC-'.date('ymd') .'-'. rand(100, 99999);
 
             $orderStmt->execute([
                 'customer_id' => $customerId,
                 'placed_by'   => $placedBy,
                 'amount'      => $total,
-                'status'      => $total,
-                'estimated_date'=> $orderNumber,
+                'status'      => $status,
+                'order_number'=> $orderNumber,
             ]);
 
             $orderId = $this->pdo->lastInsertId();
@@ -47,9 +49,9 @@ class SalesOrder {
                 $itemStmt->execute([
                     'order_id'   => $orderId,
                     'product_id'=> $item['product_id'],
-                    'quantity'  => $item['qty'],
-                    'selling_price'=> $item['price'],
-                    'discount'=> $item['price']
+                    'quantity'  => $item['quantity'],
+                    'selling_price'=> $item['unit_price'],
+                    'discount'=> 0
                 ]);
             }
 
@@ -66,6 +68,16 @@ class SalesOrder {
             $this->pdo->rollBack();
             throw $e;
         }
+    }
+    public function getUserOrders($userId) {
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                *
+            FROM orders
+            WHERE customer_id = :customer_id
+        ");
+        $stmt->execute(['customer_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

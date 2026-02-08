@@ -21,165 +21,92 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
         </div>
 
-        <!-- Order List Container -->
-        <div class="glass-panel rounded-3xl overflow-hidden shadow-xl border border-white/50">
-            
-            <!-- Desktop Table Header -->
-            <div class="hidden md:grid grid-cols-12 gap-4 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
-                <div class="col-span-3">Order Details</div>
-                <div class="col-span-2">Date</div>
-                <div class="col-span-2">Amount</div>
-                <div class="col-span-2">Payment</div>
-                <div class="col-span-2">Status</div>
-                <div class="col-span-1 text-center">Action</div>
-            </div>
-
+        <div class="hidden md:grid grid-cols-8 gap-4 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
+            <div>Code</div>
+            <div>Customer</div>
+            <div>Date</div>
+            <div>Amount</div>
+            <div>Payment</div>
+            <div>Status</div>
+            <div>Estimated Delivery</div>
+            <div class="text-center">Action</div>
+        </div>
             <!-- Order Items Mock List -->
             <div class="divide-y divide-gray-100/50">
                 
-                <!-- Order 1 -->
-                <div class="p-5 hover:bg-white/40 transition duration-200 group">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <!-- Mobile Label -->
-                        <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
-                        
-                        <div class="col-span-3 flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 group-hover:scale-110 transition duration-300">
-                                <span class="material-symbols-rounded text-xl">inventory_2</span>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 font-['Outfit']">#ORD-2025-001</h3>
-                                <p class="text-xs text-gray-500">15 Items</p>
-                            </div>
-                        </div>
 
-                        <div class="col-span-2 text-sm text-gray-600 font-medium">
-                            <span class="md:hidden font-semibold mr-2">Date:</span>
-                            Jan 10, 2025
-                        </div>
+        <div class="p-5 hover:bg-white/40 transition">
+        <div class="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
 
-                        <div class="col-span-2 font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
-                            Rs. 45,250.00
-                        </div>
-
-                        <div class="col-span-2">
-                             <span class="md:hidden font-semibold mr-2 text-gray-600">Payment:</span>
-                             <span class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">Paid</span>
-                        </div>
-
-                        <div class="col-span-2">
-                            <span class="md:hidden font-semibold mr-2 text-gray-600">Status:</span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                                <span class="w-2 h-2 mr-2 bg-green-500 rounded-full"></span>
-                                Delivered
-                            </span>
-                        </div>
-
-                        <div class="col-span-1 flex md:justify-center">
-                            <a href="index.php?page=tracking&order_id=ORD-2025-001" 
-                               class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition relative group/icon" 
-                               title="Track Order">
-                                <span class="material-symbols-rounded">location_on</span>
-                            </a>
-                            <a href="#" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition ml-2" title="View Details">
-                                <span class="material-symbols-rounded">visibility</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order 2 -->
-                <div class="p-5 hover:bg-white/40 transition duration-200 group">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <div class="col-span-3 flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 group-hover:scale-110 transition duration-300">
-                                <span class="material-symbols-rounded text-xl">checkroom</span>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 font-['Outfit']">#ORD-2025-002</h3>
-                                <p class="text-xs text-gray-500">8 Items</p>
-                            </div>
-                        </div>
-
-                        <div class="col-span-2 text-sm text-gray-600 font-medium">
-                            <span class="md:hidden font-semibold mr-2">Date:</span> Jan 12, 2025
-                        </div>
-
-                        <div class="col-span-2 font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span> Rs. 28,900.00
-                        </div>
-
-                        <div class="col-span-2">
-                            <span class="text-xs font-bold bg-gray-100 text-gray-600 px-3 py-1 rounded-full border border-gray-200">COD</span>
-                        </div>
-
-                        <div class="col-span-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                <span class="w-2 h-2 mr-2 bg-blue-500 rounded-full animate-pulse"></span>
-                                In Transit
-                            </span>
-                        </div>
-
-                        <div class="col-span-1 flex md:justify-center">
-                            <a href="index.php?page=tracking&order_id=ORD-2025-002" 
-                               class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition"
-                               title="Track Order">
-                                <span class="material-symbols-rounded">location_on</span>
-                            </a>
-                            <a href="#" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition ml-2">
-                                <span class="material-symbols-rounded">visibility</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                 <!-- Order 3 -->
-                <div class="p-5 hover:bg-white/40 transition duration-200 group">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <div class="col-span-3 flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center border border-yellow-100 group-hover:scale-110 transition duration-300">
-                                <span class="material-symbols-rounded text-xl">smartphone</span>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 font-['Outfit']">#ORD-2025-003</h3>
-                                <p class="text-xs text-gray-500">1 Item</p>
-                            </div>
-                        </div>
-
-                        <div class="col-span-2 text-sm text-gray-600 font-medium">
-                            <span class="md:hidden font-semibold mr-2">Date:</span> Jan 14, 2025
-                        </div>
-
-                        <div class="col-span-2 font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span> Rs. 125,000.00
-                        </div>
-
-                        <div class="col-span-2">
-                            <span class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">Paid</span>
-                        </div>
-
-                        <div class="col-span-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
-                                <span class="w-2 h-2 mr-2 bg-yellow-500 rounded-full"></span>
-                                Processing
-                            </span>
-                        </div>
-
-                        <div class="col-span-1 flex md:justify-center">
-                            <a href="index.php?page=tracking&order_id=ORD-2025-003" 
-                               class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition"
-                               title="Track Order">
-                                <span class="material-symbols-rounded">location_on</span>
-                            </a>
-                            <a href="#" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition ml-2">
-                                <span class="material-symbols-rounded">visibility</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
+        <?php foreach ($userOrders as $userOrder): ?>
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <span class="material-symbols-rounded">inventory_2</span>
             </div>
+            <div>
+                <div class="font-bold text-gray-800">#<?php echo $userOrder['order_number'] ?></div>
+                <div class="text-xs text-gray-500">15 Items</div>
+            </div>
+        </div>
+
+        <!-- Customer -->
+        <div class="font-medium text-gray-800">
+            <?php echo $userOrder['customer_id'] ?>
+        </div>
+
+        <!-- Date -->
+        <div class="text-sm text-gray-600">
+             <?php 
+                $orderDate =  date('Y-m-d', strtotime($userOrder['date']));
+                echo $orderDate;
+                ?>
+        </div>
+
+        <!-- Amount -->
+        <div class="font-bold text-gray-800">
+            <?php echo $userOrder['amount'] ?>
+        </div>
+
+        <!-- Payment -->
+        <div>
+            <span class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">
+                Paid
+            </span>
+        </div>
+
+        <!-- Status -->
+        <div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                <span class="w-2 h-2 mr-2 bg-green-500 rounded-full"></span>
+                Delivered
+            </span>
+        </div>
+
+        <!-- Estimated Delivery -->
+        <div class="text-sm text-gray-600">
+            <?php   
+                $estimatedDate =  date('Y-m-d', strtotime($userOrder['estimated_date']));
+                echo $estimatedDate;
+                ?>
+        </div>
+
+        <!-- Action -->
+        <div class="flex justify-center gap-2">
+            <a href="index.php?page=tracking&order_id=ORD-2025-001"
+               class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition"
+               title="Track Order">
+                <span class="material-symbols-rounded">location_on</span>
+            </a>
+            <a href="#"
+               class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition"
+               title="View Details">
+                <span class="material-symbols-rounded">visibility</span>
+            </a>
+        </div>
+            <?php endforeach;?>
+    </div>
+    </div>
+</div>
 
             <!-- Pagination -->
             <div class="bg-white/30 backdrop-blur-sm px-6 py-4 border-t border-gray-100/50 flex items-center justify-between">

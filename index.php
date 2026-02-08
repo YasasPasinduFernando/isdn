@@ -30,9 +30,6 @@ switch ($page) {
     case 'cart':
         require_once __DIR__ . '/controllers/CartController.php';
         break;
-    case 'orders':
-        require __DIR__ . '/views/customer/orders.php';
-        break;
     case 'tracking':
         require __DIR__ . '/views/customer/tracking.php';
         break;
@@ -43,6 +40,9 @@ switch ($page) {
         break;
     case 'request-product-units':
         require __DIR__ . '/views/stock-management/request_product_unit.php';
+        break;
+    case 'sales-orders':
+        require __DIR__ . '/controllers/SalesOrderController.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

@@ -122,6 +122,7 @@ require_once __DIR__ . '/../includes/functions.php';
                         
                         <!-- User Profile Dropdown Trigger (Separate from nav pill) -->
                         <div class="relative group ml-2 px-2">
+                        <div class="relative group ml-2 px-2">
                              <a href="<?php echo BASE_PATH; ?>/index.php?page=profile" class="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition">
                                 <span class="material-symbols-rounded text-3xl">account_circle</span>
                             </a>

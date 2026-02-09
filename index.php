@@ -71,7 +71,20 @@ switch ($page) {
         require __DIR__ . '/views/rdc-manager/dashboard.php';
         break;
     case 'rdc-clerk-dashboard':
-        require __DIR__ . '/views/rdc-clerk/dashboard.php';
+    case 'clerk':
+        require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        break;
+    case 'rdc-dashboard':
+        require __DIR__ . '/views/rdc/dashboard.php';
+        break;
+    case 'rep':
+        require __DIR__ . '/views/rdc/rep_dashboard.php';
+        break;
+    case 'driver':
+        require __DIR__ . '/views/rdc/driver_dashboard.php';
+        break;
+    case 'ho':
+        require __DIR__ . '/views/ho/dashboard.php';
         break;
     case 'rdc-sales-ref-dashboard':
         require __DIR__ . '/views/rdc-sales-ref/dashboard.php';

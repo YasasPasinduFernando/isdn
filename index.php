@@ -36,7 +36,8 @@ $protected_pages = [
     'sales-report',
     'request-product-units',
     'send-product-units',
-    'stock-reports'
+    'stock-reports',
+    'stock-movement-management'
 ];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');
@@ -149,6 +150,9 @@ switch ($page) {
         break;
     case 'stock-reports':
         require __DIR__ . '/views/stock-management/stock_reports.php';
+        break;
+    case 'stock-movement-management':
+        require __DIR__ . '/views/stock-management/stock_movement_management.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

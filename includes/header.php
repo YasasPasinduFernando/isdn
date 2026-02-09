@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -105,12 +106,8 @@ require_once __DIR__ . '/../config/config.php';
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php 
                         $currentPage = $_GET['page'] ?? 'home';
-                        $navItems = [
-                            'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-                            'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
-                            'orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
-                            'cart' => ['icon' => 'shopping_cart', 'label' => 'Cart'],
-                        ];
+                        $role = current_user_role();
+                        $navItems = get_nav_items_for_role($role);
                         
                         foreach ($navItems as $page => $item): 
                             $isActive = $currentPage === $page;
@@ -163,15 +160,15 @@ require_once __DIR__ . '/../config/config.php';
     <div id="mobileMenu" class="hidden md:hidden bg-teal-600 shadow-lg" style="background: linear-gradient(-45deg, #14b8a6, #0d9488);">
         <div class="container mx-auto px-4 py-4 space-y-2">
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=dashboard" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
-                    <span class="material-symbols-rounded mr-3">dashboard</span> Dashboard
-                </a>
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=products" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
-                    <span class="material-symbols-rounded mr-3">shopping_bag</span> Products
-                </a>
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=orders" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
-                    <span class="material-symbols-rounded mr-3">receipt_long</span> Orders
-                </a>
+                <?php 
+                $role = current_user_role();
+                $navItems = get_nav_items_for_role($role);
+                ?>
+                <?php foreach ($navItems as $page => $item): ?>
+                    <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $page; ?>" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
+                        <span class="material-symbols-rounded mr-3"><?php echo $item['icon']; ?></span> <?php echo $item['label']; ?>
+                    </a>
+                <?php endforeach; ?>
                 <a href="<?php echo BASE_PATH; ?>/controllers/AuthController.php?action=logout" class="flex items-center text-red-200 py-2 hover:bg-teal-700 rounded px-3">
                     <span class="material-symbols-rounded mr-3">logout</span> Logout
                 </a>

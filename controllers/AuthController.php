@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = sanitize_input($_POST['username']);
         $email = sanitize_input($_POST['email']);
         $password = $_POST['password'];
+        $confirmPassword = $_POST['confirm_password'] ?? '';
         $role = sanitize_input($_POST['role']);
 
         $allowedRoles = [
@@ -27,6 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         if (!in_array($role, $allowedRoles, true)) {
             flash_message('Invalid user role selected.', 'error');
+            redirect('/index.php?page=register');
+        }
+
+        if ($password !== $confirmPassword) {
+            flash_message('Passwords do not match.', 'error');
             redirect('/index.php?page=register');
         }
 

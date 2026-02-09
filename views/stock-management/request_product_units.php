@@ -690,7 +690,7 @@ $pending_transfers = [
 
 <!-- Enhanced Transfer Details Modal -->
 <div id="transfer-modal" class="hidden fixed inset-0 z-50 fade-in" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);">
-    <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="flex items-center justify-center min-h-screen mx-auto p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl modal-content scale-in">
             <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl z-10">

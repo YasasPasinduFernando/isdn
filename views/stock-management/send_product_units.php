@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
-?>
 
-<?php
+
 // ============================================
 // SEND PRODUCT UNITS (APPROVAL) PAGE
 // For: RDC_MANAGER only
@@ -337,6 +336,10 @@ $processed_transfers = [
         
         .checkmark {
             animation: checkmark 0.4s ease-out;
+        }
+
+        .flex-grow{
+            flex-grow: 0 !important;
         }
     </style>
 

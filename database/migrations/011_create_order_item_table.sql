@@ -4,9 +4,9 @@
 
 CREATE TABLE IF NOT EXISTS `order_items` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `order_id` int DEFAULT NULL,
-  `product_id` int DEFAULT NULL,
-  `quantity` bigint DEFAULT NULL,
+  `order_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` bigint NOT NULL,
   `selling_price` decimal(10,2) DEFAULT NULL,
   `discount` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`),

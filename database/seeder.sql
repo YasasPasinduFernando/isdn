@@ -19,6 +19,11 @@ TRUNCATE TABLE system_admins;
 TRUNCATE TABLE products;
 TRUNCATE TABLE rdcs;
 TRUNCATE TABLE users;
+TRUNCATE TABLE shopping_carts;
+TRUNCATE TABLE stock_movement_logs;
+TRUNCATE TABLE product_categories;
+TRUNCATE TABLE rdc_districts;
+
 SET foreign_key_checks = 1;
 
 -- =====================================================
@@ -81,18 +86,30 @@ INSERT INTO retail_customers (name,email,user_id) VALUES
 ('Customer Three','customer3@mail.com',11);
 
 -- =====================================================
+-- PRODUCT CATEGORIES
+-- =====================================================
+INSERT INTO product_categories (name, description) VALUES 
+('Grocery & Food Items', 'Grocery & Food Items'),
+('Beverages', 'Beverages'),
+('Household Essentials', 'Household Essentials'),
+('Home Cleaning Products', 'Home Cleaning Products'),
+('Health Care Products', 'Health Care Products'),
+('Personal Care', 'Personal Care'),
+('Beauty & Skincare', 'Beauty & Skincare'),
+('Baby Care Products', 'Baby Care Products');
+-- =====================================================
 -- PRODUCTS
 -- =====================================================
 
-INSERT INTO products (product_code, product_name, category, unit_price, minimum_stock_level) VALUES
-('P001','Cement 50kg','Construction',1450.00,100),
-('P002','Steel Rod 12mm','Construction',2200.00,200),
-('P003','Sand 1 Cube','Raw Material',7500.00,50),
-('P004','Paint 5L White','Finishing',3200.00,75),
-('P005','PVC Pipe 2inch','Plumbing',1200.00,150),
-('P006','Bricks Pack 100','Construction',1800.00,300),
-('P007','Tiles Box','Finishing',4500.00,80),
-('P008','Water Tank 1000L','Plumbing',25000.00,20);
+INSERT INTO products (product_code, product_name, category_id, unit_price, minimum_stock_level) VALUES
+('P001','Cement 50kg',1,1450.00,100),
+('P002','Steel Rod 12mm',2,2200.00,200),
+('P003','Sand 1 Cube',3,7500.00,50),
+('P004','Paint 5L White',1,3200.00,75),
+('P005','PVC Pipe 2inch',2,1200.00,150),
+('P006','Bricks Pack 100',2,1800.00,300),
+('P007','Tiles Box',1,4500.00,80),
+('P008','Water Tank 1000L',5,25000.00,20);
 
 -- =====================================================
 -- PRODUCT STOCKS
@@ -115,10 +132,10 @@ INSERT INTO promotions (name,product_id,product_count,discount_percentage,start_
 -- ORDERS
 -- =====================================================
 
-INSERT INTO orders (customer_id,order_number,total_amount,status,delivery_date,rdc_id) VALUES
-(9,'ORD-1001',14500.00,'confirmed','2026-02-10',1),
-(10,'ORD-1002',22000.00,'processing','2026-02-12',2),
-(11,'ORD-1003',7500.00,'pending','2026-02-15',3);
+INSERT INTO orders (customer_id,order_number,total_amount,status,estimated_date) VALUES
+(1,'ORD-1001',14500.00,'confirmed','2026-02-10'),
+(2,'ORD-1002',22000.00,'processing','2026-02-12'),
+(3,'ORD-1003',7500.00,'pending','2026-02-15');
 
 INSERT INTO order_items (order_id,product_id,quantity,selling_price,discount) VALUES
 (1,1,10,1450.00,0),
@@ -129,9 +146,9 @@ INSERT INTO order_deliveries (order_id,delivery_date,driver_id) VALUES
 (1,'2026-02-10',7),
 (2,'2026-02-12',8);
 
-INSERT INTO payments (order_id,amount,payment_date,payment_method) VALUES
-('ORD-1001','14500.00','2026-02-05','CASH'),
-('ORD-1002','22000.00','2026-02-05','CARD');
+INSERT INTO payments (order_id,amount,payment_method) VALUES
+(1,14500.00,'CASH'),
+(1,22000.00,'CARD');
 
 -- =====================================================
 -- STOCK TRANSFERS

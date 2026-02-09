@@ -22,7 +22,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
         </div>
         <div>
-            <a href="/index.php?page=request-product-units" class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition">Request Product Units</a>
+            <a href="<?php echo BASE_PATH; ?>/index.php?page=request-product-units" class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition">Request Product Units</a>
         </div>
        
     </div>

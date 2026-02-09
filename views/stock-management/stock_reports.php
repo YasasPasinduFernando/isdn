@@ -1,14 +1,14 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 
-// Simulated logged-in user data - Change this to test different roles
+// Logged-in user data (from session)
 $current_user = [
-    'user_id' => 5,
-    'name' => 'Nuwan Perera',
-    'role' => 'head_office_manager', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
-    'rdc_id' => 2,
-    'rdc_name' => 'South RDC',
-    'rdc_code' => 'SOUTH'
+    'user_id' => $_SESSION['user_id'] ?? null,
+    'name' => $_SESSION['username'] ?? 'User',
+    'role' => $_SESSION['role'] ?? 'rdc_clerk', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
+    'rdc_id' => $_SESSION['rdc_id'] ?? null,
+    'rdc_name' => $_SESSION['rdc_name'] ?? null,
+    'rdc_code' => $_SESSION['rdc_code'] ?? null
 ];
 
 // Role-based access control

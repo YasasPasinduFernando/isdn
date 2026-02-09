@@ -7,13 +7,41 @@ require_once __DIR__ . '/includes/functions.php';
 $page = $_GET['page'] ?? 'home';
 
 // Check if user is logged in for protected pages
-$protected_pages = ['dashboard', 'products', 'cart', 'orders', 'tracking', 'rdc-manager-dashboard', 'rdc-clerk-dashboard', 'request-product-units', 'stock-reports'];
+$protected_pages = [
+    'dashboard',
+    'products',
+    'cart',
+    'orders',
+    'tracking',
+    'payment',
+    'rdc-manager-dashboard',
+    'rdc-clerk-dashboard',
+    'rdc-sales-ref-dashboard',
+    'logistics-officer-dashboard',
+    'rdc-driver-dashboard',
+    'head-office-manager-dashboard',
+    'system-admin-dashboard',
+    'request-product-units',
+    'send-product-units',
+    'stock-reports'
+];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');
+}
+if (in_array($page, $protected_pages) && is_logged_in()) {
+    $role = current_user_role();
+    if (!is_page_allowed_for_role($role, $page)) {
+        $dashboard = dashboard_page_for_role($role);
+        redirect('/index.php?page=' . $dashboard);
+    }
 }
 
 switch ($page) {
     case 'home':
+        if (is_logged_in()) {
+            $dashboard = dashboard_page_for_role(current_user_role());
+            redirect('/index.php?page=' . $dashboard);
+        }
         require __DIR__ . '/views/auth/login.php';
         break;
     case 'login':
@@ -44,6 +72,21 @@ switch ($page) {
         break;
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
+        break;
+    case 'rdc-sales-ref-dashboard':
+        require __DIR__ . '/views/rdc-sales-ref/dashboard.php';
+        break;
+    case 'logistics-officer-dashboard':
+        require __DIR__ . '/views/logistics-officer/dashboard.php';
+        break;
+    case 'rdc-driver-dashboard':
+        require __DIR__ . '/views/rdc-driver/dashboard.php';
+        break;
+    case 'head-office-manager-dashboard':
+        require __DIR__ . '/views/head-office-manager/dashboard.php';
+        break;
+    case 'system-admin-dashboard':
+        require __DIR__ . '/views/system-admin/dashboard.php';
         break;
     case 'request-product-units':
         require __DIR__ . '/views/stock-management/request_product_units.php';

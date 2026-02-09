@@ -1,4 +1,6 @@
 <?php
+// Auth update: role-aware login redirects, registration role validation,
+// and dashboard routing per user role.
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -12,6 +14,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = sanitize_input($_POST['email']);
         $password = $_POST['password'];
         $role = sanitize_input($_POST['role']);
+
+        $allowedRoles = [
+            'customer',
+            'rdc_manager',
+            'rdc_clerk',
+            'rdc_sales_ref',
+            'logistics_officer',
+            'rdc_driver',
+            'head_office_manager',
+            'system_admin'
+        ];
+        if (!in_array($role, $allowedRoles, true)) {
+            flash_message('Invalid user role selected.', 'error');
+            redirect('/index.php?page=register');
+        }
 
         $userModel = new User($pdo);
         
@@ -45,16 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['rdc_id'] = $user['rdc_id'] ?? null;
             
             flash_message('Login successful!', 'success');
 
-            if ($user['role'] === 'rdc_manager') {
-                redirect('/index.php?page=rdc-manager-dashboard');
-            } elseif ($user['role'] === 'rdc_clerk') {
-                redirect('/index.php?page=rdc-clerk-dashboard');
-            } else {
-                redirect('/index.php?page=dashboard');
-            }
+            $dashboard = dashboard_page_for_role($user['role']);
+            redirect('/index.php?page=' . $dashboard);
         } else {
             flash_message('Invalid email or password!', 'error');
             redirect('/index.php?page=login');

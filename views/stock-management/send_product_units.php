@@ -8,14 +8,16 @@ require_once __DIR__ . '/../../includes/header.php';
 // For: RDC_MANAGER only
 // ============================================
 
-// Simulated logged-in user data
+// Logged-in user data (from session)
+$role = $_SESSION['role'] ?? 'rdc_manager';
+$role_upper = strtoupper($role);
 $current_user = [
-    'user_id' => 8,
-    'name' => 'Kasun Silva',
-    'role' => 'RDC_MANAGER',
-    'rdc_id' => 1,
-    'rdc_name' => 'North RDC',
-    'rdc_code' => 'NORTH'
+    'user_id' => $_SESSION['user_id'] ?? null,
+    'name' => $_SESSION['username'] ?? 'User',
+    'role' => $role_upper,
+    'rdc_id' => $_SESSION['rdc_id'] ?? null,
+    'rdc_name' => $_SESSION['rdc_name'] ?? 'RDC',
+    'rdc_code' => $_SESSION['rdc_code'] ?? ''
 ];
 
 // Dummy data: Pending transfer requests TO this RDC (North)

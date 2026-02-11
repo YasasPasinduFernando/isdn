@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS transfer_status_logs (
     previous_status VARCHAR(50),
     new_status VARCHAR(50),
     changed_by INT NOT NULL,
+    change_by_role VARCHAR(50) NOT NULL,
+    change_by_name VARCHAR(255) NULL,
     changed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    remarks TEXT,
     FOREIGN KEY (transfer_id) REFERENCES stock_transfers(transfer_id)
 );

@@ -55,6 +55,19 @@ require_once __DIR__ . '/../../includes/header.php';
                     </button>
                 </div>
 
+                <!-- Confirm Password Input -->
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-rounded text-gray-400 group-focus-within:text-teal-500 transition-colors">lock</span>
+                    </div>
+                    <input type="password" name="confirm_password" required id="confirm_password"
+                        class="w-full pl-10 pr-12 py-3 bg-white/50 backdrop-blur-sm border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all placeholder-gray-400 text-gray-700 shadow-sm"
+                        placeholder="Confirm Password">
+                    <button type="button" onclick="toggleConfirmPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-teal-600 transition select-none">
+                        <span class="material-symbols-rounded" id="toggleConfirmIcon">visibility</span>
+                    </button>
+                </div>
+
                 <!-- User Role Selection -->
                 <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -63,9 +76,14 @@ require_once __DIR__ . '/../../includes/header.php';
                     <select name="role" required 
                         class="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all appearance-none text-gray-700 shadow-sm cursor-pointer">
                         <option value="">Select User Type</option>
-                        <option value="customer">🛒 Customer (Retailer)</option>
-                        <option value="rdc_staff">🏢 RDC Staff</option>
-                        <option value="logistics">🚚 Logistics Team</option>
+                        <option value="customer">Customer (Retailer)</option>
+                        <option value="rdc_sales_ref">RDC Sales Representative</option>
+                        <option value="rdc_clerk">RDC Clerk</option>
+                        <option value="rdc_manager">RDC Manager</option>
+                        <option value="logistics_officer">Logistics Officer</option>
+                        <option value="rdc_driver">RDC Driver</option>
+                        <option value="head_office_manager">Head Office Manager</option>
+                        <option value="system_admin">System Admin</option>
                     </select>
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span class="material-symbols-rounded text-gray-400">expand_more</span>
@@ -149,6 +167,20 @@ function togglePassword() {
         icon.textContent = 'visibility';
     }
 }
+
+function toggleConfirmPassword() {
+    const password = document.getElementById('confirm_password');
+    const icon = document.getElementById('toggleConfirmIcon');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        password.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+

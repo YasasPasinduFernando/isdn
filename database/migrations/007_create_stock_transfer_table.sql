@@ -12,23 +12,16 @@ CREATE TABLE IF NOT EXISTS stock_transfers (
     
     -- Request Info
     requested_by INT NOT NULL,
+    requested_by_role ENUM('RDC_CLERK', 'RDC_MANAGER') NOT NULL,
     requested_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     request_reason TEXT,
     is_urgent BOOLEAN DEFAULT FALSE,
     
     -- Approval Info
-    approval_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') DEFAULT 'PENDING',
+    approval_status ENUM('CLERK_REQUESTED', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'RECEIVED') DEFAULT 'CLERK_REQUESTED',
     approved_by INT,
     approval_date TIMESTAMP NULL,
     approval_remarks TEXT,
-    
-    -- Status Tracking
-    transfer_status ENUM(
-        'PENDING_APPROVAL',
-        'DISPATCHED',
-        'DELIVERED',
-        'CANCELLED'
-    ) DEFAULT 'PENDING_APPROVAL',
     
     current_status_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     

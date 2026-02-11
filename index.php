@@ -27,6 +27,7 @@ switch ($page) {
         break;
     case 'products':
         require_once __DIR__ . '/controllers/ProductController.php';
+        break;
     case 'cart':
         require_once __DIR__ . '/controllers/CartController.php';
         break;
@@ -35,6 +36,7 @@ switch ($page) {
         break;
     case 'payment':
         require __DIR__ . '/views/customer/payment.php';
+        break;
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
@@ -43,6 +45,18 @@ switch ($page) {
         break;
     case 'sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';
+        break;
+    case 'order-info':
+        require __DIR__ . '/views/customer/order_info.php';
+        break;
+    case 'register-product':
+        require __DIR__ . '/views/customer/register_product.php';
+        break;
+    case 'products-list':
+        require __DIR__ . '/views/customer/products_list.php';
+        break;
+    case 'checkout':
+        require __DIR__ . '/views/customer/order_checkout.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

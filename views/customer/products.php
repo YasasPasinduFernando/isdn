@@ -117,8 +117,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     </span>
                 </div>
                 <div class="p-5">
-                    <span class="text-xs font-bold text-teal-600 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-md"><?php echo $product['category'] ?></span>
-                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']"><?php echo $product['name'] ?></h3>
+                    <span class="text-xs font-bold text-teal-600 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-md"><?php echo $product['category_id'] ?></span>
+                    <h3 class="font-bold text-xl text-gray-800 mt-3 font-['Outfit']"><?php echo $product['product_name'] ?></h3>
                     <p class="text-sm text-gray-500 mt-1"><?php echo $product['description'] ?></p>
                     
                     <div class="flex items-center mt-3 space-x-1 text-yellow-400">
@@ -154,8 +154,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
                     <button 
                         class="add-to-cart-btn w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg"
-                        data-id="<?php echo $product['id']; ?>"
-                        data-name="<?php echo $product['name']; ?>"
+                        data-id="<?php echo $product['product_id']; ?>"
+                        data-name="<?php echo $product['product_name']; ?>"
                         data-price="<?php echo $product['unit_price']; ?>">
                         <i class="fas fa-cart-plus mr-2"></i>Add to Cart
                     </button>

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+$userOrders = [];
 ?>
 
 <div class="min-h-screen py-8">
@@ -8,30 +9,43 @@ require_once __DIR__ . '/../../includes/header.php';
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">My Orders</h1>
-                <p class="text-gray-600 mt-1">Manage and track your recent purchases</p>
+                <h1 class="text-2xl font-bold text-gray-800 font-['Outfit']">All Products</h1>
+                <p class="text-gray-600 mt-1">Manage All ISDN Products</p>
             </div>
-            <div class="flex gap-2">
-                <button
-                    class="bg-white/60 backdrop-blur-sm border border-white/60 px-4 py-2 rounded-xl shadow-sm text-teal-700 font-semibold hover:bg-white transition flex items-center">
-                    <span class="material-symbols-rounded mr-2 text-lg">filter_alt</span>Filter
+            <div class="flex gap-2 items-center">
+
+                <!-- Search wrapper takes remaining space -->
+                <div class="flex-1">
+                    <input type="text" name="product_name" required placeholder="Search Product.."
+                        class="w-full md:w-96 border border-gray-200 rounded-lg px-3 py-3 text-sm text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                </div>
+
+                <!-- Filter Button -->
+                <button id="openFilter" class="bg-white/60 backdrop-blur-sm border border-white/60 px-4 py-2 rounded-xl shadow-sm
+         text-teal-700 font-semibold hover:bg-white transition flex items-center">
+                    <span class="material-symbols-rounded mr-2 text-lg">filter_alt</span>
+                    Filter
                 </button>
-                <button
-                    class="bg-teal-600 px-4 py-2 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center">
-                    <span class="material-symbols-rounded mr-2 text-lg">download</span>Report
+
+                <!-- Report Button -->
+                <button class="bg-teal-600 px-4 py-2 rounded-xl shadow-lg shadow-teal-500/30
+               text-white font-semibold hover:bg-teal-700 transition flex items-center">
+                    <span class="material-symbols-rounded mr-2 text-lg">download</span>
+                    Report
                 </button>
+
             </div>
         </div>
 
         <div
-            class="hidden md:grid grid-cols-8 gap-4 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
+            class="hidden md:grid grid-cols-7 gap-4 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
+            <div>Name</div>
             <div>Code</div>
-            <div>Customer</div>
-            <div>Date</div>
-            <div>Amount</div>
-            <div>Payment</div>
-            <div>Status</div>
-            <div>Estimated Delivery</div>
+            <div>category</div>
+            <div>Description</div>
+            <div>Unit Price</div>
+            <div>Available Stock</div>
+
             <div class="text-center">Action</div>
         </div>
         <!-- Order Items Mock List -->
@@ -39,7 +53,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
 
             <div class="p-5 hover:bg-white/40 transition">
-                <div class="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 items-center">
 
                     <?php foreach ($userOrders as $userOrder): ?>
                         <div class="flex items-center gap-3">
@@ -136,4 +150,5 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 </div>
 
+<?php require_once __DIR__ . '/../../components/filter_drawer.php'; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

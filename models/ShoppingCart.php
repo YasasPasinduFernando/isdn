@@ -13,10 +13,10 @@ class ShoppingCart {
                 sc.id AS cart_id,
                 sc.product_id,
                 sc.quantity,
-                p.name,
+                p.product_name,
                 p.unit_price
             FROM shopping_cart sc
-            JOIN products p ON p.id = sc.product_id
+            JOIN products p ON p.product_id = sc.product_id
             WHERE sc.user_id = :user_id
         ");
         $stmt->execute(['user_id' => $userId]);

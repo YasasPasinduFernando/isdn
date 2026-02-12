@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // In a real app, use $_SESSION['user_id']. For demo, we simulate a Clerk.
 // We'll try to find an RDC Clerk user.
 try {
-    $stmt = $pdo->prepare("SELECT u.id, u.username, u.rdc_id, r.rdc_name 
+    $stmt = $pdo->prepare("SELECT u.id, u.username, r.rdc_name 
                            FROM users u 
                            JOIN rdcs r ON u.rdc_id = r.rdc_id 
                            WHERE u.role = 'rdc_clerk' LIMIT 1");

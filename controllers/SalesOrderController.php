@@ -3,10 +3,14 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/SalesOrder.php';
 require_once __DIR__ . '/../models/ShoppingCart.php';
+require_once __DIR__ . '/../dummydata/Orders.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
     && isset($_GET['action'])
-    && $_GET['action'] === 'place') {
+    && $_GET['action'] === 'place'
+) {
 
     $data = json_decode(file_get_contents("php://input"), true);
 
@@ -27,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 
         echo json_encode([
             'success' => true,
-            'order_id'=> $orderId
+            'order_id' => $orderId
         ]);
         exit;
 
@@ -39,16 +43,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         ]);
         exit;
     }
-    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $page = $_GET['page'] ?? '';
 
-    if ($page === 'sales-orders') {
+    if ($page === 'customer-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $orderModel = new SalesOrder($pdo);
-        $userOrders = $orderModel->getUserOrders($userId);
+        $userOrders = $orders;//$orderModel->getUserOrders($userId);
         require_once __DIR__ . '/../views/customer/orders.php';
+    } else if ($page === 'rdc-sales-ref-sales-orders') {
+        $userId = $_SESSION['user_id'] ?? 1;
+        $orderModel = new SalesOrder($pdo);
+        $userOrders = $refOrders;//$orderModel->getUserOrders($userId);
+        require_once __DIR__ . '/../views/rdc-sales-ref/orders.php';
+    }else if ($page === 'rdc-clerk-sales-orders') {
+        $userId = $_SESSION['user_id'] ?? 1;
+        $orderModel = new SalesOrder($pdo);
+        $userOrders = $clerkOrders;//$orderModel->getUserOrders($userId);
+        require_once __DIR__ . '/../views/rdc-clerk/orders.php';
+    }else if ($page === 'head-office-manager-sales-orders') {
+        $userId = $_SESSION['user_id'] ?? 1;
+        $orderModel = new SalesOrder($pdo);
+        $userOrders = $headOfficeOrders;//$orderModel->getUserOrders($userId);
+        require_once __DIR__ . '/../views/head-office-manager/orders.php';
     }
 }

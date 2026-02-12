@@ -8,8 +8,8 @@ require_once __DIR__ . '/../../includes/header.php';
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">My Orders</h1>
-                <p class="text-gray-600 mt-1">Manage and track your recent purchases</p>
+                <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">All RDC Orders - Southern RDC</h1>
+                <p class="text-gray-600 mt-1">Manage and track orders</p>
             </div>
             <div class="flex gap-2">
                 <div class="flex-1">
@@ -33,9 +33,10 @@ require_once __DIR__ . '/../../includes/header.php';
 
             <!-- Desktop Table Header -->
             <div
-                class="hidden md:grid grid-cols-9 gap-5 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
+                class="hidden md:grid grid-cols-10 gap-5 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
                 <div class="col-span-2">Code</div>
                 <div class="col-span-1">Customer</div>
+                <div class="col-span-1">Sales Ref</div>
                 <div class="col-span-1">Date</div>
                 <div class="col-span-1">Amount</div>
                 <div class="col-span-1">Payment</div>
@@ -45,11 +46,10 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
             <!-- Order Items Mock List -->
             <div class="p-5 hover:bg-white/40 transition duration-200 group">
-                <div class="grid grid-cols-1 md:grid-cols-9 gap-5 items-center">
+                <div class="grid grid-cols-1 md:grid-cols-10 gap-5 items-center">
                     <!-- Mobile Label -->
+                    <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
                     <?php foreach ($userOrders as $userOrder): ?>
-
-                        <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
 
                         <div class="col-span-2 flex items-center space-x-4">
                             <div>
@@ -58,12 +58,14 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <p class="text-xs text-gray-500"> <?php echo $userOrder['item_count'] ?> Items</p>
                             </div>
                         </div>
-
                         <div class="col-span-1 font-bold text-gray-800">
                             <span class="md:hidden font-semibold mr-2">Date:</span>
                             <?php echo $userOrder['customer'] ?>
                         </div>
-
+                        <div class="col-span-1 font-bold text-gray-800">
+                            <span class="md:hidden font-semibold mr-2">Date:</span>
+                            <?php echo $userOrder['sales_ref'] ?>
+                        </div>
                         <div class="col-span-1 text-sm text-gray-600 font-medium">
                             <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
                             <?php echo $userOrder['order_date'] ?>
@@ -139,7 +141,6 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 </div>
             </div>
-            
 
             <!-- Pagination -->
             <div
@@ -163,5 +164,5 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../../components/customer_orders_filter_drawer.php'; ?>
+<?php require_once __DIR__ . '/../../components/clerk_orders_filter_drawer.php'; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

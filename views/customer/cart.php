@@ -37,7 +37,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                             <div class="flex-grow">
                                 <h3 class="font-bold text-lg text-gray-800 font-['Outfit']">
-                                    <?= $item['name'] ?>
+                                    <?= $item['product_name'] ?>
                                 </h3>
 
                                 <p class="text-sm text-gray-500 mb-2">

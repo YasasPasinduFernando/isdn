@@ -116,6 +116,7 @@
         <script src="js/shopping_cart.js?v=<?= time() ?>"></script>
         <script src="js/sales_order.js?v=<?= time() ?>"></script>
         <script src="js/filter_drawer.js?v=<?= time() ?>"></script>
+        <script src="js/customer_orders_filter_drawer.js?v=<?= time() ?>"></script>
         <script src="js/checkout.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 <?php
 // Database Configuration
 // Database Configuration
-define('DB_HOST', '10.1.1.23');
-define('DB_PORT', '3310');
+define('DB_HOST', 'localhost');
+define('DB_PORT', '3306');
 define('DB_NAME', 'isdn_db');
 define('DB_USER', 'root');
 define('DB_PASS', '123456');

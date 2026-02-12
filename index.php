@@ -69,6 +69,7 @@ switch ($page) {
         require __DIR__ . '/views/rdc-manager/dashboard.php';
         break;
     case 'rdc-clerk-dashboard':
+        break;
     case 'clerk':
         require __DIR__ . '/views/rdc/clerk_dashboard.php';
         break;
@@ -108,7 +109,16 @@ switch ($page) {
     case 'stock-reports':
         require __DIR__ . '/views/stock-management/stock_reports.php';
         break;
-    case 'sales-orders':
+    case 'customer-sales-orders':
+        require __DIR__ . '/controllers/SalesOrderController.php';
+        break;
+    case 'rdc-sales-ref-sales-orders':
+        require __DIR__ . '/controllers/SalesOrderController.php';
+        break;
+    case 'rdc-clerk-sales-orders':
+        require __DIR__ . '/controllers/SalesOrderController.php';
+        break;
+    case 'head-office-manager-sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';
         break;
     case 'order-info':

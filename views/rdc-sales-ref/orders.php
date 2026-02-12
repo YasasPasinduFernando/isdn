@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">My Orders</h1>
-                <p class="text-gray-600 mt-1">Manage and track your recent purchases</p>
+                <p class="text-gray-600 mt-1">Manage and track your recent orders</p>
             </div>
             <div class="flex gap-2">
                 <div class="flex-1">
@@ -47,9 +47,8 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="p-5 hover:bg-white/40 transition duration-200 group">
                 <div class="grid grid-cols-1 md:grid-cols-9 gap-5 items-center">
                     <!-- Mobile Label -->
+                    <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
                     <?php foreach ($userOrders as $userOrder): ?>
-
-                        <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
 
                         <div class="col-span-2 flex items-center space-x-4">
                             <div>
@@ -139,7 +138,6 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 </div>
             </div>
-            
 
             <!-- Pagination -->
             <div
@@ -163,5 +161,5 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../../components/customer_orders_filter_drawer.php'; ?>
+<?php require_once __DIR__ . '/../../components/ref_orders_filter_drawer.php'; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

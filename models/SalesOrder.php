@@ -21,16 +21,16 @@ class SalesOrder {
             // Insert order
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders 
-                (date, customer_id, placed_by, amount, status, order_number, last_updated, estimated_date)
+                (order_date, customer_id, placed_by, total_amount, status, order_number, estimated_date)
                 VALUES 
-                (NOW(), :customer_id, :placed_by, :amount, :status, :order_number ,NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY))
+                (NOW(), :customer_id, :placed_by, :amount, :status, :order_number , DATE_ADD(NOW(), INTERVAL 2 DAY))
             ");
 
-            $status = 'PENDING_RDC_CLERK';
+            $status = 'Pending';
             $orderNumber = 'ORD' .'-'. 'RDC-'.date('ymd') .'-'. rand(100, 99999);
 
             $orderStmt->execute([
-                'customer_id' => $customerId,
+                'customer_id' => 1,//$customerId,
                 'placed_by'   => $placedBy,
                 'amount'      => $total,
                 'status'      => $status,
@@ -57,7 +57,7 @@ class SalesOrder {
 
             // Clear shopping cart
             $clearStmt = $this->pdo->prepare(
-                "DELETE FROM shopping_cart WHERE user_id = :user_id"
+                "DELETE FROM shopping_carts WHERE user_id = :user_id"
             );
             $clearStmt->execute(['user_id' => $customerId]);
 
@@ -76,7 +76,7 @@ class SalesOrder {
             FROM orders
             WHERE customer_id = :customer_id
         ");
-        $stmt->execute(['customer_id' => $userId]);
+        $stmt->execute(['customer_id' => 1]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

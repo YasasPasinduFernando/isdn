@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_transfer_statu
             $d->updateTransferStatus($transferId, $status, (int) $_SESSION['user_id'], $remarks);
             $d->logTransferStatusChange($transferId, $status, (int) $_SESSION['user_id']);
             $pdo->commit();
+            audit_log($pdo, (int) $_SESSION['user_id'], 'UPDATE', 'transfer', $transferId, "Stock transfer #{$transferId} {$status}");
             flash_message("Transfer #{$transferId} has been {$status}.", 'success');
         } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
@@ -121,14 +122,6 @@ foreach ($statusChartData['labels'] as $label) {
             <div>
                 <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">Head Office Dashboard</h1>
                 <p class="text-gray-500 mt-1">Welcome back, <span class="text-teal-600 font-semibold"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Manager'); ?></span> &mdash; <?php echo date('l, F j, Y'); ?></p>
-            </div>
-            <div class="flex items-center space-x-3 mt-4 md:mt-0">
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=stock-reports" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-200/50 hover:scale-[1.02] transition flex items-center gap-2">
-                    <span class="material-symbols-rounded text-lg">bar_chart</span> Stock Reports
-                </a>
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=delivery-report" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-bold text-sm shadow-lg shadow-indigo-200/50 hover:scale-[1.02] transition flex items-center gap-2">
-                    <span class="material-symbols-rounded text-lg">local_shipping</span> Delivery Report
-                </a>
             </div>
         </div>
 

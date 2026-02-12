@@ -10,11 +10,13 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== USER_ROLE_SYST
 $admin        = new SystemAdmin($pdo);
 $search       = trim($_GET['search'] ?? '');
 $actionFilter = trim($_GET['action_type'] ?? '');
+$dateFrom     = trim($_GET['date_from'] ?? '');
+$dateTo       = trim($_GET['date_to'] ?? '');
 $page         = max(1, (int) ($_GET['pg'] ?? 1));
-$perPage      = 20;
+$perPage      = 25;
 
-$logs      = $admin->getAuditLogs($page, $perPage, $search, $actionFilter);
-$totalLogs = $admin->countAuditLogs($search, $actionFilter);
+$logs      = $admin->getAuditLogs($page, $perPage, $search, $actionFilter, $dateFrom ?: null, $dateTo ?: null);
+$totalLogs = $admin->countAuditLogs($search, $actionFilter, $dateFrom ?: null, $dateTo ?: null);
 $totalPages = max(1, ceil($totalLogs / $perPage));
 
 $actionIcons = [
@@ -24,6 +26,10 @@ $actionIcons = [
     'TOGGLE' => ['icon' => 'toggle_on',    'bg' => 'bg-yellow-100/50 text-yellow-600','badge' => 'bg-yellow-100 text-yellow-700'],
     'LOGIN'  => ['icon' => 'login',        'bg' => 'bg-teal-100/50 text-teal-600',    'badge' => 'bg-teal-100 text-teal-700'],
     'LOGOUT' => ['icon' => 'logout',       'bg' => 'bg-gray-100/50 text-gray-600',    'badge' => 'bg-gray-100 text-gray-700'],
+];
+$entityLabels = [
+    'user' => 'User', 'product' => 'Product', 'promotion' => 'Promotion', 'profile' => 'Profile',
+    'session' => 'Session', 'transfer' => 'Stock Transfer',
 ];
 $actionTypes = ['CREATE', 'UPDATE', 'DELETE', 'TOGGLE', 'LOGIN', 'LOGOUT'];
 ?>
@@ -45,7 +51,7 @@ $actionTypes = ['CREATE', 'UPDATE', 'DELETE', 'TOGGLE', 'LOGIN', 'LOGOUT'];
             <input type="hidden" name="page" value="system-admin-audit">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Search</label>
-                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Username, entity, details..."
+                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Username, action, entity, details..."
                        class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
             </div>
             <div>
@@ -57,10 +63,20 @@ $actionTypes = ['CREATE', 'UPDATE', 'DELETE', 'TOGGLE', 'LOGIN', 'LOGOUT'];
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">From</label>
+                <input type="date" name="date_from" value="<?php echo htmlspecialchars($dateFrom); ?>"
+                       class="border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">To</label>
+                <input type="date" name="date_to" value="<?php echo htmlspecialchars($dateTo); ?>"
+                       class="border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+            </div>
             <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold text-sm shadow-lg hover:scale-[1.02] transition flex items-center gap-1.5">
                 <span class="material-symbols-rounded text-base">search</span> Filter
             </button>
-            <?php if ($search || $actionFilter): ?>
+            <?php if ($search || $actionFilter || $dateFrom || $dateTo): ?>
                 <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-audit" class="px-4 py-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-white/40 transition text-sm flex items-center gap-1"><span class="material-symbols-rounded text-base">refresh</span> Reset</a>
             <?php endif; ?>
         </form>
@@ -70,7 +86,8 @@ $actionTypes = ['CREATE', 'UPDATE', 'DELETE', 'TOGGLE', 'LOGIN', 'LOGOUT'];
             <?php if (empty($logs)): ?>
                 <div class="text-center py-16">
                     <div class="w-16 h-16 mx-auto rounded-full bg-gray-100/50 flex items-center justify-center text-gray-300 mb-4"><span class="material-symbols-rounded text-3xl">history</span></div>
-                    <p class="text-gray-400">No audit logs found</p>
+                    <p class="text-gray-500 font-medium">No audit logs found</p>
+                    <p class="text-xs text-gray-400 mt-2 max-w-md mx-auto">Try adjusting your filters or date range. Logs are recorded for: user/product/promotion changes, profile updates, login/logout, and stock transfer approvals.</p>
                 </div>
             <?php else: ?>
                 <div class="space-y-3">
@@ -83,7 +100,7 @@ $actionTypes = ['CREATE', 'UPDATE', 'DELETE', 'TOGGLE', 'LOGIN', 'LOGOUT'];
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-bold text-gray-800 text-sm"><?php echo htmlspecialchars($log['username']); ?></span>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $ai['badge']; ?>"><?php echo $log['action']; ?></span>
-                                <span class="text-gray-500 text-xs"><?php echo htmlspecialchars($log['entity_type']); ?><?php if ($log['entity_id']): ?> #<?php echo $log['entity_id']; ?><?php endif; ?></span>
+                                <span class="text-gray-500 text-xs"><?php echo htmlspecialchars($entityLabels[$log['entity_type']] ?? ucfirst($log['entity_type'])); ?><?php if (!empty($log['entity_id'])): ?> #<?php echo (int) $log['entity_id']; ?><?php endif; ?></span>
                             </div>
                             <?php if ($log['details']): ?>
                                 <p class="text-xs text-gray-500 mt-1"><?php echo htmlspecialchars($log['details']); ?></p>

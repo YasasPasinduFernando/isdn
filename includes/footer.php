@@ -98,6 +98,22 @@
             menu.classList.toggle('hidden');
         }
 
+        // Profile dropdown toggle (click to open/close; desktop also supports hover)
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!menu) return;
+            menu.classList.toggle('opacity-0');
+            menu.classList.toggle('invisible');
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('profile-dropdown-wrap');
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!wrap || !menu) return;
+            if (!wrap.contains(e.target)) {
+                menu.classList.add('opacity-0', 'invisible');
+            }
+        });
+
         // Back to top button
         window.addEventListener('scroll', function() {
             const backToTop = document.getElementById('backToTop');

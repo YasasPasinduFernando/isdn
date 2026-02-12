@@ -88,7 +88,7 @@ function get_nav_page_labels() {
         'rdc-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'request-product-units' => ['icon' => 'inbox', 'label' => 'Requests'],
         'send-product-units' => ['icon' => 'local_shipping', 'label' => 'Dispatch'],
-        'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports'],
+        'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Stock Reports'],
         'rdc-clerk-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
         'rdc-sales-ref-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
@@ -97,10 +97,10 @@ function get_nav_page_labels() {
         'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'delivery-report' => ['icon' => 'local_shipping', 'label' => 'Delivery Report'],
         'system-admin-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-        'system-admin-users' => ['icon' => 'group', 'label' => 'Users'],
-        'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Products'],
+        'system-admin-users' => ['icon' => 'group', 'label' => 'Manage Users'],
+        'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Manage Products'],
         'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
-        // Audit Log intentionally omitted from nav; system admin only, access via dashboard buttons/Quick Actions
+        'system-admin-audit' => ['icon' => 'history', 'label' => 'Audit Log'],
     ];
 }
 
@@ -109,10 +109,24 @@ function get_nav_page_labels() {
  * Order is determined by the role's allowed list so nav matches access (e.g. HO manager: Dashboard, Reports, Delivery Report).
  */
 function get_nav_items_for_role($role) {
-    $allowed = get_allowed_pages_for_role($role);
     $labels = get_nav_page_labels();
     // Profile is in header dropdown; exclude from main nav to avoid clutter
-    $allowed = array_diff($allowed, ['system-admin-profile', 'profile', 'payment']);
+    $exclude = ['system-admin-profile', 'profile', 'payment'];
+
+    // System admin: nav shows Dashboard, Manage Users, Manage Products, Audit Log
+    if ($role === 'system_admin') {
+        $navPages = ['system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-audit'];
+        $order = [];
+        foreach ($navPages as $page) {
+            if (isset($labels[$page])) {
+                $order[$page] = $labels[$page];
+            }
+        }
+        return $order ?: ['system-admin-users' => $labels['system-admin-users']];
+    }
+
+    $allowed = get_allowed_pages_for_role($role);
+    $allowed = array_diff($allowed, $exclude);
     $order = [];
     foreach ($allowed as $page) {
         if (isset($labels[$page])) {
@@ -125,6 +139,15 @@ function get_nav_items_for_role($role) {
 function redirect($url) {
     header("Location: " . BASE_PATH . $url);
     exit();
+}
+
+/**
+ * Write an audit log entry. Use for login, logout, and any tracked action.
+ */
+function audit_log(PDO $pdo, int $userId, string $action, string $entityType, ?int $entityId = null, string $details = ''): void {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'CLI';
+    $stmt = $pdo->prepare("INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$userId, $action, $entityType, $entityId, $details, $ip]);
 }
 
 function flash_message($message, $type = 'success') {

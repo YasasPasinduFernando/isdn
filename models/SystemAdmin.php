@@ -596,28 +596,37 @@ class SystemAdmin
         ]);
     }
 
-    public function getAuditLogs(int $page = 1, int $perPage = 20, string $search = '', string $actionFilter = ''): array
+    public function getAuditLogs(int $page = 1, int $perPage = 20, string $search = '', string $actionFilter = '', ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $offset = ($page - 1) * $perPage;
         $conditions = [];
         $params = [];
 
         if ($search !== '') {
-            $conditions[] = "(u.username LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3)";
+            $conditions[] = "(COALESCE(u.username, CONCAT('User #', a.user_id)) LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3 OR a.action LIKE :search4)";
             $params['search']  = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
+            $params['search4'] = "%{$search}%";
         }
         if ($actionFilter !== '') {
             $conditions[] = "a.action = :action";
             $params['action'] = $actionFilter;
         }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $conditions[] = "a.created_at >= :date_from";
+            $params['date_from'] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo !== null && $dateTo !== '') {
+            $conditions[] = "a.created_at <= :date_to";
+            $params['date_to'] = $dateTo . ' 23:59:59';
+        }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-        $sql = "SELECT a.*, u.username
+        $sql = "SELECT a.*, COALESCE(u.username, CONCAT('User #', a.user_id)) AS username
                 FROM audit_logs a
-                JOIN users u ON a.user_id = u.id
+                LEFT JOIN users u ON a.user_id = u.id
                 {$where}
                 ORDER BY a.created_at DESC
                 LIMIT {$perPage} OFFSET {$offset}";
@@ -627,24 +636,33 @@ class SystemAdmin
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function countAuditLogs(string $search = '', string $actionFilter = ''): int
+    public function countAuditLogs(string $search = '', string $actionFilter = '', ?string $dateFrom = null, ?string $dateTo = null): int
     {
         $conditions = [];
         $params = [];
 
         if ($search !== '') {
-            $conditions[] = "(u.username LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3)";
+            $conditions[] = "(COALESCE(u.username, CONCAT('User #', a.user_id)) LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3 OR a.action LIKE :search4)";
             $params['search']  = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
+            $params['search4'] = "%{$search}%";
         }
         if ($actionFilter !== '') {
             $conditions[] = "a.action = :action";
             $params['action'] = $actionFilter;
         }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $conditions[] = "a.created_at >= :date_from";
+            $params['date_from'] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo !== null && $dateTo !== '') {
+            $conditions[] = "a.created_at <= :date_to";
+            $params['date_to'] = $dateTo . ' 23:59:59';
+        }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM audit_logs a JOIN users u ON a.user_id = u.id {$where}");
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM audit_logs a LEFT JOIN users u ON a.user_id = u.id {$where}");
         $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }

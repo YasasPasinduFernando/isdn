@@ -48,86 +48,314 @@ try {
 } catch (Exception $e) {
     $error   = $e->getMessage();
     $rdcData = $details = $allRdcs = [];
-    $summary = ['total_deliveries' => 0, 'completed' => 0, 'on_time' => 0, 'delayed' => 0, 'pending' => 0, 'overall_efficiency' => 0, 'avg_hours' => 0];
+    $summary = [
+        'total_deliveries' => 0,
+        'completed' => 0,
+        'on_time' => 0,
+        'delayed' => 0,
+        'pending' => 0,
+        'overall_efficiency' => 0,
+        'avg_hours' => 0
+    ];
 }
 
 // ── PDF Export (must run before any HTML output) ─────────────
 if (isset($_GET['export']) && $_GET['export'] === 'pdf') {
     require_once __DIR__ . '/../../includes/fpdf.php';
-    $pdf = new FPDF('L', 'mm', 'A4');
-    $pdf->SetAutoPageBreak(true, 12);
-    $pdf->AddPage();
-    $pdf->SetFont('Helvetica', 'B', 16);
-    $pdf->Cell(0, 8, 'ISDN - Delivery Efficiency Report', 0, 1);
-    $pdf->SetFont('Helvetica', '', 9);
-    $pdf->Cell(0, 6, 'Generated: ' . date('Y-m-d H:i:s') . '  |  Filters: ' . (empty($filters) ? 'None' : json_encode($filters)), 0, 1);
-    $pdf->Ln(4);
+    if (!class_exists('DeliveryEfficiencyPdf')) {
+        class DeliveryEfficiencyPdf extends FPDF
+        {
+            private string $generatedAt = '';
+            private string $filterSummary = 'All deliveries';
 
-    // Summary
-    $pdf->SetFont('Helvetica', 'B', 11);
-    $pdf->Cell(0, 6, 'Overall Summary', 0, 1);
-    $pdf->SetFont('Helvetica', '', 9);
-    $pdf->Cell(45, 6, 'Total Deliveries', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['total_deliveries'] ?? 0), 1, 0, 'R');
-    $pdf->Cell(45, 6, 'On-time', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['on_time'] ?? 0), 1, 1, 'R');
-    $pdf->Cell(45, 6, 'Delayed', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['delayed'] ?? 0), 1, 0, 'R');
-    $pdf->Cell(45, 6, 'Pending', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['pending'] ?? 0), 1, 1, 'R');
-    $pdf->Cell(45, 6, 'Efficiency %', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['overall_efficiency'] ?? 0) . '%', 1, 0, 'R');
-    $pdf->Cell(45, 6, 'Avg Hours', 1, 0);
-    $pdf->Cell(25, 6, (string) ($summary['avg_hours'] ?? 0), 1, 1, 'R');
-    $pdf->Ln(6);
+            public function setMeta(string $generatedAt, string $filterSummary): void
+            {
+                $this->generatedAt = $generatedAt;
+                $this->filterSummary = $filterSummary;
+            }
 
-    // RDC table
-    $pdf->SetFont('Helvetica', 'B', 11);
-    $pdf->Cell(0, 6, 'RDC Comparison', 0, 1);
-    $pdf->SetFont('Helvetica', 'B', 8);
-    $w = [50, 18, 18, 18, 18, 22, 22, 25];
-    $pdf->Cell($w[0], 6, 'RDC', 1, 0);
-    $pdf->Cell($w[1], 6, 'Total', 1, 0, 'C');
-    $pdf->Cell($w[2], 6, 'On-time', 1, 0, 'C');
-    $pdf->Cell($w[3], 6, 'Delayed', 1, 0, 'C');
-    $pdf->Cell($w[4], 6, 'Pending', 1, 0, 'C');
-    $pdf->Cell($w[5], 6, 'Efficiency%', 1, 0, 'C');
-    $pdf->Cell($w[6], 6, 'Avg Hrs', 1, 0, 'C');
-    $pdf->Cell($w[7], 6, 'Code', 1, 1, 'C');
-    $pdf->SetFont('Helvetica', '', 8);
-    foreach ($rdcData as $r) {
-        $pdf->Cell($w[0], 6, substr($r['rdc_name'] ?? '', 0, 28), 1, 0);
-        $pdf->Cell($w[1], 6, (string) ($r['total_deliveries'] ?? 0), 1, 0, 'C');
-        $pdf->Cell($w[2], 6, (string) ($r['on_time'] ?? 0), 1, 0, 'C');
-        $pdf->Cell($w[3], 6, (string) ($r['delayed'] ?? 0), 1, 0, 'C');
-        $pdf->Cell($w[4], 6, (string) ($r['pending'] ?? 0), 1, 0, 'C');
-        $pdf->Cell($w[5], 6, (string) ($r['efficiency_pct'] ?? 0), 1, 0, 'C');
-        $pdf->Cell($w[6], 6, (string) ($r['avg_delivery_hours'] ?? '-'), 1, 0, 'C');
-        $pdf->Cell($w[7], 6, $r['rdc_code'] ?? '', 1, 1, 'C');
+            public function Header(): void
+            {
+                $this->SetFillColor(13, 148, 136);
+                $this->Rect(0, 0, $this->GetPageWidth(), 22, 'F');
+
+                $this->SetTextColor(255, 255, 255);
+                $this->SetFont('Helvetica', 'B', 15);
+                $this->SetXY(10, 6);
+                $this->Cell(0, 6, 'ISDN DELIVERY EFFICIENCY REPORT', 0, 1, 'L');
+
+                $this->SetFont('Helvetica', '', 8);
+                $this->SetX(10);
+                $this->Cell(0, 4, 'Generated: ' . $this->generatedAt, 0, 1, 'L');
+
+                $this->SetTextColor(55, 65, 81);
+                $this->SetFont('Helvetica', '', 8);
+                $this->SetXY(10, 24);
+                $this->Cell($this->GetPageWidth() - 20, 4, 'Filters: ' . $this->filterSummary, 0, 1, 'L');
+                $this->Ln(3);
+            }
+
+            public function Footer(): void
+            {
+                $this->SetY(-10);
+                $this->SetDrawColor(226, 232, 240);
+                $this->Line(10, $this->GetY(), $this->GetPageWidth() - 10, $this->GetY());
+
+                $this->SetY(-7);
+                $this->SetFont('Helvetica', '', 8);
+                $this->SetTextColor(107, 114, 128);
+                $this->Cell(0, 4, 'ISDN Internal Use Only', 0, 0, 'L');
+                $this->Cell(0, 4, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
+            }
+        }
     }
-    $pdf->Ln(6);
 
-    // Delivery details
-    $pdf->SetFont('Helvetica', 'B', 11);
-    $pdf->Cell(0, 6, 'Delivery Records (sample)', 0, 1);
-    $pdf->SetFont('Helvetica', 'B', 7);
-    $wd = [32, 35, 30, 38, 38, 28, 22];
-    $pdf->Cell($wd[0], 6, 'Order #', 1, 0);
-    $pdf->Cell($wd[1], 6, 'RDC', 1, 0);
-    $pdf->Cell($wd[2], 6, 'Driver', 1, 0);
-    $pdf->Cell($wd[3], 6, 'Scheduled', 1, 0);
-    $pdf->Cell($wd[4], 6, 'Completed', 1, 0);
-    $pdf->Cell($wd[5], 6, 'Status', 1, 0);
-    $pdf->Cell($wd[6], 6, 'Hrs', 1, 1, 'C');
-    $pdf->SetFont('Helvetica', '', 7);
+    $rdcLookup = [];
+    foreach ($allRdcs as $rdc) {
+        $rdcLookup[(int) $rdc['rdc_id']] = $rdc['rdc_name'];
+    }
+
+    $statusLabels = [
+        'completed' => 'Completed',
+        'pending' => 'Pending',
+        'on_time' => 'On-time',
+        'delayed' => 'Delayed',
+    ];
+
+    $filterParts = [];
+    if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
+        $from = !empty($filters['start_date']) ? $filters['start_date'] : 'Any';
+        $to = !empty($filters['end_date']) ? $filters['end_date'] : 'Any';
+        $filterParts[] = 'Date: ' . $from . ' to ' . $to;
+    }
+    if (!empty($filters['rdc_id'])) {
+        $rdcName = $rdcLookup[(int) $filters['rdc_id']] ?? ('RDC #' . (int) $filters['rdc_id']);
+        $filterParts[] = 'RDC: ' . $rdcName;
+    }
+    if (!empty($filters['status'])) {
+        $filterParts[] = 'Status: ' . ($statusLabels[$filters['status']] ?? $filters['status']);
+    }
+    $filterSummary = empty($filterParts) ? 'All deliveries' : implode(' | ', $filterParts);
+    $generatedAt = date('Y-m-d H:i:s');
+
+    $num = static function ($value): float {
+        return is_numeric($value) ? (float) $value : 0.0;
+    };
+    $fmtInt = static function ($value): string {
+        return number_format((int) round(is_numeric($value) ? (float) $value : 0.0));
+    };
+    $fmtPct = static function ($value): string {
+        return number_format(is_numeric($value) ? (float) $value : 0.0, 1) . '%';
+    };
+    $fmtHours = static function ($value): string {
+        return is_numeric($value) ? number_format((float) $value, 1) . ' h' : '-';
+    };
+
+    $rankedRdcs = $rdcData;
+    usort($rankedRdcs, static function ($a, $b) use ($num) {
+        return $num($b['efficiency_pct'] ?? 0) <=> $num($a['efficiency_pct'] ?? 0);
+    });
+    $bestRdc = $rankedRdcs[0] ?? null;
+    $worstRdc = !empty($rankedRdcs) ? $rankedRdcs[count($rankedRdcs) - 1] : null;
+
+    $pdf = new DeliveryEfficiencyPdf('L', 'mm', 'A4');
+    $pdf->AliasNbPages();
+    $pdf->SetMargins(10, 30, 10);
+    $pdf->SetAutoPageBreak(true, 14);
+    $pdf->setMeta($generatedAt, $filterSummary);
+    $pdf->AddPage();
+
+    $sectionTitle = static function (FPDF $pdfDoc, string $title): void {
+        $pdfDoc->SetTextColor(30, 41, 59);
+        $pdfDoc->SetFont('Helvetica', 'B', 11);
+        $pdfDoc->Cell(0, 7, $title, 0, 1, 'L');
+    };
+
+    $drawKpiCard = static function (FPDF $pdfDoc, float $x, float $y, float $w, float $h, string $label, string $value, array $color): void {
+        $pdfDoc->SetFillColor($color[0], $color[1], $color[2]);
+        $pdfDoc->SetDrawColor(226, 232, 240);
+        $pdfDoc->Rect($x, $y, $w, $h, 'DF');
+        $pdfDoc->SetTextColor(255, 255, 255);
+        $pdfDoc->SetXY($x + 3, $y + 3);
+        $pdfDoc->SetFont('Helvetica', '', 8);
+        $pdfDoc->Cell($w - 6, 4, $label, 0, 2, 'L');
+        $pdfDoc->SetFont('Helvetica', 'B', 15);
+        $pdfDoc->Cell($w - 6, 8, $value, 0, 0, 'L');
+    };
+
+    $drawKpiCard($pdf, 10, 34, 89, 17, 'TOTAL DELIVERIES', $fmtInt($summary['total_deliveries'] ?? 0), [15, 23, 42]);
+    $drawKpiCard($pdf, 104, 34, 89, 17, 'ON-TIME DELIVERIES', $fmtInt($summary['on_time'] ?? 0), [16, 185, 129]);
+    $drawKpiCard($pdf, 198, 34, 89, 17, 'DELAYED DELIVERIES', $fmtInt($summary['delayed'] ?? 0), [239, 68, 68]);
+    $drawKpiCard($pdf, 10, 54, 89, 17, 'PENDING DELIVERIES', $fmtInt($summary['pending'] ?? 0), [245, 158, 11]);
+    $drawKpiCard($pdf, 104, 54, 89, 17, 'OVERALL EFFICIENCY', $fmtPct($summary['overall_efficiency'] ?? 0), [59, 130, 246]);
+    $drawKpiCard($pdf, 198, 54, 89, 17, 'AVG DELIVERY TIME', $fmtHours($summary['avg_hours'] ?? 0), [99, 102, 241]);
+
+    $pdf->SetY(76);
+    $sectionTitle($pdf, 'Performance Snapshot');
+    $pdf->SetDrawColor(226, 232, 240);
+    $pdf->SetFillColor(248, 250, 252);
+
+    $pdf->SetFont('Helvetica', '', 9);
+    $pdf->SetTextColor(30, 41, 59);
+
+    $pdf->Rect(10, $pdf->GetY(), 136, 18, 'DF');
+    $pdf->Rect(151, $pdf->GetY(), 136, 18, 'DF');
+
+    $bestText = 'No RDC data available';
+    if ($bestRdc) {
+        $bestText = sprintf(
+            '%s (%s)  |  Efficiency: %s  |  On-time: %s  |  Avg: %s',
+            substr((string) ($bestRdc['rdc_name'] ?? 'Unknown'), 0, 32),
+            (string) ($bestRdc['rdc_code'] ?? '-'),
+            $fmtPct($bestRdc['efficiency_pct'] ?? 0),
+            $fmtInt($bestRdc['on_time'] ?? 0),
+            $fmtHours($bestRdc['avg_delivery_hours'] ?? null)
+        );
+    }
+
+    $worstText = 'No RDC data available';
+    if ($worstRdc) {
+        $worstText = sprintf(
+            '%s (%s)  |  Efficiency: %s  |  Delayed: %s  |  Pending: %s',
+            substr((string) ($worstRdc['rdc_name'] ?? 'Unknown'), 0, 32),
+            (string) ($worstRdc['rdc_code'] ?? '-'),
+            $fmtPct($worstRdc['efficiency_pct'] ?? 0),
+            $fmtInt($worstRdc['delayed'] ?? 0),
+            $fmtInt($worstRdc['pending'] ?? 0)
+        );
+    }
+
+    $pdf->SetXY(13, $pdf->GetY() + 3);
+    $pdf->SetFont('Helvetica', 'B', 9);
+    $pdf->SetTextColor(5, 150, 105);
+    $pdf->Cell(28, 5, 'Top Performer', 0, 0, 'L');
+    $pdf->SetFont('Helvetica', '', 8);
+    $pdf->SetTextColor(51, 65, 85);
+    $pdf->Cell(104, 5, $bestText, 0, 0, 'L');
+
+    $pdf->SetXY(154, $pdf->GetY());
+    $pdf->SetFont('Helvetica', 'B', 9);
+    $pdf->SetTextColor(220, 38, 38);
+    $pdf->Cell(34, 5, 'Needs Attention', 0, 0, 'L');
+    $pdf->SetFont('Helvetica', '', 8);
+    $pdf->SetTextColor(51, 65, 85);
+    $pdf->Cell(96, 5, $worstText, 0, 1, 'L');
+
+    $pdf->Ln(12);
+    $sectionTitle($pdf, 'RDC Comparison');
+
+    $rdcWidths = [68, 21, 21, 21, 21, 28, 26, 20, 25];
+    $rdcHeaders = ['RDC', 'Total', 'Completed', 'On-time', 'Delayed', 'Pending', 'Efficiency', 'Avg Hrs', 'Code'];
+
+    $pdf->SetFillColor(15, 23, 42);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->SetDrawColor(226, 232, 240);
+    $pdf->SetFont('Helvetica', 'B', 8);
+    foreach ($rdcHeaders as $idx => $header) {
+        $pdf->Cell($rdcWidths[$idx], 7, $header, 1, 0, 'C', true);
+    }
+    $pdf->Ln();
+
+    $pdf->SetFont('Helvetica', '', 8);
+    $rowIndex = 0;
+    foreach ($rdcData as $r) {
+        $fill = ($rowIndex % 2 === 0);
+        if ($fill) {
+            $pdf->SetFillColor(248, 250, 252);
+        } else {
+            $pdf->SetFillColor(255, 255, 255);
+        }
+        $pdf->SetTextColor(31, 41, 55);
+        $pdf->Cell($rdcWidths[0], 6, substr((string) ($r['rdc_name'] ?? ''), 0, 34), 1, 0, 'L', true);
+        $pdf->Cell($rdcWidths[1], 6, $fmtInt($r['total_deliveries'] ?? 0), 1, 0, 'R', true);
+        $pdf->Cell($rdcWidths[2], 6, $fmtInt($r['completed'] ?? 0), 1, 0, 'R', true);
+        $pdf->Cell($rdcWidths[3], 6, $fmtInt($r['on_time'] ?? 0), 1, 0, 'R', true);
+        $pdf->Cell($rdcWidths[4], 6, $fmtInt($r['delayed'] ?? 0), 1, 0, 'R', true);
+        $pdf->Cell($rdcWidths[5], 6, $fmtInt($r['pending'] ?? 0), 1, 0, 'R', true);
+
+        $efficiency = $num($r['efficiency_pct'] ?? 0);
+        if ($efficiency >= 80) {
+            $pdf->SetTextColor(5, 150, 105);
+        } elseif ($efficiency >= 50) {
+            $pdf->SetTextColor(217, 119, 6);
+        } else {
+            $pdf->SetTextColor(220, 38, 38);
+        }
+        $pdf->Cell($rdcWidths[6], 6, $fmtPct($r['efficiency_pct'] ?? 0), 1, 0, 'R', true);
+
+        $pdf->SetTextColor(31, 41, 55);
+        $pdf->Cell($rdcWidths[7], 6, $fmtHours($r['avg_delivery_hours'] ?? null), 1, 0, 'R', true);
+        $pdf->Cell($rdcWidths[8], 6, (string) ($r['rdc_code'] ?? '-'), 1, 1, 'C', true);
+        $rowIndex++;
+    }
+
+    if (empty($rdcData)) {
+        $pdf->SetFillColor(248, 250, 252);
+        $pdf->SetTextColor(100, 116, 139);
+        $pdf->Cell(array_sum($rdcWidths), 8, 'No RDC data available for selected filters.', 1, 1, 'C', true);
+    }
+
+    $pdf->Ln(5);
+    $sectionTitle($pdf, 'Delivery Records (Sample)');
+
+    $detailWidths = [28, 58, 35, 43, 43, 33, 25];
+    $drawDetailHeader = static function (FPDF $pdfDoc, array $widths): void {
+        $pdfDoc->SetFillColor(30, 41, 59);
+        $pdfDoc->SetTextColor(255, 255, 255);
+        $pdfDoc->SetFont('Helvetica', 'B', 8);
+        $pdfDoc->Cell($widths[0], 7, 'Order #', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[1], 7, 'RDC', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[2], 7, 'Driver', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[3], 7, 'Scheduled', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[4], 7, 'Completed', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[5], 7, 'Status', 1, 0, 'C', true);
+        $pdfDoc->Cell($widths[6], 7, 'Duration', 1, 1, 'C', true);
+    };
+
+    $drawDetailHeader($pdf, $detailWidths);
+    $pdf->SetFont('Helvetica', '', 8);
+    $detailRow = 0;
     foreach ($details as $d) {
-        $pdf->Cell($wd[0], 5, substr($d['order_number'] ?? '', 0, 14), 1, 0);
-        $pdf->Cell($wd[1], 5, substr($d['rdc_name'] ?? '-', 0, 18), 1, 0);
-        $pdf->Cell($wd[2], 5, substr($d['driver_name'] ?? '-', 0, 12), 1, 0);
-        $pdf->Cell($wd[3], 5, $d['scheduled_date'] ? date('M j, Y', strtotime($d['scheduled_date'])) : '-', 1, 0);
-        $pdf->Cell($wd[4], 5, $d['completed_date'] ? date('M j, Y', strtotime($d['completed_date'])) : '-', 1, 0);
-        $pdf->Cell($wd[5], 5, $d['delivery_status'] ?? '-', 1, 0);
-        $pdf->Cell($wd[6], 5, $d['duration_hours'] !== null ? (string) $d['duration_hours'] : '-', 1, 1, 'C');
+        if ($pdf->GetY() > 184) {
+            $pdf->AddPage();
+            $sectionTitle($pdf, 'Delivery Records (Continued)');
+            $drawDetailHeader($pdf, $detailWidths);
+            $detailRow = 0;
+        }
+
+        $fill = ($detailRow % 2 === 0);
+        if ($fill) {
+            $pdf->SetFillColor(248, 250, 252);
+        } else {
+            $pdf->SetFillColor(255, 255, 255);
+        }
+        $pdf->SetTextColor(31, 41, 55);
+
+        $status = (string) ($d['delivery_status'] ?? '-');
+        $pdf->Cell($detailWidths[0], 6, substr((string) ($d['order_number'] ?? ''), 0, 18), 1, 0, 'L', true);
+        $pdf->Cell($detailWidths[1], 6, substr((string) ($d['rdc_name'] ?? '-'), 0, 33), 1, 0, 'L', true);
+        $pdf->Cell($detailWidths[2], 6, substr((string) ($d['driver_name'] ?? '-'), 0, 19), 1, 0, 'L', true);
+        $pdf->Cell($detailWidths[3], 6, !empty($d['scheduled_date']) ? date('M j, Y H:i', strtotime($d['scheduled_date'])) : '-', 1, 0, 'C', true);
+        $pdf->Cell($detailWidths[4], 6, !empty($d['completed_date']) ? date('M j, Y H:i', strtotime($d['completed_date'])) : '-', 1, 0, 'C', true);
+
+        if ($status === 'On-time') {
+            $pdf->SetTextColor(5, 150, 105);
+        } elseif ($status === 'Delayed') {
+            $pdf->SetTextColor(220, 38, 38);
+        } else {
+            $pdf->SetTextColor(217, 119, 6);
+        }
+        $pdf->Cell($detailWidths[5], 6, $status, 1, 0, 'C', true);
+
+        $pdf->SetTextColor(31, 41, 55);
+        $pdf->Cell($detailWidths[6], 6, $fmtHours($d['duration_hours'] ?? null), 1, 1, 'R', true);
+        $detailRow++;
+    }
+
+    if (empty($details)) {
+        $pdf->SetFillColor(248, 250, 252);
+        $pdf->SetTextColor(100, 116, 139);
+        $pdf->Cell(array_sum($detailWidths), 8, 'No delivery records available for selected filters.', 1, 1, 'C', true);
     }
 
     $pdf->Output('D', 'delivery_efficiency_report_' . date('Y-m-d') . '.pdf');
@@ -139,42 +367,110 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="delivery_efficiency_report_' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
+    // UTF-8 BOM so Excel detects encoding correctly
+    fwrite($out, "\xEF\xBB\xBF");
 
-    // Summary section
-    fputcsv($out, ['=== ISDN Delivery Efficiency Report ===']);
-    fputcsv($out, ['Generated', date('Y-m-d H:i:s')]);
-    fputcsv($out, ['Filters', json_encode($filters)]);
+    $rdcLookup = [];
+    foreach ($allRdcs as $rdc) {
+        $rdcLookup[(int) $rdc['rdc_id']] = $rdc['rdc_name'];
+    }
+    $statusLabels = [
+        'completed' => 'Completed',
+        'pending' => 'Pending',
+        'on_time' => 'On-time',
+        'delayed' => 'Delayed',
+    ];
+    $filterParts = [];
+    if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
+        $from = !empty($filters['start_date']) ? $filters['start_date'] : 'Any';
+        $to = !empty($filters['end_date']) ? $filters['end_date'] : 'Any';
+        $filterParts[] = 'Date: ' . $from . ' to ' . $to;
+    }
+    if (!empty($filters['rdc_id'])) {
+        $rdcName = $rdcLookup[(int) $filters['rdc_id']] ?? ('RDC #' . (int) $filters['rdc_id']);
+        $filterParts[] = 'RDC: ' . $rdcName;
+    }
+    if (!empty($filters['status'])) {
+        $filterParts[] = 'Status: ' . ($statusLabels[$filters['status']] ?? $filters['status']);
+    }
+    $filterSummary = empty($filterParts) ? 'All deliveries' : implode(' | ', $filterParts);
+
+    $rankedRdcs = $rdcData;
+    usort($rankedRdcs, static function ($a, $b) {
+        return ((float) ($b['efficiency_pct'] ?? 0)) <=> ((float) ($a['efficiency_pct'] ?? 0));
+    });
+    $bestRdc = $rankedRdcs[0] ?? null;
+    $worstRdc = !empty($rankedRdcs) ? $rankedRdcs[count($rankedRdcs) - 1] : null;
+
+    // Report header
+    fputcsv($out, ['ISDN Delivery Efficiency Report']);
+    fputcsv($out, ['Generated At', date('Y-m-d H:i:s')]);
+    fputcsv($out, ['Filter Summary', $filterSummary]);
     fputcsv($out, []);
 
-    // Overall summary
-    fputcsv($out, ['--- Overall Summary ---']);
+    // KPI snapshot
+    fputcsv($out, ['KPI Snapshot']);
+    fputcsv($out, ['Metric', 'Value']);
     fputcsv($out, ['Total Deliveries', $summary['total_deliveries']]);
-    fputcsv($out, ['Completed', $summary['completed']]);
-    fputcsv($out, ['On-time', $summary['on_time']]);
-    fputcsv($out, ['Delayed', $summary['delayed']]);
-    fputcsv($out, ['Pending', $summary['pending']]);
-    fputcsv($out, ['Overall Efficiency %', $summary['overall_efficiency']]);
-    fputcsv($out, ['Avg Delivery Hours', $summary['avg_hours']]);
+    fputcsv($out, ['Completed Deliveries', $summary['completed']]);
+    fputcsv($out, ['On-time Deliveries', $summary['on_time']]);
+    fputcsv($out, ['Delayed Deliveries', $summary['delayed']]);
+    fputcsv($out, ['Pending Deliveries', $summary['pending']]);
+    fputcsv($out, ['Overall Efficiency %', number_format((float) ($summary['overall_efficiency'] ?? 0), 1)]);
+    fputcsv($out, ['Average Delivery Hours', number_format((float) ($summary['avg_hours'] ?? 0), 1)]);
     fputcsv($out, []);
 
-    // RDC breakdown
-    fputcsv($out, ['--- RDC Breakdown ---']);
-    fputcsv($out, ['RDC Name', 'Code', 'Total', 'Completed', 'On-time', 'Delayed', 'Pending', 'Efficiency %', 'Avg Hours']);
+    // Performance snapshot
+    fputcsv($out, ['Performance Snapshot']);
+    fputcsv($out, ['Type', 'RDC Name', 'Code', 'Efficiency %', 'On-time', 'Delayed', 'Pending', 'Avg Hours']);
+    if ($bestRdc) {
+        fputcsv($out, [
+            'Top Performer',
+            $bestRdc['rdc_name'] ?? '-',
+            $bestRdc['rdc_code'] ?? '-',
+            number_format((float) ($bestRdc['efficiency_pct'] ?? 0), 1),
+            $bestRdc['on_time'] ?? 0,
+            $bestRdc['delayed'] ?? 0,
+            $bestRdc['pending'] ?? 0,
+            $bestRdc['avg_delivery_hours'] ?? '-',
+        ]);
+    }
+    if ($worstRdc) {
+        fputcsv($out, [
+            'Needs Attention',
+            $worstRdc['rdc_name'] ?? '-',
+            $worstRdc['rdc_code'] ?? '-',
+            number_format((float) ($worstRdc['efficiency_pct'] ?? 0), 1),
+            $worstRdc['on_time'] ?? 0,
+            $worstRdc['delayed'] ?? 0,
+            $worstRdc['pending'] ?? 0,
+            $worstRdc['avg_delivery_hours'] ?? '-',
+        ]);
+    }
+    fputcsv($out, []);
+
+    // RDC comparison
+    fputcsv($out, ['RDC Comparison']);
+    fputcsv($out, ['RDC Name', 'Code', 'Total', 'Completed', 'On-time', 'Delayed', 'Pending', 'Efficiency %', 'Avg Hours', 'Performance Band']);
     foreach ($rdcData as $row) {
+        $eff = (float) ($row['efficiency_pct'] ?? 0);
+        $band = $eff >= 80 ? 'Good' : ($eff >= 50 ? 'Medium' : 'Needs Attention');
         fputcsv($out, [
             $row['rdc_name'], $row['rdc_code'], $row['total_deliveries'],
             $row['completed'], $row['on_time'], $row['delayed'], $row['pending'],
-            $row['efficiency_pct'] ?? 0, $row['avg_delivery_hours'] ?? 0,
+            number_format($eff, 1), $row['avg_delivery_hours'] ?? 0, $band,
         ]);
     }
 
     fputcsv($out, []);
-    fputcsv($out, ['--- Delivery Details ---']);
-    fputcsv($out, ['Order #', 'RDC', 'Driver', 'Scheduled', 'Completed', 'Status', 'Duration (hrs)']);
+    fputcsv($out, ['Delivery Records (Sample)']);
+    fputcsv($out, ['Order #', 'RDC', 'Driver', 'Scheduled Date', 'Completed Date', 'Status', 'Duration (hrs)']);
     foreach ($details as $d) {
+        $schedDate = !empty($d['scheduled_date']) ? date('Y-m-d', strtotime($d['scheduled_date'])) : '-';
+        $compDate  = !empty($d['completed_date']) ? date('Y-m-d', strtotime($d['completed_date'])) : '-';
         fputcsv($out, [
             $d['order_number'], $d['rdc_name'], $d['driver_name'] ?? '-',
-            $d['scheduled_date'], $d['completed_date'] ?? '-',
+            $schedDate, $compDate,
             $d['delivery_status'], $d['duration_hours'] ?? '-',
         ]);
     }
@@ -217,6 +513,13 @@ $statusBadge = [
     'Delayed' => 'bg-red-100 text-red-700',
     'Pending' => 'bg-yellow-100 text-yellow-700',
 ];
+
+$rankedRdcData = $rdcData;
+usort($rankedRdcData, static function ($a, $b) {
+    return ((float) ($b['efficiency_pct'] ?? 0)) <=> ((float) ($a['efficiency_pct'] ?? 0));
+});
+$bestRdcUi = $rankedRdcData[0] ?? null;
+$worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1] : null;
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
@@ -300,36 +603,63 @@ $statusBadge = [
         </form>
 
         <!-- KPI Summary Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-blue-500 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total</p>
-                <h3 class="text-2xl font-bold text-gray-800 mt-1 font-['Outfit']"><?php echo number_format($summary['total_deliveries']); ?></h3>
-                <p class="text-blue-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">local_shipping</span> Deliveries</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-slate-900 to-slate-700">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-200">Total Deliveries</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format($summary['total_deliveries']); ?></h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-slate-200"><span class="material-symbols-rounded text-sm mr-1">local_shipping</span> Network volume</p>
             </div>
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-green-500 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">On-time</p>
-                <h3 class="text-2xl font-bold text-green-600 mt-1 font-['Outfit']"><?php echo number_format($summary['on_time']); ?></h3>
-                <p class="text-green-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">check_circle</span> Before deadline</p>
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-500">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-100">On-time Deliveries</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format($summary['on_time']); ?></h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-emerald-100"><span class="material-symbols-rounded text-sm mr-1">check_circle</span> Within SLA window</p>
             </div>
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-red-500 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Delayed</p>
-                <h3 class="text-2xl font-bold text-red-600 mt-1 font-['Outfit']"><?php echo number_format($summary['delayed']); ?></h3>
-                <p class="text-red-500 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">schedule</span> Past deadline</p>
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-rose-600 to-red-500">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-red-100">Delayed Deliveries</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format($summary['delayed']); ?></h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-red-100"><span class="material-symbols-rounded text-sm mr-1">schedule</span> Missed target time</p>
             </div>
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-yellow-400 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pending</p>
-                <h3 class="text-2xl font-bold text-yellow-600 mt-1 font-['Outfit']"><?php echo number_format($summary['pending']); ?></h3>
-                <p class="text-yellow-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">hourglass_top</span> In progress</p>
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-amber-500 to-orange-400">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-amber-100">Pending Deliveries</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format($summary['pending']); ?></h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-amber-100"><span class="material-symbols-rounded text-sm mr-1">hourglass_top</span> Awaiting completion</p>
             </div>
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-teal-500 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Efficiency</p>
-                <h3 class="text-2xl font-bold <?php echo ($summary['overall_efficiency'] ?? 0) >= 70 ? 'text-green-600' : 'text-red-600'; ?> mt-1 font-['Outfit']"><?php echo $summary['overall_efficiency'] ?? 0; ?>%</h3>
-                <p class="text-teal-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">speed</span> On-time rate</p>
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-sky-600 to-blue-500">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-sky-100">Overall Efficiency</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format((float) ($summary['overall_efficiency'] ?? 0), 1); ?>%</h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-sky-100"><span class="material-symbols-rounded text-sm mr-1">speed</span> On-time completion rate</p>
             </div>
-            <div class="glass-card p-5 rounded-3xl border-l-4 border-purple-500 group hover-lift">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Avg Time</p>
-                <h3 class="text-2xl font-bold text-purple-600 mt-1 font-['Outfit']"><?php echo $summary['avg_hours'] ?? 0; ?>h</h3>
-                <p class="text-purple-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">timer</span> Order→Delivery</p>
+            <div class="rounded-3xl p-5 text-white shadow-lg bg-gradient-to-br from-cyan-600 to-teal-500">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-cyan-100">Average Delivery Time</p>
+                <h3 class="text-3xl font-bold mt-1 font-['Outfit']"><?php echo number_format((float) ($summary['avg_hours'] ?? 0), 1); ?>h</h3>
+                <p class="text-[11px] font-semibold mt-2 flex items-center text-cyan-100"><span class="material-symbols-rounded text-sm mr-1">timer</span> From order to completion</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-rounded text-emerald-600">military_tech</span>
+                    <p class="text-sm font-bold text-emerald-700 uppercase tracking-wide">Top Performer</p>
+                </div>
+                <?php if ($bestRdcUi): ?>
+                    <p class="text-lg font-bold text-gray-800"><?php echo htmlspecialchars($bestRdcUi['rdc_name'] ?? '-'); ?> <span class="text-sm text-gray-500">(<?php echo htmlspecialchars($bestRdcUi['rdc_code'] ?? '-'); ?>)</span></p>
+                    <p class="text-sm text-gray-600 mt-1">Efficiency: <span class="font-semibold text-emerald-700"><?php echo number_format((float) ($bestRdcUi['efficiency_pct'] ?? 0), 1); ?>%</span> | On-time: <span class="font-semibold"><?php echo number_format((int) ($bestRdcUi['on_time'] ?? 0)); ?></span> | Avg: <span class="font-semibold"><?php echo is_numeric($bestRdcUi['avg_delivery_hours'] ?? null) ? number_format((float) $bestRdcUi['avg_delivery_hours'], 1) . 'h' : '-'; ?></span></p>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500">No RDC data available for current filters.</p>
+                <?php endif; ?>
+            </div>
+            <div class="rounded-2xl border border-rose-200 bg-rose-50/80 p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-rounded text-rose-600">warning</span>
+                    <p class="text-sm font-bold text-rose-700 uppercase tracking-wide">Needs Attention</p>
+                </div>
+                <?php if ($worstRdcUi): ?>
+                    <p class="text-lg font-bold text-gray-800"><?php echo htmlspecialchars($worstRdcUi['rdc_name'] ?? '-'); ?> <span class="text-sm text-gray-500">(<?php echo htmlspecialchars($worstRdcUi['rdc_code'] ?? '-'); ?>)</span></p>
+                    <p class="text-sm text-gray-600 mt-1">Efficiency: <span class="font-semibold text-rose-700"><?php echo number_format((float) ($worstRdcUi['efficiency_pct'] ?? 0), 1); ?>%</span> | Delayed: <span class="font-semibold"><?php echo number_format((int) ($worstRdcUi['delayed'] ?? 0)); ?></span> | Pending: <span class="font-semibold"><?php echo number_format((int) ($worstRdcUi['pending'] ?? 0)); ?></span></p>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500">No RDC data available for current filters.</p>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -706,3 +1036,4 @@ $statusBadge = [
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+

@@ -56,12 +56,12 @@ function get_allowed_pages_for_role($role) {
             'rdc-driver-dashboard', 'tracking', 'profile'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'profile'
+            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
             'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
             'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
-            'stock-reports', 'delivery-report'
+            'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];
 
@@ -96,6 +96,7 @@ function get_nav_page_labels() {
         'rdc-driver-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'delivery-report' => ['icon' => 'local_shipping', 'label' => 'Delivery Report'],
+        'sales-report' => ['icon' => 'trending_up', 'label' => 'Sales Report'],
         'system-admin-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'system-admin-users' => ['icon' => 'group', 'label' => 'Manage Users'],
         'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Manage Products'],

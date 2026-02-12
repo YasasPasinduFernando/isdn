@@ -3,13 +3,12 @@
  * RDC-wise Delivery Efficiency Report
  *
  * Access: head_office_manager, system_admin only
- * Features: KPI summary, RDC comparison table, bar chart (Chart.js), CSV export
+ * Features: KPI summary, RDC comparison table, bar chart (Chart.js), CSV & PDF export
  *
  * Architecture:
  *   View (this file) → DeliveryReport model → MySQL aggregation
  *   Filters applied via GET parameters with prepared statements
  */
-require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/DeliveryReport.php';
 
@@ -50,6 +49,89 @@ try {
     $error   = $e->getMessage();
     $rdcData = $details = $allRdcs = [];
     $summary = ['total_deliveries' => 0, 'completed' => 0, 'on_time' => 0, 'delayed' => 0, 'pending' => 0, 'overall_efficiency' => 0, 'avg_hours' => 0];
+}
+
+// ── PDF Export (must run before any HTML output) ─────────────
+if (isset($_GET['export']) && $_GET['export'] === 'pdf') {
+    require_once __DIR__ . '/../../includes/fpdf.php';
+    $pdf = new FPDF('L', 'mm', 'A4');
+    $pdf->SetAutoPageBreak(true, 12);
+    $pdf->AddPage();
+    $pdf->SetFont('Helvetica', 'B', 16);
+    $pdf->Cell(0, 8, 'ISDN - Delivery Efficiency Report', 0, 1);
+    $pdf->SetFont('Helvetica', '', 9);
+    $pdf->Cell(0, 6, 'Generated: ' . date('Y-m-d H:i:s') . '  |  Filters: ' . (empty($filters) ? 'None' : json_encode($filters)), 0, 1);
+    $pdf->Ln(4);
+
+    // Summary
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->Cell(0, 6, 'Overall Summary', 0, 1);
+    $pdf->SetFont('Helvetica', '', 9);
+    $pdf->Cell(45, 6, 'Total Deliveries', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['total_deliveries'] ?? 0), 1, 0, 'R');
+    $pdf->Cell(45, 6, 'On-time', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['on_time'] ?? 0), 1, 1, 'R');
+    $pdf->Cell(45, 6, 'Delayed', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['delayed'] ?? 0), 1, 0, 'R');
+    $pdf->Cell(45, 6, 'Pending', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['pending'] ?? 0), 1, 1, 'R');
+    $pdf->Cell(45, 6, 'Efficiency %', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['overall_efficiency'] ?? 0) . '%', 1, 0, 'R');
+    $pdf->Cell(45, 6, 'Avg Hours', 1, 0);
+    $pdf->Cell(25, 6, (string) ($summary['avg_hours'] ?? 0), 1, 1, 'R');
+    $pdf->Ln(6);
+
+    // RDC table
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->Cell(0, 6, 'RDC Comparison', 0, 1);
+    $pdf->SetFont('Helvetica', 'B', 8);
+    $w = [50, 18, 18, 18, 18, 22, 22, 25];
+    $pdf->Cell($w[0], 6, 'RDC', 1, 0);
+    $pdf->Cell($w[1], 6, 'Total', 1, 0, 'C');
+    $pdf->Cell($w[2], 6, 'On-time', 1, 0, 'C');
+    $pdf->Cell($w[3], 6, 'Delayed', 1, 0, 'C');
+    $pdf->Cell($w[4], 6, 'Pending', 1, 0, 'C');
+    $pdf->Cell($w[5], 6, 'Efficiency%', 1, 0, 'C');
+    $pdf->Cell($w[6], 6, 'Avg Hrs', 1, 0, 'C');
+    $pdf->Cell($w[7], 6, 'Code', 1, 1, 'C');
+    $pdf->SetFont('Helvetica', '', 8);
+    foreach ($rdcData as $r) {
+        $pdf->Cell($w[0], 6, substr($r['rdc_name'] ?? '', 0, 28), 1, 0);
+        $pdf->Cell($w[1], 6, (string) ($r['total_deliveries'] ?? 0), 1, 0, 'C');
+        $pdf->Cell($w[2], 6, (string) ($r['on_time'] ?? 0), 1, 0, 'C');
+        $pdf->Cell($w[3], 6, (string) ($r['delayed'] ?? 0), 1, 0, 'C');
+        $pdf->Cell($w[4], 6, (string) ($r['pending'] ?? 0), 1, 0, 'C');
+        $pdf->Cell($w[5], 6, (string) ($r['efficiency_pct'] ?? 0), 1, 0, 'C');
+        $pdf->Cell($w[6], 6, (string) ($r['avg_delivery_hours'] ?? '-'), 1, 0, 'C');
+        $pdf->Cell($w[7], 6, $r['rdc_code'] ?? '', 1, 1, 'C');
+    }
+    $pdf->Ln(6);
+
+    // Delivery details
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->Cell(0, 6, 'Delivery Records (sample)', 0, 1);
+    $pdf->SetFont('Helvetica', 'B', 7);
+    $wd = [32, 35, 30, 38, 38, 28, 22];
+    $pdf->Cell($wd[0], 6, 'Order #', 1, 0);
+    $pdf->Cell($wd[1], 6, 'RDC', 1, 0);
+    $pdf->Cell($wd[2], 6, 'Driver', 1, 0);
+    $pdf->Cell($wd[3], 6, 'Scheduled', 1, 0);
+    $pdf->Cell($wd[4], 6, 'Completed', 1, 0);
+    $pdf->Cell($wd[5], 6, 'Status', 1, 0);
+    $pdf->Cell($wd[6], 6, 'Hrs', 1, 1, 'C');
+    $pdf->SetFont('Helvetica', '', 7);
+    foreach ($details as $d) {
+        $pdf->Cell($wd[0], 5, substr($d['order_number'] ?? '', 0, 14), 1, 0);
+        $pdf->Cell($wd[1], 5, substr($d['rdc_name'] ?? '-', 0, 18), 1, 0);
+        $pdf->Cell($wd[2], 5, substr($d['driver_name'] ?? '-', 0, 12), 1, 0);
+        $pdf->Cell($wd[3], 5, $d['scheduled_date'] ? date('M j, Y', strtotime($d['scheduled_date'])) : '-', 1, 0);
+        $pdf->Cell($wd[4], 5, $d['completed_date'] ? date('M j, Y', strtotime($d['completed_date'])) : '-', 1, 0);
+        $pdf->Cell($wd[5], 5, $d['delivery_status'] ?? '-', 1, 0);
+        $pdf->Cell($wd[6], 5, $d['duration_hours'] !== null ? (string) $d['duration_hours'] : '-', 1, 1, 'C');
+    }
+
+    $pdf->Output('D', 'delivery_efficiency_report_' . date('Y-m-d') . '.pdf');
+    exit;
 }
 
 // ── CSV Export ───────────────────────────────────────────────
@@ -101,6 +183,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     exit;
 }
 
+// ── Page output (include header only after exports are handled) ─
+require_once __DIR__ . '/../../includes/header.php';
+
 // ── Chart data preparation ───────────────────────────────────
 $chartData = [
     'labels'     => array_column($rdcData, 'rdc_name'),
@@ -146,9 +231,13 @@ $statusBadge = [
             </div>
             <div class="flex items-center gap-3 mt-4 md:mt-0">
                 <?php
-                    $exportQs = http_build_query(array_merge($_GET, ['export' => 'csv']));
+                    $exportCsvQs = http_build_query(array_merge($_GET, ['export' => 'csv']));
+                    $exportPdfQs = http_build_query(array_merge($_GET, ['export' => 'pdf']));
                 ?>
-                <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $exportQs; ?>" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-green-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $exportPdfQs; ?>" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-sm shadow-lg shadow-red-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                    <span class="material-symbols-rounded text-lg">picture_as_pdf</span> Export PDF
+                </a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $exportCsvQs; ?>" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-green-200/50 hover:scale-[1.02] transition flex items-center gap-2">
                     <span class="material-symbols-rounded text-lg">download</span> Export CSV
                 </a>
             </div>

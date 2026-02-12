@@ -25,7 +25,11 @@ define('MAIL_LOG_DIR', __DIR__ . '/../logs/emails/');
 define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');
 define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '');
 
-// Build the Google redirect URI dynamically from the request
+// Build the Google redirect URI from relative base path (works in any subfolder / server)
+if (!defined('BASE_PATH')) {
+    require_once __DIR__ . '/config.php';
+}
 $_googleScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $_googleHost   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-define('GOOGLE_REDIRECT_URI', $_googleScheme . '://' . $_googleHost . '/isdn/controllers/AuthController.php?action=google_callback');
+$_base         = rtrim(BASE_PATH, '/');
+define('GOOGLE_REDIRECT_URI', $_googleScheme . '://' . $_googleHost . ($_base !== '' ? $_base . '/' : '') . 'controllers/AuthController.php?action=google_callback');

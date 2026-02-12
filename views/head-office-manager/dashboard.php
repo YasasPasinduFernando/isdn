@@ -126,6 +126,9 @@ foreach ($statusChartData['labels'] as $label) {
                 <a href="<?php echo BASE_PATH; ?>/index.php?page=stock-reports" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-200/50 hover:scale-[1.02] transition flex items-center gap-2">
                     <span class="material-symbols-rounded text-lg">bar_chart</span> Stock Reports
                 </a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=delivery-report" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-bold text-sm shadow-lg shadow-indigo-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                    <span class="material-symbols-rounded text-lg">local_shipping</span> Delivery Report
+                </a>
             </div>
         </div>
 
@@ -467,9 +470,9 @@ foreach ($statusChartData['labels'] as $label) {
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-4 group-hover:bg-white/30 transition backdrop-blur-sm"><span class="material-symbols-rounded">bar_chart</span></div>
                             <div><h3 class="font-bold text-sm">Stock Reports</h3><p class="text-xs opacity-90">View inventory levels</p></div>
                         </a>
-                        <a href="<?php echo BASE_PATH; ?>/index.php?page=stock-reports" class="flex items-center p-4 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-200/50 transform hover:scale-[1.02] transition duration-300 group border border-white/20">
+                        <a href="<?php echo BASE_PATH; ?>/index.php?page=delivery-report" class="flex items-center p-4 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-200/50 transform hover:scale-[1.02] transition duration-300 group border border-white/20">
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-4 group-hover:bg-white/30 transition backdrop-blur-sm"><span class="material-symbols-rounded">analytics</span></div>
-                            <div><h3 class="font-bold text-sm">Analytics</h3><p class="text-xs opacity-90">Performance metrics</p></div>
+                            <div><h3 class="font-bold text-sm">Delivery Efficiency</h3><p class="text-xs opacity-90">On-time delivery analytics</p></div>
                         </a>
                         <a href="<?php echo BASE_PATH; ?>/index.php?page=stock-reports" class="flex items-center p-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-teal-200/50 transform hover:scale-[1.02] transition duration-300 group border border-white/20">
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-4 group-hover:bg-white/30 transition backdrop-blur-sm"><span class="material-symbols-rounded">swap_horiz</span></div>

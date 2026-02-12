@@ -1,7 +1,8 @@
 <?php
 // Application Configuration
 define('APP_NAME', 'ISDN - IslandLink Sales Distribution Network');
-// Base URL/path auto-detected for shared hosting (e.g., InfinityFree).
+
+// Relative base path for URLs – works in any subfolder and on any server (no hardcoded paths).
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 $scheme = $isHttps ? 'https' : 'http';
@@ -16,7 +17,12 @@ if ($docRoot && $appRoot && strpos($appRoot, $docRoot) === 0) {
     $basePath = str_replace('\\', '/', $scriptDir);
 }
 $basePath = rtrim($basePath, '/');
+if ($basePath === '' || $basePath === '\\') {
+    $basePath = '';
+}
 
+// Application root directory (for file paths); use __DIR__-relative paths in requires.
+define('APP_ROOT', dirname(__DIR__));
 define('APP_URL', $scheme . '://' . $host . $basePath);
 define('BASE_PATH', $basePath);
 define('SITE_KEY', 'your-secret-key-here');

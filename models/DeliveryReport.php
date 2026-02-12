@@ -118,10 +118,10 @@ class DeliveryReport
                     WHEN od.completed_date IS NOT NULL
                      AND od.completed_date > od.delivery_date
                     THEN 1 ELSE 0
-                END) AS delayed,
+                END) AS `delayed`,
 
                 /* Still pending */
-                SUM(CASE WHEN od.completed_date IS NULL THEN 1 ELSE 0 END) AS pending,
+                SUM(CASE WHEN od.completed_date IS NULL THEN 1 ELSE 0 END) AS `pending`,
 
                 /* Efficiency % = (on-time / completed) × 100 */
                 ROUND(
@@ -185,8 +185,8 @@ class DeliveryReport
                 COUNT(od.id) AS total_deliveries,
                 SUM(CASE WHEN od.completed_date IS NOT NULL THEN 1 ELSE 0 END) AS completed,
                 SUM(CASE WHEN od.completed_date IS NOT NULL AND od.completed_date <= od.delivery_date THEN 1 ELSE 0 END) AS on_time,
-                SUM(CASE WHEN od.completed_date IS NOT NULL AND od.completed_date > od.delivery_date THEN 1 ELSE 0 END) AS delayed,
-                SUM(CASE WHEN od.completed_date IS NULL THEN 1 ELSE 0 END) AS pending,
+                SUM(CASE WHEN od.completed_date IS NOT NULL AND od.completed_date > od.delivery_date THEN 1 ELSE 0 END) AS `delayed`,
+                SUM(CASE WHEN od.completed_date IS NULL THEN 1 ELSE 0 END) AS `pending`,
                 ROUND(
                     SUM(CASE WHEN od.completed_date IS NOT NULL AND od.completed_date <= od.delivery_date THEN 1 ELSE 0 END) * 100.0
                     / NULLIF(SUM(CASE WHEN od.completed_date IS NOT NULL THEN 1 ELSE 0 END), 0),

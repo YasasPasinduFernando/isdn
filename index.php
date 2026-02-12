@@ -9,6 +9,7 @@ $page = $_GET['page'] ?? 'home';
 // Check if user is logged in for protected pages
 $protected_pages = [
     'dashboard',
+    'profile',
     'products',
     'cart',
     'orders',
@@ -79,6 +80,9 @@ switch ($page) {
         break;
     case 'payment':
         require __DIR__ . '/views/customer/payment.php';
+        break;
+    case 'profile':
+        require __DIR__ . '/views/shared/profile_edit.php';
         break;
     case 'rdc-manager-dashboard':
         require __DIR__ . '/views/rdc-manager/dashboard.php';

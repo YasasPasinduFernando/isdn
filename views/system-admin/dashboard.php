@@ -68,12 +68,18 @@ $statusColors = [
                 <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">System Administration</h1>
                 <p class="text-gray-500 mt-1">Welcome back, <span class="text-teal-600 font-semibold"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></span> &mdash; <?php echo date('l, F j, Y'); ?></p>
             </div>
-            <div class="flex items-center space-x-3 mt-4 md:mt-0">
+            <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
                 <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-200/50 hover:scale-[1.02] transition flex items-center gap-2">
                     <span class="material-symbols-rounded text-lg">group_add</span> Manage Users
                 </a>
                 <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-200/50 hover:scale-[1.02] transition flex items-center gap-2">
                     <span class="material-symbols-rounded text-lg">inventory_2</span> Manage Products
+                </a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-audit" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold text-sm shadow-lg shadow-purple-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                    <span class="material-symbols-rounded text-lg">history</span> Audit Log
+                </a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=delivery-report" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-bold text-sm shadow-lg shadow-indigo-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                    <span class="material-symbols-rounded text-lg">local_shipping</span> Delivery Report
                 </a>
             </div>
         </div>

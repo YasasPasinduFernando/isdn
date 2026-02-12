@@ -27,28 +27,36 @@ function dashboard_page_for_role($role) {
     return $map[$role] ?? 'dashboard';
 }
 
+/** Profile page key for header link; system_admin uses system-admin-profile, others use profile. */
+function get_profile_page_for_role($role) {
+    if ($role === 'system_admin') {
+        return 'system-admin-profile';
+    }
+    return 'profile';
+}
+
 function get_allowed_pages_for_role($role) {
     $map = [
         'customer' => [
-            'dashboard', 'products', 'cart', 'orders', 'tracking', 'payment'
+            'dashboard', 'products', 'cart', 'orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports'
+            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
-            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports'
+            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
         ],
         'rdc_sales_ref' => [
-            'rdc-sales-ref-dashboard', 'products', 'orders'
+            'rdc-sales-ref-dashboard', 'products', 'orders', 'profile'
         ],
         'logistics_officer' => [
-            'logistics-officer-dashboard', 'stock-reports', 'tracking'
+            'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
         ],
         'rdc_driver' => [
-            'rdc-driver-dashboard', 'tracking'
+            'rdc-driver-dashboard', 'tracking', 'profile'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports', 'delivery-report'
+            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'profile'
         ],
         'system_admin' => [
             'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
@@ -65,58 +73,53 @@ function is_page_allowed_for_role($role, $page) {
     return in_array($page, $allowed, true);
 }
 
-function get_nav_items_for_role($role) {
-    $map = [
-        'customer' => [
-            'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
-            'orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
-            'cart' => ['icon' => 'shopping_cart', 'label' => 'Cart'],
-            'tracking' => ['icon' => 'location_on', 'label' => 'Tracking']
-        ],
-        'rdc_manager' => [
-            'rdc-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'request-product-units' => ['icon' => 'inbox', 'label' => 'Requests'],
-            'send-product-units' => ['icon' => 'local_shipping', 'label' => 'Dispatch'],
-            'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
-        ],
-        'rdc_clerk' => [
-            'rdc-clerk-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
-            'request-product-units' => ['icon' => 'inbox', 'label' => 'Requests'],
-            'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
-        ],
-        'rdc_sales_ref' => [
-            'rdc-sales-ref-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
-            'orders' => ['icon' => 'receipt_long', 'label' => 'Orders']
-        ],
-        'logistics_officer' => [
-            'logistics-officer-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports'],
-            'tracking' => ['icon' => 'location_on', 'label' => 'Tracking']
-        ],
-        'rdc_driver' => [
-            'rdc-driver-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'tracking' => ['icon' => 'location_on', 'label' => 'Tracking']
-        ],
-        'head_office_manager' => [
-            'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
-        ],
-        'system_admin' => [
-            'system-admin-dashboard'  => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'system-admin-users'      => ['icon' => 'group', 'label' => 'Users'],
-            'system-admin-products'   => ['icon' => 'inventory_2', 'label' => 'Products'],
-            'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
-            'system-admin-audit'      => ['icon' => 'history', 'label' => 'Audit Log'],
-            'stock-reports'           => ['icon' => 'bar_chart', 'label' => 'Reports']
-        ]
+/**
+ * Page display info (icon + label) for nav. Only pages listed here can appear in the menu.
+ * Nav is built from allowed pages for the role, so users only see links they can access.
+ */
+function get_nav_page_labels() {
+    return [
+        'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
+        'orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
+        'cart' => ['icon' => 'shopping_cart', 'label' => 'Cart'],
+        'tracking' => ['icon' => 'location_on', 'label' => 'Tracking'],
+        'payment' => ['icon' => 'payment', 'label' => 'Payment'],
+        'rdc-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'request-product-units' => ['icon' => 'inbox', 'label' => 'Requests'],
+        'send-product-units' => ['icon' => 'local_shipping', 'label' => 'Dispatch'],
+        'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports'],
+        'rdc-clerk-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
+        'rdc-sales-ref-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'logistics-officer-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'rdc-driver-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'delivery-report' => ['icon' => 'local_shipping', 'label' => 'Delivery Report'],
+        'system-admin-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'system-admin-users' => ['icon' => 'group', 'label' => 'Users'],
+        'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Products'],
+        'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
+        // Audit Log intentionally omitted from nav; system admin only, access via dashboard buttons/Quick Actions
     ];
+}
 
-    return $map[$role] ?? [
-        'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard']
-    ];
+/**
+ * Nav items for a role: only pages the role is allowed to access, with icon and label.
+ * Order is determined by the role's allowed list so nav matches access (e.g. HO manager: Dashboard, Reports, Delivery Report).
+ */
+function get_nav_items_for_role($role) {
+    $allowed = get_allowed_pages_for_role($role);
+    $labels = get_nav_page_labels();
+    // Profile is in header dropdown; exclude from main nav to avoid clutter
+    $allowed = array_diff($allowed, ['system-admin-profile', 'profile', 'payment']);
+    $order = [];
+    foreach ($allowed as $page) {
+        if (isset($labels[$page])) {
+            $order[$page] = $labels[$page];
+        }
+    }
+    return $order ?: ['dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard']];
 }
 
 function redirect($url) {

@@ -196,6 +196,22 @@ $chartData = [
     'avg_hours'  => array_map('floatval', array_column($rdcData, 'avg_delivery_hours')),
 ];
 
+// Map data for Sri Lanka regional view: rdc_code => { efficiency, rdc_name, on_time, delayed, pending, perf_class }
+$mapRdcData = [];
+foreach ($rdcData as $r) {
+    $eff = (float) ($r['efficiency_pct'] ?? 0);
+    $perfClass = $eff >= 80 ? 'good' : ($eff >= 50 ? 'medium' : 'bad');
+    $mapRdcData[$r['rdc_code'] ?? ''] = [
+        'rdc_name'   => $r['rdc_name'] ?? '',
+        'efficiency' => $eff,
+        'on_time'    => (int) ($r['on_time'] ?? 0),
+        'delayed'    => (int) ($r['delayed'] ?? 0),
+        'pending'    => (int) ($r['pending'] ?? 0),
+        'total'      => (int) ($r['total_deliveries'] ?? 0),
+        'perf_class' => $perfClass,
+    ];
+}
+
 $statusBadge = [
     'On-time' => 'bg-green-100 text-green-700',
     'Delayed' => 'bg-red-100 text-red-700',
@@ -314,6 +330,70 @@ $statusBadge = [
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Avg Time</p>
                 <h3 class="text-2xl font-bold text-purple-600 mt-1 font-['Outfit']"><?php echo $summary['avg_hours'] ?? 0; ?>h</h3>
                 <p class="text-purple-600 text-[10px] font-semibold mt-1 flex items-center"><span class="material-symbols-rounded text-xs mr-0.5">timer</span> Order→Delivery</p>
+            </div>
+        </div>
+
+        <!-- Sri Lanka Map - Regional Delivery Efficiency -->
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 mb-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div class="flex items-center space-x-3">
+                    <span class="material-symbols-rounded text-teal-500 text-2xl">map</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Regional Delivery Efficiency</h2>
+                        <p class="text-sm text-gray-500">Interactive map — RDC locations with performance markers</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-green-500 shadow-sm border-2 border-white"></span>
+                        <span class="text-xs font-medium text-gray-600">Good (≥80%)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-amber-500 shadow-sm border-2 border-white"></span>
+                        <span class="text-xs font-medium text-gray-600">Medium (50–79%)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-red-500 shadow-sm border-2 border-white"></span>
+                        <span class="text-xs font-medium text-gray-600">Needs attention (&lt;50%)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-gray-300 shadow-sm border-2 border-white"></span>
+                        <span class="text-xs font-medium text-gray-600">No data</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+                <div class="flex-1 w-full lg:min-w-0">
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-inner border border-gray-100">
+                        <div id="delivery-map" class="w-full h-[400px] rounded-2xl"></div>
+                    </div>
+                </div>
+                <div class="w-full lg:w-80 space-y-3">
+                    <?php
+                    $allCodes = ['NORTH', 'SOUTH', 'EAST', 'WEST', 'CENTRAL'];
+                    foreach ($allCodes as $code):
+                        $d = $mapRdcData[$code] ?? null;
+                        $label = $code === 'NORTH' ? 'Northern' : ($code === 'SOUTH' ? 'Southern' : ($code === 'EAST' ? 'Eastern' : ($code === 'WEST' ? 'Western' : 'Central')));
+                        $label .= ' RDC';
+                        $perfClass = $d['perf_class'] ?? 'empty';
+                        $bgClass = $perfClass === 'good' ? 'bg-green-50 border-green-200' : ($perfClass === 'medium' ? 'bg-amber-50 border-amber-200' : ($perfClass === 'bad' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'));
+                        $effColor = $perfClass === 'good' ? 'text-green-600' : ($perfClass === 'medium' ? 'text-amber-600' : ($perfClass === 'bad' ? 'text-red-600' : 'text-gray-500'));
+                    ?>
+                    <div class="rounded-xl border p-4 <?php echo $bgClass; ?> transition hover:shadow-md" data-rdc="<?php echo $code; ?>">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-gray-800"><?php echo htmlspecialchars($d['rdc_name'] ?? $label); ?></span>
+                            <span class="font-bold <?php echo $effColor; ?>"><?php echo $d ? $d['efficiency'] . '%' : '—'; ?></span>
+                        </div>
+                        <?php if ($d): ?>
+                        <div class="flex gap-4 mt-2 text-xs text-gray-500">
+                            <span class="text-green-600">On-time: <?php echo $d['on_time']; ?></span>
+                            <span class="text-red-600">Delayed: <?php echo $d['delayed']; ?></span>
+                            <span class="text-amber-600">Pending: <?php echo $d['pending']; ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
 
@@ -450,6 +530,100 @@ $statusBadge = [
 
     </div>
 </div>
+
+<!-- Leaflet + OpenStreetMap for real map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+<style>
+.custom-marker { background: none !important; border: none !important; }
+.marker-shop-icon { font-family: 'Material Symbols Rounded'; font-weight: 400; font-style: normal; font-size: 22px; line-height: 1; letter-spacing: normal; }
+#delivery-map .leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+#delivery-map .leaflet-popup-content { margin: 12px 16px; min-width: 160px; }
+</style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function() {
+    var mapData = <?php echo json_encode($mapRdcData); ?>;
+    var rdcCoords = {
+        'NORTH': [9.6615, 80.0255],
+        'SOUTH': [6.0531, 80.2110],
+        'EAST': [7.7131, 81.6924],
+        'WEST': [6.9271, 79.8612],
+        'CENTRAL': [7.2906, 80.6337]
+    };
+    var rdcAddresses = {
+        'NORTH': 'Jaffna Industrial Zone',
+        'SOUTH': 'Galle Trade Center',
+        'EAST': 'Batticaloa Hub',
+        'WEST': 'Colombo Warehouse Complex',
+        'CENTRAL': 'Kandy Distribution Park'
+    };
+    var colors = { good: '#10b981', medium: '#f59e0b', bad: '#ef4444', empty: '#9ca3af' };
+    // Simplified Sri Lanka regional polygons (lat, lng) - approximate provincial boundaries
+    var regionPolygons = {
+        'NORTH': [[9.75,80.0],[9.5,80.15],[9.0,80.5],[8.7,80.6],[8.9,80.9],[9.3,80.95],[9.6,80.5],[9.75,80.0]],
+        'SOUTH': [[6.0,80.2],[6.3,80.4],[6.6,80.3],[6.9,80.85],[6.5,81.0],[6.1,80.6],[6.0,80.2]],
+        'EAST': [[8.9,80.6],[8.5,81.0],[7.8,81.7],[7.2,81.8],[6.8,81.5],[7.0,81.0],[7.5,80.8],[8.2,80.7],[8.9,80.6]],
+        'WEST': [[8.7,79.8],[8.0,79.9],[7.0,79.95],[6.2,80.1],[6.0,80.2],[6.3,80.4],[6.6,80.3],[7.2,80.0],[7.8,79.9],[8.7,79.8]],
+        'CENTRAL': [[8.0,80.5],[7.8,80.7],[7.5,80.8],[7.0,81.0],[6.8,81.5],[7.2,80.9],[7.5,80.5],[7.8,80.2],[8.0,80.5]]
+    };
+    var map = L.map('delivery-map').setView([7.8731, 80.7718], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+    // Add colored region polygons first (below markers)
+    ['NORTH','SOUTH','EAST','WEST','CENTRAL'].forEach(function(code) {
+        var d = mapData[code] || null;
+        var col = d ? colors[d.perf_class] : colors.empty;
+        var fillOpacity = d ? 0.55 : 0.25;
+        var poly = L.polygon(regionPolygons[code], {
+            color: col,
+            weight: 2,
+            fillColor: col,
+            fillOpacity: fillOpacity
+        }).addTo(map);
+        var name = d ? d.rdc_name : (code + ' RDC');
+        var addr = rdcAddresses[code] || '';
+        var popup = '<div style="font-weight:700;color:#1f2937;font-size:14px;">' + name + '</div>';
+        if (addr) popup += '<div style="font-size:11px;color:#6b7280;margin-top:4px;">' + addr + '</div>';
+        if (d) {
+            var effColor = d.perf_class === 'good' ? '#059669' : (d.perf_class === 'medium' ? '#d97706' : '#dc2626');
+            popup += '<div style="margin-top:8px;font-size:13px;"><span style="font-weight:700;color:' + effColor + ';">' + d.efficiency + '%</span> efficiency</div>';
+            popup += '<div style="font-size:11px;margin-top:4px;"><span style="color:#10b981">On-time: ' + d.on_time + '</span> | <span style="color:#ef4444">Delayed: ' + d.delayed + '</span> | <span style="color:#f59e0b">Pending: ' + d.pending + '</span></div>';
+        } else {
+            popup += '<div style="margin-top:8px;font-size:11px;color:#6b7280;">No delivery data</div>';
+        }
+        poly.bindPopup(popup, { maxWidth: 260 });
+        poly.on('mouseover', function() { this.setStyle({ fillOpacity: 0.75 }); });
+        poly.on('mouseout', function() { this.setStyle({ fillOpacity: fillOpacity }); });
+    });
+    // Add markers on top - shop/store icons for RDC locations
+    ['NORTH','SOUTH','EAST','WEST','CENTRAL'].forEach(function(code) {
+        var d = mapData[code] || null;
+        var c = rdcCoords[code];
+        var col = d ? colors[d.perf_class] : colors.empty;
+        var icon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:white;border:2px solid ' + col + ';box-shadow:0 2px 8px rgba(0,0,0,0.25);"><span class="marker-shop-icon" style="color:' + col + ';">storefront</span></div>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+        var m = L.marker(c, { icon: icon }).addTo(map);
+        var name = d ? d.rdc_name : (code + ' RDC');
+        var addr = rdcAddresses[code] || '';
+        var popup = '<div style="font-weight:700;color:#1f2937;font-size:14px;">' + name + '</div>';
+        if (addr) popup += '<div style="font-size:11px;color:#6b7280;margin-top:4px;">' + addr + '</div>';
+        if (d) {
+            var effColor = d.perf_class === 'good' ? '#059669' : (d.perf_class === 'medium' ? '#d97706' : '#dc2626');
+            popup += '<div style="margin-top:8px;font-size:13px;"><span style="font-weight:700;color:' + effColor + ';">' + d.efficiency + '%</span> efficiency</div>';
+            popup += '<div style="font-size:11px;margin-top:4px;"><span style="color:#10b981">On-time: ' + d.on_time + '</span> | <span style="color:#ef4444">Delayed: ' + d.delayed + '</span> | <span style="color:#f59e0b">Pending: ' + d.pending + '</span></div>';
+        } else {
+            popup += '<div style="margin-top:8px;font-size:11px;color:#6b7280;">No delivery data</div>';
+        }
+        m.bindPopup(popup, { maxWidth: 260 });
+    });
+})();
+</script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

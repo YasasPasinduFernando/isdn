@@ -4,3 +4,6 @@ node_modules/
 *.log
 uploads/*
 !uploads/.gitkeep
+logs/emails/*
+!logs/emails/.gitkeep
+!logs/.gitkeep

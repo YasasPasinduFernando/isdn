@@ -57,6 +57,12 @@ switch ($page) {
     case 'register':
         require __DIR__ . '/views/auth/register.php';
         break;
+    case 'forgot-password':
+        require __DIR__ . '/views/auth/forgot_password.php';
+        break;
+    case 'reset-password':
+        require __DIR__ . '/views/auth/reset_password.php';
+        break;
     case 'dashboard':
         require __DIR__ . '/views/customer/dashboard.php';
         break;

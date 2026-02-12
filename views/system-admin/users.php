@@ -181,6 +181,7 @@ $users      = $admin->getUsers($page, $perPage, $search, $roleFilter);
 $totalUsers = $admin->countUsers($search, $roleFilter);
 $totalPages = max(1, ceil($totalUsers / $perPage));
 $allRoles   = $admin->getAllRoles();
+$totalAll   = $admin->countUsers('', '');
 
 $roleBadges = [
     'customer'            => 'bg-gray-100 text-gray-700',
@@ -199,17 +200,48 @@ $roleBadges = [
         <?php display_flash(); ?>
 
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-dashboard" class="w-10 h-10 rounded-xl bg-white/50 border border-white/60 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-white/70 transition"><span class="material-symbols-rounded">arrow_back</span></a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-dashboard" class="w-10 h-10 rounded-xl bg-white/70 border border-white/80 flex items-center justify-center text-gray-500 hover:text-teal-600 hover:bg-white shadow-sm transition"><span class="material-symbols-rounded">arrow_back</span></a>
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800 font-['Outfit']">User Management</h1>
-                    <p class="text-sm text-gray-500"><?php echo number_format($totalUsers); ?> users found</p>
+                    <p class="text-sm text-gray-500">Manage accounts and roles</p>
                 </div>
             </div>
-            <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users&action=add" class="mt-4 md:mt-0 px-5 py-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-200/50 hover:scale-[1.02] transition flex items-center gap-2 w-fit">
+            <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users&action=add" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-sm shadow-lg shadow-teal-200/50 hover:shadow-teal-200/70 hover:scale-[1.02] transition flex items-center gap-2 w-fit">
                 <span class="material-symbols-rounded text-lg">person_add</span> Add User
             </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div class="stat-card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
+                    <span class="material-symbols-rounded text-2xl">group</span>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800"><?php echo number_format($totalAll); ?></p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Users</p>
+                </div>
+            </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <span class="material-symbols-rounded text-2xl">filter_list</span>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800"><?php echo number_format($totalUsers); ?></p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo ($search || $roleFilter) ? 'Showing (filtered)' : 'In list'; ?></p>
+                </div>
+            </div>
+            <div class="stat-card flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+                <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <span class="material-symbols-rounded text-2xl">badge</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-gray-700 truncate"><?php echo count($allRoles); ?> roles</p>
+                    <p class="text-xs text-gray-500">Customer, RDC, Admin...</p>
+                </div>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -218,77 +250,75 @@ $roleBadges = [
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Search</label>
                 <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Username or email..."
-                       class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent transition shadow-sm">
+                       class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent transition shadow-sm">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Role</label>
-                <select name="role" class="border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-3 py-2 text-sm min-w-[160px] focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+                <select name="role" class="border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-3 py-2.5 text-sm min-w-[160px] focus:ring-2 focus:ring-teal-500 transition shadow-sm">
                     <option value="">All Roles</option>
                     <?php foreach ($allRoles as $k => $v): ?>
                         <option value="<?php echo $k; ?>" <?php echo $roleFilter === $k ? 'selected' : ''; ?>><?php echo $v; ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold text-sm shadow-lg hover:scale-[1.02] transition flex items-center gap-1.5">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold text-sm shadow-lg hover:scale-[1.02] transition flex items-center gap-1.5">
                 <span class="material-symbols-rounded text-base">search</span> Search
             </button>
             <?php if ($search || $roleFilter): ?>
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users" class="px-4 py-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-white/40 transition text-sm flex items-center gap-1"><span class="material-symbols-rounded text-base">refresh</span> Reset</a>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users" class="px-4 py-2.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-white/40 transition text-sm flex items-center gap-1"><span class="material-symbols-rounded text-base">refresh</span> Reset</a>
             <?php endif; ?>
         </form>
 
         <!-- Users Table -->
-        <div class="glass-panel rounded-3xl p-6 sm:p-8 mb-6">
+        <div class="glass-panel rounded-3xl overflow-hidden mb-6 shadow-sm">
             <?php if (empty($users)): ?>
-                <div class="text-center py-16">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-gray-100/50 flex items-center justify-center text-gray-300 mb-4"><span class="material-symbols-rounded text-3xl">person_search</span></div>
-                    <p class="text-gray-400">No users found</p>
+                <div class="text-center py-20">
+                    <div class="w-20 h-20 mx-auto rounded-2xl bg-gray-100/80 flex items-center justify-center text-gray-300 mb-4"><span class="material-symbols-rounded text-4xl">person_search</span></div>
+                    <p class="text-gray-500 font-medium">No users found</p>
+                    <p class="text-sm text-gray-400 mt-1">Try adjusting search or filters</p>
                 </div>
             <?php else: ?>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm admin-table">
                         <thead>
-                            <tr class="text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200/50">
-                                <th class="pb-3 pr-3">#</th>
-                                <th class="pb-3 pr-3">Username</th>
-                                <th class="pb-3 pr-3">Email</th>
-                                <th class="pb-3 pr-3">Role</th>
-                                <th class="pb-3 pr-3">RDC</th>
-                                <th class="pb-3 pr-3">Status</th>
-                                <th class="pb-3 pr-3">Joined</th>
-                                <th class="pb-3 text-right">Actions</th>
+                            <tr class="text-left">
+                                <th>#</th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>RDC</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th class="text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100/50">
+                        <tbody class="divide-y divide-slate-100">
                             <?php foreach ($users as $u): ?>
-                            <tr class="hover:bg-white/30 transition group">
-                                <td class="py-3 pr-3 text-gray-400 text-xs"><?php echo $u['id']; ?></td>
-                                <td class="py-3 pr-3 font-semibold text-gray-800"><?php echo htmlspecialchars($u['username']); ?></td>
-                                <td class="py-3 pr-3 text-gray-600"><?php echo htmlspecialchars($u['email']); ?></td>
-                                <td class="py-3 pr-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $roleBadges[$u['role']] ?? 'bg-gray-100 text-gray-600'; ?>"><?php echo ucwords(str_replace('_', ' ', $u['role'])); ?></span></td>
-                                <td class="py-3 pr-3 text-gray-500 text-xs"><?php echo htmlspecialchars($u['rdc_name'] ?? '-'); ?></td>
-                                <td class="py-3 pr-3">
+                            <tr class="table-row-hover" data-user="<?php echo htmlspecialchars(json_encode(['id' => $u['id'], 'username' => $u['username'], 'email' => $u['email'], 'role' => $u['role'], 'rdc_name' => $u['rdc_name'] ?? '-', 'is_active' => (int)($u['is_active'] ?? 1), 'created_at' => $u['created_at']])); ?>">
+                                <td class="text-gray-400 font-mono text-xs"><?php echo $u['id']; ?></td>
+                                <td>
+                                    <button type="button" onclick="openViewUser(this.closest('tr'))" class="font-semibold text-gray-800 hover:text-teal-600 transition text-left flex items-center gap-2">
+                                        <span class="w-8 h-8 rounded-lg bg-teal-100/80 flex items-center justify-center text-teal-600 flex-shrink-0"><span class="material-symbols-rounded text-base">person</span></span>
+                                        <?php echo htmlspecialchars($u['username']); ?>
+                                    </button>
+                                </td>
+                                <td class="text-gray-600"><?php echo htmlspecialchars($u['email']); ?></td>
+                                <td><span class="px-2.5 py-1 rounded-lg text-xs font-bold <?php echo $roleBadges[$u['role']] ?? 'bg-gray-100 text-gray-600'; ?>"><?php echo ucwords(str_replace('_', ' ', $u['role'])); ?></span></td>
+                                <td class="text-gray-500 text-xs"><?php echo htmlspecialchars($u['rdc_name'] ?? '-'); ?></td>
+                                <td>
                                     <?php if ($u['is_active'] ?? 1): ?>
-                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-green-600"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active</span>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600"><span class="w-2 h-2 rounded-full bg-green-500"></span>Active</span>
                                     <?php else: ?>
-                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-500"><span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Inactive</span>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-500"><span class="w-2 h-2 rounded-full bg-red-400"></span>Inactive</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="py-3 pr-3 text-gray-400 text-xs"><?php echo date('M j, Y', strtotime($u['created_at'])); ?></td>
-                                <td class="py-3 text-right">
-                                    <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-                                        <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users&action=edit&id=<?php echo $u['id']; ?>" class="w-8 h-8 rounded-lg bg-blue-100/50 text-blue-600 flex items-center justify-center hover:bg-blue-200 transition" title="Edit"><span class="material-symbols-rounded text-base">edit</span></a>
-                                        <form method="POST" class="inline" onsubmit="return confirm('Toggle active status?')">
-                                            <input type="hidden" name="form_action" value="toggle">
-                                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                            <button class="w-8 h-8 rounded-lg <?php echo ($u['is_active'] ?? 1) ? 'bg-yellow-100/50 text-yellow-600 hover:bg-yellow-200' : 'bg-green-100/50 text-green-600 hover:bg-green-200'; ?> flex items-center justify-center transition" title="<?php echo ($u['is_active'] ?? 1) ? 'Deactivate' : 'Activate'; ?>"><span class="material-symbols-rounded text-base"><?php echo ($u['is_active'] ?? 1) ? 'person_off' : 'person'; ?></span></button>
-                                        </form>
+                                <td class="text-gray-400 text-xs"><?php echo date('M j, Y', strtotime($u['created_at'])); ?></td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users&action=edit&id=<?php echo $u['id']; ?>" class="admin-action-btn admin-action-btn-edit" title="Edit"><span class="material-symbols-rounded text-lg">edit</span></a>
+                                        <button type="button" onclick="openConfirmUser(<?php echo $u['id']; ?>, 'toggle', '<?php echo ($u['is_active'] ?? 1) ? 'Deactivate' : 'Activate'; ?> this user?')" class="admin-action-btn admin-action-btn-toggle <?php echo ($u['is_active'] ?? 1) ? '' : 'on'; ?>" title="<?php echo ($u['is_active'] ?? 1) ? 'Deactivate' : 'Activate'; ?>"><span class="material-symbols-rounded text-lg"><?php echo ($u['is_active'] ?? 1) ? 'person_off' : 'person'; ?></span></button>
                                         <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                                        <form method="POST" class="inline" onsubmit="return confirm('Permanently delete this user? This cannot be undone.')">
-                                            <input type="hidden" name="form_action" value="delete">
-                                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                            <button class="w-8 h-8 rounded-lg bg-red-100/50 text-red-500 flex items-center justify-center hover:bg-red-200 transition" title="Delete"><span class="material-symbols-rounded text-base">delete</span></button>
-                                        </form>
+                                        <button type="button" onclick="openConfirmUser(<?php echo $u['id']; ?>, 'delete', 'Permanently delete this user? This cannot be undone.')" class="admin-action-btn admin-action-btn-delete" title="Delete"><span class="material-symbols-rounded text-lg">delete</span></button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -302,13 +332,13 @@ $roleBadges = [
 
         <!-- Pagination -->
         <?php if ($totalPages > 1): ?>
-        <div class="flex items-center justify-center gap-2">
+        <div class="flex items-center justify-center gap-2 flex-wrap">
             <?php for ($i = 1; $i <= $totalPages; $i++):
                 $isActive = $i === $page;
                 $qs = http_build_query(array_merge($_GET, ['pg' => $i]));
             ?>
                 <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $qs; ?>"
-                   class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition <?php echo $isActive ? 'bg-teal-500 text-white shadow-lg shadow-teal-200/50' : 'bg-white/50 text-gray-600 hover:bg-white/70 border border-white/60'; ?>">
+                   class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition <?php echo $isActive ? 'bg-teal-500 text-white shadow-lg shadow-teal-200/50' : 'bg-white/70 text-gray-600 hover:bg-white border border-slate-200/80'; ?>">
                     <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
@@ -316,5 +346,95 @@ $roleBadges = [
         <?php endif; ?>
     </div>
 </div>
+
+<!-- View User Modal -->
+<div id="modal-view-user" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-view-user-title">
+    <div class="modal-box modal-box-lg" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modal-view-user-title" class="text-lg font-bold text-gray-800">User Details</h2>
+            <button type="button" class="btn-modal-close" onclick="closeViewUser()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-[var(--admin-accent)]" style="background: var(--admin-accent-light);">
+                        <span class="material-symbols-rounded text-3xl">person</span>
+                    </div>
+                    <div>
+                        <p id="view-user-name" class="text-lg font-bold text-gray-800"></p>
+                        <p id="view-user-email" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div><dt class="text-gray-500 font-medium">Role</dt><dd id="view-user-role" class="font-semibold text-gray-800 mt-0.5"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">RDC</dt><dd id="view-user-rdc" class="font-semibold text-gray-800 mt-0.5"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">Status</dt><dd id="view-user-status" class="mt-0.5"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">Joined</dt><dd id="view-user-joined" class="font-semibold text-gray-800 mt-0.5"></dd></div>
+                </dl>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeViewUser()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition">Close</button>
+            <a id="view-user-edit-link" href="#" class="btn-primary-modal inline-flex items-center gap-1.5">Edit user</a>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Action Modal (Toggle / Delete) -->
+<div id="modal-confirm-user" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-user-title">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modal-confirm-user-title" class="text-lg font-bold text-gray-800">Confirm</h2>
+            <button type="button" class="btn-modal-close" onclick="closeConfirmUser()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <form method="POST" id="form-confirm-user" action="<?php echo BASE_PATH; ?>/index.php?page=system-admin-users">
+            <input type="hidden" name="form_action" id="confirm-user-action" value="">
+            <input type="hidden" name="user_id" id="confirm-user-id" value="">
+            <div class="modal-body">
+                <p id="modal-confirm-user-message" class="text-gray-600"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeConfirmUser()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" id="modal-confirm-user-submit" class="px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    function openViewUser(tr) {
+        var data = JSON.parse(tr.getAttribute('data-user'));
+        document.getElementById('view-user-name').textContent = data.username;
+        document.getElementById('view-user-email').textContent = data.email;
+        document.getElementById('view-user-role').textContent = (data.role || '').replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        document.getElementById('view-user-rdc').textContent = data.rdc_name || '-';
+        document.getElementById('view-user-status').innerHTML = data.is_active ? '<span class="text-green-600 font-semibold">Active</span>' : '<span class="text-red-600 font-semibold">Inactive</span>';
+        document.getElementById('view-user-joined').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+        document.getElementById('view-user-edit-link').href = '<?php echo BASE_PATH; ?>/index.php?page=system-admin-users&action=edit&id=' + data.id;
+        document.getElementById('modal-view-user').classList.add('modal-open');
+    }
+    function closeViewUser() {
+        document.getElementById('modal-view-user').classList.remove('modal-open');
+    }
+    window.openViewUser = openViewUser;
+    window.closeViewUser = closeViewUser;
+    document.getElementById('modal-view-user').addEventListener('click', closeViewUser);
+})();
+
+function openConfirmUser(userId, action, message) {
+    document.getElementById('confirm-user-id').value = userId;
+    document.getElementById('confirm-user-action').value = action;
+    document.getElementById('modal-confirm-user-message').textContent = message;
+    var btn = document.getElementById('modal-confirm-user-submit');
+    btn.textContent = action === 'delete' ? 'Delete' : 'Confirm';
+    btn.className = 'px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition ' + (action === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-500 hover:bg-amber-600');
+    document.getElementById('modal-confirm-user').classList.add('modal-open');
+}
+function closeConfirmUser() {
+    document.getElementById('modal-confirm-user').classList.remove('modal-open');
+}
+document.getElementById('modal-confirm-user').addEventListener('click', function(e) { if (e.target === this) closeConfirmUser(); });
+</script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

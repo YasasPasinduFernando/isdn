@@ -7,3 +7,4 @@ uploads/*
 logs/emails/*
 !logs/emails/.gitkeep
 !logs/.gitkeep
+docs/*.md

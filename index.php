@@ -21,6 +21,11 @@ $protected_pages = [
     'rdc-driver-dashboard',
     'head-office-manager-dashboard',
     'system-admin-dashboard',
+    'system-admin-users',
+    'system-admin-products',
+    'system-admin-profile',
+    'system-admin-audit',
+    'delivery-report',
     'request-product-units',
     'send-product-units',
     'stock-reports'
@@ -87,6 +92,21 @@ switch ($page) {
         break;
     case 'system-admin-dashboard':
         require __DIR__ . '/views/system-admin/dashboard.php';
+        break;
+    case 'system-admin-users':
+        require __DIR__ . '/views/system-admin/users.php';
+        break;
+    case 'system-admin-products':
+        require __DIR__ . '/views/system-admin/products.php';
+        break;
+    case 'system-admin-profile':
+        require __DIR__ . '/views/system-admin/profile.php';
+        break;
+    case 'system-admin-audit':
+        require __DIR__ . '/views/system-admin/audit_logs.php';
+        break;
+    case 'delivery-report':
+        require __DIR__ . '/views/reports/delivery_efficiency.php';
         break;
     case 'request-product-units':
         require __DIR__ . '/views/stock-management/request_product_units.php';

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/functions.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com "></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/style.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/custom.css?v=<?= time() ?>">
     <!-- Google Material Symbols Rounded -->
@@ -70,20 +70,27 @@ require_once __DIR__ . '/../includes/functions.php';
     </div>
 
     <script>
-        // Force loader for at least 2 seconds
-        window.addEventListener('load', () => {
-             setTimeout(() => {
-                 const loader = document.getElementById('page-loader');
-                 if(loader) {
+        // Hide loader: show for at least 1s, then fade out.
+        // Uses DOMContentLoaded (faster) + fallback max timeout of 4s.
+        (function() {
+            var dismissed = false;
+            function hideLoader() {
+                if (dismissed) return;
+                dismissed = true;
+                var loader = document.getElementById('page-loader');
+                if (loader) {
                     loader.style.opacity = '0';
-                    loader.style.visibility = 'hidden'; 
-                    // Remove from DOM after transition
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 500); 
-                 }
-             }, 2000); // 2000ms = 2 seconds
-        });
+                    loader.style.visibility = 'hidden';
+                    setTimeout(function() { loader.style.display = 'none'; }, 500);
+                }
+            }
+            // Primary: after DOM is ready + 1s delay
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(hideLoader, 1000);
+            });
+            // Fallback: max 4 seconds no matter what
+            setTimeout(hideLoader, 4000);
+        })();
     </script>
     
     <!-- Sticky Top Header -->

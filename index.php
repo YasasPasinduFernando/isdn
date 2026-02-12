@@ -9,6 +9,7 @@ $page = $_GET['page'] ?? 'home';
 // Check if user is logged in for protected pages
 $protected_pages = [
     'dashboard',
+    'profile',
     'products',
     'cart',
     'orders',
@@ -16,11 +17,18 @@ $protected_pages = [
     'payment',
     'rdc-manager-dashboard',
     'rdc-clerk-dashboard',
+    'rdc-clerk-promotions',
     'rdc-sales-ref-dashboard',
     'logistics-officer-dashboard',
     'rdc-driver-dashboard',
     'head-office-manager-dashboard',
     'system-admin-dashboard',
+    'system-admin-users',
+    'system-admin-products',
+    'system-admin-promotions',
+    'system-admin-profile',
+    'system-admin-audit',
+    'delivery-report',
     'request-product-units',
     'send-product-units',
     'stock-reports'
@@ -50,6 +58,12 @@ switch ($page) {
     case 'register':
         require __DIR__ . '/views/auth/register.php';
         break;
+    case 'forgot-password':
+        require __DIR__ . '/views/auth/forgot_password.php';
+        break;
+    case 'reset-password':
+        require __DIR__ . '/views/auth/reset_password.php';
+        break;
     case 'dashboard':
         require __DIR__ . '/views/customer/dashboard.php';
         break;
@@ -67,12 +81,18 @@ switch ($page) {
     case 'payment':
         require __DIR__ . '/views/customer/payment.php';
         break;
+    case 'profile':
+        require __DIR__ . '/views/shared/profile_edit.php';
+        break;
     case 'rdc-manager-dashboard':
         require __DIR__ . '/views/rdc-manager/dashboard.php';
         break;
     case 'rdc-clerk-dashboard':
     case 'clerk':
         require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        break;
+    case 'rdc-clerk-promotions':
+        require __DIR__ . '/views/rdc-clerk/promotions.php';
         break;
     case 'rdc-dashboard':
         require __DIR__ . '/views/rdc/dashboard.php';
@@ -100,6 +120,24 @@ switch ($page) {
         break;
     case 'system-admin-dashboard':
         require __DIR__ . '/views/system-admin/dashboard.php';
+        break;
+    case 'system-admin-users':
+        require __DIR__ . '/views/system-admin/users.php';
+        break;
+    case 'system-admin-products':
+        require __DIR__ . '/views/system-admin/products.php';
+        break;
+    case 'system-admin-promotions':
+        require __DIR__ . '/views/system-admin/promotions.php';
+        break;
+    case 'system-admin-profile':
+        require __DIR__ . '/views/system-admin/profile.php';
+        break;
+    case 'system-admin-audit':
+        require __DIR__ . '/views/system-admin/audit_logs.php';
+        break;
+    case 'delivery-report':
+        require __DIR__ . '/views/reports/delivery_efficiency.php';
         break;
     case 'request-product-units':
         require __DIR__ . '/views/stock-management/request_product_units.php';

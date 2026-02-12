@@ -358,6 +358,150 @@ class SystemAdmin
     }
 
     /* ================================================================
+     * PROMOTION MANAGEMENT
+     * ================================================================ */
+
+    public function getPromotions(int $page = 1, int $perPage = 10, string $search = '', string $statusFilter = ''): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $conditions = [];
+        $params = [];
+
+        if ($search !== '') {
+            $conditions[] = "(pr.name LIKE :search OR p.product_name LIKE :search2)";
+            $params['search']  = "%{$search}%";
+            $params['search2'] = "%{$search}%";
+        }
+        if ($statusFilter === 'active') {
+            $conditions[] = "pr.is_active = 1 AND pr.start_date <= CURDATE() AND pr.end_date >= CURDATE()";
+        } elseif ($statusFilter === 'expired') {
+            $conditions[] = "pr.end_date < CURDATE()";
+        } elseif ($statusFilter === 'upcoming') {
+            $conditions[] = "pr.start_date > CURDATE()";
+        } elseif ($statusFilter === 'inactive') {
+            $conditions[] = "pr.is_active = 0";
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        $sql = "SELECT pr.*, p.product_name, p.product_code
+                FROM promotions pr
+                LEFT JOIN products p ON pr.product_id = p.product_id
+                {$where}
+                ORDER BY pr.id DESC
+                LIMIT {$perPage} OFFSET {$offset}";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countPromotions(string $search = '', string $statusFilter = ''): int
+    {
+        $conditions = [];
+        $params = [];
+
+        if ($search !== '') {
+            $conditions[] = "(pr.name LIKE :search OR p.product_name LIKE :search2)";
+            $params['search']  = "%{$search}%";
+            $params['search2'] = "%{$search}%";
+        }
+        if ($statusFilter === 'active') {
+            $conditions[] = "pr.is_active = 1 AND pr.start_date <= CURDATE() AND pr.end_date >= CURDATE()";
+        } elseif ($statusFilter === 'expired') {
+            $conditions[] = "pr.end_date < CURDATE()";
+        } elseif ($statusFilter === 'upcoming') {
+            $conditions[] = "pr.start_date > CURDATE()";
+        } elseif ($statusFilter === 'inactive') {
+            $conditions[] = "pr.is_active = 0";
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM promotions pr LEFT JOIN products p ON pr.product_id = p.product_id {$where}"
+        );
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function getPromotionById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT pr.*, p.product_name, p.product_code
+             FROM promotions pr
+             LEFT JOIN products p ON pr.product_id = p.product_id
+             WHERE pr.id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function createPromotion(array $data): int
+    {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO promotions (name, description, product_id, product_count, discount_percentage, start_date, end_date, is_active)
+             VALUES (:name, :description, :product_id, :product_count, :discount, :start_date, :end_date, :is_active)"
+        );
+        $stmt->execute([
+            'name'          => $data['name'],
+            'description'   => $data['description'] ?? null,
+            'product_id'    => (int) $data['product_id'],
+            'product_count' => (int) ($data['product_count'] ?? 1),
+            'discount'      => (float) $data['discount_percentage'],
+            'start_date'    => $data['start_date'],
+            'end_date'      => $data['end_date'],
+            'is_active'     => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+        ]);
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function updatePromotion(int $id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE promotions SET
+                name = :name,
+                description = :description,
+                product_id = :product_id,
+                product_count = :product_count,
+                discount_percentage = :discount,
+                start_date = :start_date,
+                end_date = :end_date,
+                is_active = :is_active
+             WHERE id = :id"
+        );
+        return $stmt->execute([
+            'id'            => $id,
+            'name'          => $data['name'],
+            'description'   => $data['description'] ?? null,
+            'product_id'    => (int) $data['product_id'],
+            'product_count' => (int) ($data['product_count'] ?? 1),
+            'discount'      => (float) $data['discount_percentage'],
+            'start_date'    => $data['start_date'],
+            'end_date'      => $data['end_date'],
+            'is_active'     => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+        ]);
+    }
+
+    public function togglePromotionActive(int $id): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE promotions SET is_active = NOT is_active WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
+    public function deletePromotion(int $id): bool
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM promotions WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
+    public function getProductsForDropdown(): array
+    {
+        return $this->pdo->query(
+            "SELECT product_id, product_name, product_code FROM products WHERE is_active = 1 ORDER BY product_name"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ================================================================
      * ADMIN PROFILE
      * ================================================================ */
 

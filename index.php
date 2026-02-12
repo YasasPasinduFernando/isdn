@@ -16,6 +16,7 @@ $protected_pages = [
     'payment',
     'rdc-manager-dashboard',
     'rdc-clerk-dashboard',
+    'rdc-clerk-promotions',
     'rdc-sales-ref-dashboard',
     'logistics-officer-dashboard',
     'rdc-driver-dashboard',
@@ -23,6 +24,7 @@ $protected_pages = [
     'system-admin-dashboard',
     'system-admin-users',
     'system-admin-products',
+    'system-admin-promotions',
     'system-admin-profile',
     'system-admin-audit',
     'delivery-report',
@@ -78,6 +80,24 @@ switch ($page) {
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
+    case 'clerk':
+        require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        break;
+    case 'rdc-clerk-promotions':
+        require __DIR__ . '/views/rdc-clerk/promotions.php';
+        break;
+    case 'rdc-dashboard':
+        require __DIR__ . '/views/rdc/dashboard.php';
+        break;
+    case 'rep':
+        require __DIR__ . '/views/rdc/rep_dashboard.php';
+        break;
+    case 'driver':
+        require __DIR__ . '/views/rdc/driver_dashboard.php';
+        break;
+    case 'ho':
+        require __DIR__ . '/views/ho/dashboard.php';
+        break;
     case 'rdc-sales-ref-dashboard':
         require __DIR__ . '/views/rdc-sales-ref/dashboard.php';
         break;
@@ -98,6 +118,9 @@ switch ($page) {
         break;
     case 'system-admin-products':
         require __DIR__ . '/views/system-admin/products.php';
+        break;
+    case 'system-admin-promotions':
+        require __DIR__ . '/views/system-admin/promotions.php';
         break;
     case 'system-admin-profile':
         require __DIR__ . '/views/system-admin/profile.php';

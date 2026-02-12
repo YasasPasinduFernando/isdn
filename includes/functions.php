@@ -48,10 +48,11 @@ function get_allowed_pages_for_role($role) {
             'rdc-driver-dashboard', 'tracking'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports'
+            'head-office-manager-dashboard', 'stock-reports', 'delivery-report'
         ],
         'system_admin' => [
-            'system-admin-dashboard', 'stock-reports'
+            'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
+            'system-admin-profile', 'system-admin-audit', 'stock-reports', 'delivery-report'
         ]
     ];
 
@@ -103,7 +104,10 @@ function get_nav_items_for_role($role) {
         ],
         'system_admin' => [
             'system-admin-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
+            'system-admin-users'     => ['icon' => 'group', 'label' => 'Users'],
+            'system-admin-products'  => ['icon' => 'inventory_2', 'label' => 'Products'],
+            'system-admin-audit'     => ['icon' => 'history', 'label' => 'Audit Log'],
+            'stock-reports'          => ['icon' => 'bar_chart', 'label' => 'Reports']
         ]
     ];
 

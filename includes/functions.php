@@ -36,7 +36,7 @@ function get_allowed_pages_for_role($role) {
             'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports'
         ],
         'rdc_clerk' => [
-            'rdc-clerk-dashboard', 'request-product-units', 'stock-reports'
+            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports'
         ],
         'rdc_sales_ref' => [
             'rdc-sales-ref-dashboard', 'products', 'orders'
@@ -52,7 +52,8 @@ function get_allowed_pages_for_role($role) {
         ],
         'system_admin' => [
             'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
-            'system-admin-profile', 'system-admin-audit', 'stock-reports', 'delivery-report'
+            'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'stock-reports', 'delivery-report'
         ]
     ];
 
@@ -81,6 +82,7 @@ function get_nav_items_for_role($role) {
         ],
         'rdc_clerk' => [
             'rdc-clerk-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+            'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
             'request-product-units' => ['icon' => 'inbox', 'label' => 'Requests'],
             'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
         ],
@@ -103,11 +105,12 @@ function get_nav_items_for_role($role) {
             'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Reports']
         ],
         'system_admin' => [
-            'system-admin-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-            'system-admin-users'     => ['icon' => 'group', 'label' => 'Users'],
-            'system-admin-products'  => ['icon' => 'inventory_2', 'label' => 'Products'],
-            'system-admin-audit'     => ['icon' => 'history', 'label' => 'Audit Log'],
-            'stock-reports'          => ['icon' => 'bar_chart', 'label' => 'Reports']
+            'system-admin-dashboard'  => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+            'system-admin-users'      => ['icon' => 'group', 'label' => 'Users'],
+            'system-admin-products'   => ['icon' => 'inventory_2', 'label' => 'Products'],
+            'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
+            'system-admin-audit'      => ['icon' => 'history', 'label' => 'Audit Log'],
+            'stock-reports'           => ['icon' => 'bar_chart', 'label' => 'Reports']
         ]
     ];
 

@@ -21,6 +21,10 @@ require_once __DIR__ . '/../../includes/header.php';
                     <i class="fa-solid fa-file-pdf"></i> Invoice
                 </button>
                 <button
+                    class="px-4 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 flex items-center gap-2">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button
                     class="px-4 py-2 bg-teal-600 text-white rounded-xl shadow hover:bg-teal-700 flex items-center gap-2">
                     <span class="material-symbols-rounded">location_on</span> Track
                 </button>
@@ -31,7 +35,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <div class="bg-white rounded-3xl shadow-lg p-6 border">
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Order Number</p>
@@ -117,6 +121,44 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="text-red-500 font-semibold col-span-2"><?php echo $order_item['discount_amount']; ?></div>
                     <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['line_total']; ?></div>
                 <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="mt-10 glass-panel rounded-3xl border border-white/50 shadow-xl p-8">
+            <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
+                <span class="material-symbols-rounded text-teal-600">sync</span>
+                Update Order Status
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+
+                <!-- Status Dropdown -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">
+                        Select New Status
+                    </label>
+
+                    <select
+                        class="w-full bg-white/70 backdrop-blur border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="">-- Choose Status --</option>
+                        <option value="waiting_for_stocks">Waiting for Stocks</option>
+                        <option value="ready_for_delivery">Ready for Delivery</option>
+                        <option value="delivery_completed">Delivery Completed</option>
+                    </select>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Changing the status will update order tracking for the customer.
+                    </p>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex md:justify-end">
+                    <button
+                        class="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-teal-500/30 hover:from-teal-600 hover:to-emerald-700 transition flex items-center gap-2">
+                        <span class="material-symbols-rounded">published_with_changes</span>
+                        Change Status
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>

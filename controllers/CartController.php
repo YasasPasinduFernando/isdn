@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/ShoppingCart.php';
+require_once __DIR__ . '/../dummydata/ShoppingCart.php';
+
 
 $userId = $_SESSION['user_id'] ?? 1; // logged user
 
@@ -33,7 +35,7 @@ switch ($action) {
         break;
 
     default:
-        $cartItems = $cart->getUserCart($userId);
+        $cartItems = $shopping_cart;//$cart->getUserCart($userId);
         require __DIR__ . '/../views/customer/cart.php';
 }
 

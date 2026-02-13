@@ -2,13 +2,13 @@
 $orders = [
     [
         "id" => 1,
-        "order_date" => "2026-02-11",
-        "customer" => "Wijitha Stores",
+        "order_date" => "2026-02-13",
+        "customer" => "Vijaya Stores - Galle",
         "placed_by" => "",
-        "order_number" => "ORD-RDCS-260211-1025",
-        "total_amount" => 25300.00,
+        "order_number" => "ORD-RDCS-260213-1025",
+        "total_amount" => 18751.46,
         "status" => "Pending",
-        "estimated_date" => "2026-02-13",
+        "estimated_date" => "2026-02-15",
         "item_count" => 5,
         "created_at" => "2026-02-11 12:20:52",
         "updated_at" => "2026-02-11 13:23:45"
@@ -16,7 +16,7 @@ $orders = [
     [
         "id" => 2,
         "order_date" => "2026-02-10",
-        "customer" => "Wijitha Stores",
+        "customer" => "Vijaya Stores - Galle",
         "placed_by" => "",
         "order_number" => "ORD-RDCS-260211-4103",
         "total_amount" => 18650.00,
@@ -30,7 +30,7 @@ $orders = [
     [
         "id" => 3,
         "order_date" => "2026-02-09",
-        "customer" => "Wijitha Stores",
+        "customer" => "Vijaya Stores - Galle",
         "placed_by" => "",
         "order_number" => "ORD-RDCS-260209-1452",
         "total_amount" => 18650.00,
@@ -43,7 +43,7 @@ $orders = [
     [
         "id" => 4,
         "order_date" => "2026-02-08",
-        "customer" => "Wijitha Stores",
+        "customer" => "Vijaya Stores - Galle",
         "placed_by" => "",
         "order_number" => "ORD-RDCS-260205-5452",
         "total_amount" => 15356.00,
@@ -57,7 +57,7 @@ $orders = [
     [
         "id" => 5,
         "order_date" => "2026-02-06",
-        "customer" => "Wijitha Stores",
+        "customer" => "Vijaya Stores - Galle",
         "placed_by" => "",
         "order_number" => "ORD-RDCS-260208-5461",
         "total_amount" => 17365.00,

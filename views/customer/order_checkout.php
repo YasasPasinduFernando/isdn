@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../dummydata/OrderCheckout.php';
+
 ?>
 
 <div class="min-h-screen py-8">
@@ -22,32 +24,39 @@ require_once __DIR__ . '/../../includes/header.php';
             </h2>
 
             <!-- Table Header -->
-            <div class="hidden md:grid grid-cols-7 bg-gray-50 px-6 py-4 text-sm font-bold text-gray-600 uppercase">
-                <div>Product Code</div>
-                <div>Product Name</div>
-                <div>Category</div>
-                <div>Selling Price</div>
-                <div>Qty</div>
-                <div>Discount</div>
-                <div>Line Total</div>
+            <div class="hidden md:grid grid-cols-12 bg-gray-50 px-6 py-4 text-sm font-bold text-gray-600 uppercase">
+                <div class="col-span-2">Product Code</div>
+                <div class="col-span-2">Product Name</div>
+                <div class="col-span-2">Category</div>
+                <div class="col-span-2">Selling Price</div>
+                <div class="col-span-1">Qty</div>
+                <div class="col-span-2">Discount</div>
+                <div class="col-span-1">Line Total</div>
             </div>
 
             <!-- Item Row -->
-            <div class="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 py-5 border-t items-center hover:bg-gray-50">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-5 border-t items-center hover:bg-gray-50">
 
-                <div class="font-semibold text-gray-800">PRD-001</div>
+                <?php foreach ($order_items as $order_item): ?>
 
-                <div class="font-semibold text-gray-800">Wireless Headphones</div>
+                    <div class="font-semibold text-gray-800 col-span-2"><?php echo $order_item['product_code']; ?></div>
 
-                <div class="text-gray-600">Electronics</div>
+                    <div class="font-semibold text-gray-800 col-span-2"><?php echo $order_item['product_name']; ?></div>
 
-                <div class="font-semibold text-gray-800">Rs. 12,500.00</div>
-                <div class="font-semibold text-gray-800">10</div>
+                    <div class="text-gray-600 col-span-2"><?php echo $order_item['category']; ?></div>
 
-                <div class="text-red-500 font-semibold">Rs. 500.00</div>
-                <div class="font-semibold text-gray-800">Rs. 13,500.00</div>
+                    <div class="font-semibold text-gray-800 col-span-2"><?php echo $order_item['unit_price']; ?></div>
+                    <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['quantity']; ?></div>
+
+                    <div class="text-red-500 font-semibold col-span-2"><?php echo $order_item['discount_amount']; ?></div>
+                    <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['line_total']; ?></div>
+                <?php endforeach; ?>
             </div>
         </div>
+
+
+
+
         <!-- ================= Shipping & Payment ================= -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 flex flex-wrap justify-between items-center mt-5 gap-4">
 
@@ -63,13 +72,15 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div>
                         <label class="text-sm font-semibold text-gray-600">Delivery Address</label>
                         <p class="mt-1 font-medium text-gray-800">
-                            No 45, Galle Road, Colombo 03, Sri Lanka
+                            <?php echo $delivery_info['delivery_address']; ?>
                         </p>
                     </div>
 
                     <div>
                         <label class="text-sm font-semibold text-gray-600">Estimated Delivery Date</label>
-                        <p class="mt-1 font-medium text-gray-800">Jan 15, 2025</p>
+                        <p class="mt-1 font-medium text-gray-800">
+                            <?php echo $delivery_info['estimated_delivery_date']; ?>
+                        </p>
                     </div>
 
                     <div>
@@ -91,26 +102,26 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
-                        <span>Rs. 45,750.00</span>
+                        <span><?php echo $delivery_info['sub_total']; ?></span>
                     </div>
                     <div class="flex justify-between text-red-500">
                         <span>Discount</span>
-                        <span>- Rs. 500.00</span>
+                        <span><?php echo $delivery_info['discount']; ?></span>
                     </div>
                     <div class="flex justify-between">
                         <span>VAT (15%)</span>
-                        <span>Rs. 6,787.50</span>
+                        <span><?php echo $delivery_info['vat']; ?></span>
                     </div>
                     <div class="flex justify-between">
                         <span>Delivery Fee</span>
-                        <span>Rs. 500.00</span>
+                        <span><?php echo $delivery_info['delivery_fee']; ?></span>
                     </div>
 
                     <hr>
 
                     <div class="flex justify-between font-bold text-lg text-teal-700">
                         <span>Grand Total</span>
-                        <span>Rs. 52,537.50</span>
+                        <span><?php echo $delivery_info['grand_total']; ?></span>
                     </div>
                 </div>
 

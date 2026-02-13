@@ -127,13 +127,13 @@ require_once __DIR__ . '/../includes/functions.php';
                             </a>
                         <?php endforeach; ?>
                         
-                        <!-- User Profile Dropdown Trigger (Separate from nav pill) -->
+                        <!-- User Profile Dropdown: My Profile + Logout only -->
                         <?php $profile_page = get_profile_page_for_role(current_user_role()); ?>
-                        <div class="relative group ml-2 px-2">
-                            <a href="<?php echo $profile_page ? BASE_PATH . '/index.php?page=' . $profile_page : '#'; ?>" class="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition">
+                        <div class="relative group ml-2 px-2" id="profile-dropdown-wrap">
+                            <button type="button" onclick="toggleProfileDropdown()" class="flex items-center p-1 rounded-full text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 transition" aria-haspopup="true" aria-expanded="false">
                                 <span class="material-symbols-rounded text-3xl">account_circle</span>
-                            </a>
-                            <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50">
+                            </button>
+                            <div id="profile-dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible md:group-hover:opacity-100 md:group-hover:visible transition-all duration-300 origin-top-right z-50">
                                 <?php if ($profile_page): ?>
                                 <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $profile_page; ?>" class="flex items-center px-4 py-3 text-gray-600 hover:bg-teal-50 hover:text-teal-700 rounded-t-xl transition">
                                     <span class="material-symbols-rounded mr-2 text-lg">person</span> My Profile
@@ -178,6 +178,11 @@ require_once __DIR__ . '/../includes/functions.php';
                         <span class="material-symbols-rounded mr-3"><?php echo $item['icon']; ?></span> <?php echo $item['label']; ?>
                     </a>
                 <?php endforeach; ?>
+                <?php $profile_page = get_profile_page_for_role($role); if ($profile_page): ?>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $profile_page; ?>" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
+                    <span class="material-symbols-rounded mr-3">person</span> My Profile
+                </a>
+                <?php endif; ?>
                 <a href="<?php echo BASE_PATH; ?>/controllers/AuthController.php?action=logout" class="flex items-center text-red-200 py-2 hover:bg-teal-700 rounded px-3">
                     <span class="material-symbols-rounded mr-3">logout</span> Logout
                 </a>

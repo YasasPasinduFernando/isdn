@@ -186,16 +186,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
 // ── Page output (include header only after exports are handled) ─
 require_once __DIR__ . '/../../includes/header.php';
 
-// ── Chart data preparation ───────────────────────────────────
-$chartData = [
-    'labels'     => array_column($rdcData, 'rdc_name'),
-    'on_time'    => array_map('intval', array_column($rdcData, 'on_time')),
-    'delayed'    => array_map('intval', array_column($rdcData, 'delayed')),
-    'pending'    => array_map('intval', array_column($rdcData, 'pending')),
-    'efficiency' => array_map('floatval', array_column($rdcData, 'efficiency_pct')),
-    'avg_hours'  => array_map('floatval', array_column($rdcData, 'avg_delivery_hours')),
-];
-
 $statusBadge = [
     'On-time' => 'bg-green-100 text-green-700',
     'Delayed' => 'bg-red-100 text-red-700',
@@ -317,38 +307,6 @@ $statusBadge = [
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-            <!-- Stacked Bar Chart: On-time vs Delayed per RDC -->
-            <div class="glass-panel rounded-3xl p-6 sm:p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <span class="material-symbols-rounded text-blue-500 text-2xl">bar_chart</span>
-                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">RDC Delivery Breakdown</h2>
-                </div>
-                <div class="h-72">
-                    <?php if (empty($chartData['labels'])): ?>
-                        <div class="flex flex-col items-center justify-center h-full"><p class="text-sm text-gray-400">No delivery data</p></div>
-                    <?php else: ?>
-                        <canvas id="rdcBreakdownChart"></canvas>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <!-- Efficiency % + Avg Hours -->
-            <div class="glass-panel rounded-3xl p-6 sm:p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <span class="material-symbols-rounded text-teal-500 text-2xl">speed</span>
-                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Efficiency &amp; Avg Duration</h2>
-                </div>
-                <div class="h-72">
-                    <?php if (empty($chartData['labels'])): ?>
-                        <div class="flex flex-col items-center justify-center h-full"><p class="text-sm text-gray-400">No data</p></div>
-                    <?php else: ?>
-                        <canvas id="efficiencyChart"></canvas>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
         <!-- RDC Comparison Table -->
         <div class="glass-panel rounded-3xl p-6 sm:p-8 mb-10">
             <div class="flex items-center justify-between mb-6">
@@ -450,85 +408,5 @@ $statusBadge = [
 
     </div>
 </div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-(function() {
-    Chart.defaults.font.family = "'Outfit', 'Segoe UI', system-ui, sans-serif";
-    Chart.defaults.font.size = 11;
-    Chart.defaults.color = '#9ca3af';
-
-    var data = <?php echo json_encode($chartData); ?>;
-    var el;
-
-    // Stacked bar: On-time vs Delayed vs Pending per RDC
-    el = document.getElementById('rdcBreakdownChart');
-    if (el && data.labels.length > 0) {
-        new Chart(el, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    { label: 'On-time',  data: data.on_time, backgroundColor: '#10b981', borderRadius: 4, barPercentage: 0.6 },
-                    { label: 'Delayed',  data: data.delayed, backgroundColor: '#ef4444', borderRadius: 4, barPercentage: 0.6 },
-                    { label: 'Pending',  data: data.pending, backgroundColor: '#f59e0b', borderRadius: 4, barPercentage: 0.6 }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } } },
-                scales: {
-                    x: { stacked: true, grid: { display: false } },
-                    y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Deliveries', font: { size: 10 } } }
-                }
-            }
-        });
-    }
-
-    // Combo chart: Efficiency % (bars) + Avg Hours (line)
-    el = document.getElementById('efficiencyChart');
-    if (el && data.labels.length > 0) {
-        new Chart(el, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    {
-                        label: 'Efficiency %',
-                        data: data.efficiency,
-                        backgroundColor: data.efficiency.map(function(v) { return v >= 80 ? '#10b981' : (v >= 50 ? '#f59e0b' : '#ef4444'); }),
-                        borderRadius: 6,
-                        barPercentage: 0.5,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Avg Hours',
-                        data: data.avg_hours,
-                        type: 'line',
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139,92,246,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#8b5cf6',
-                        borderWidth: 2.5,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } } },
-                scales: {
-                    y:  { beginAtZero: true, max: 100, position: 'left', grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Efficiency %', font: { size: 10 } } },
-                    y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg Hours', font: { size: 10 } } },
-                    x:  { grid: { display: false } }
-                }
-            }
-        });
-    }
-})();
-</script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

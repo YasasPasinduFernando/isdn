@@ -10,6 +10,7 @@
  *  - Forgot password with secure token + email
  *  - Password reset
  */
+require_once __DIR__ . '/../config/env_loader.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -96,6 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role']     = $user['role'];
             $_SESSION['rdc_id']   = $user['rdc_id'] ?? null;
 
+            audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', null, "Logged in as {$user['role']}");
+
             // Send login notification email
             send_login_notification($user['email'], $user['username'], $user['role']);
 
@@ -161,6 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($userModel->resetPassword($user['id'], $password)) {
+            audit_log($pdo, (int) $user['id'], 'UPDATE', 'profile', (int) $user['id'], 'Password reset via email link');
             flash_message('Password reset successfully! Please login with your new password.', 'success');
             redirect('/index.php?page=login');
         } else {
@@ -178,6 +182,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // ── LOGOUT ───────────────────────────────────────────────
     if ($action === 'logout') {
+        $userId = $_SESSION['user_id'] ?? null;
+        if ($userId) {
+            audit_log($pdo, (int) $userId, 'LOGOUT', 'session', null, 'Logged out');
+        }
         session_destroy();
         redirect('/index.php?page=login');
     }
@@ -302,6 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $_SESSION['username'] = $user['username'];
         $_SESSION['role']     = $user['role'];
         $_SESSION['rdc_id']   = $user['rdc_id'] ?? null;
+
+        audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', null, "Logged in via Google as {$user['role']}");
 
         // Send login notification
         send_login_notification($user['email'], $user['username'], $user['role']);

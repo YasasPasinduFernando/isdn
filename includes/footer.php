@@ -74,7 +74,7 @@
             <div class="border-t border-gray-800 mt-12 pt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <p class="text-gray-500 text-sm">
-                        &copy; 2025 <?php echo APP_NAME; ?>. All rights reserved.
+                        &copy; 2026 <?php echo APP_NAME; ?>. All rights reserved.
                     </p>
                     <div class="flex space-x-6 text-sm">
                         <a href="#" class="text-gray-500 hover:text-teal-400 transition">Privacy Policy</a>
@@ -97,6 +97,22 @@
             const menu = document.getElementById('mobileMenu');
             menu.classList.toggle('hidden');
         }
+
+        // Profile dropdown toggle (click to open/close; desktop also supports hover)
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!menu) return;
+            menu.classList.toggle('opacity-0');
+            menu.classList.toggle('invisible');
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('profile-dropdown-wrap');
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!wrap || !menu) return;
+            if (!wrap.contains(e.target)) {
+                menu.classList.add('opacity-0', 'invisible');
+            }
+        });
 
         // Back to top button
         window.addEventListener('scroll', function() {

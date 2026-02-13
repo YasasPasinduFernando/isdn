@@ -162,11 +162,14 @@ switch ($page) {
     case 'register-product':
         require __DIR__ . '/views/customer/register_product.php';
         break;
-    case 'products-list':
-        require __DIR__ . '/views/customer/products_list.php';
+    case 'admin-products-list':
+        require_once __DIR__ . '/controllers/ProductController.php';
         break;
     case 'checkout':
         require __DIR__ . '/views/customer/order_checkout.php';
+        break;
+    case 'rdc-sales-ref-checkout':
+        require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

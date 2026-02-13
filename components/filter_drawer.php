@@ -30,8 +30,14 @@
       <select name="category"
         class="w-full mt-2 rounded-lg border border-gray-200 px-3 py-2">
         <option value="">All</option>
-        <option value="vegetables">Vegetables</option>
-        <option value="fruits">Fruits</option>
+        <option value="Grocery & Food Items">Grocery & Food Items</option>
+        <option value="Beverages">Beverages</option>
+        <option value="Household Essentials">Household Essentials</option>
+        <option value="Home Cleaning Products">Home Cleaning Products</option>
+        <option value="Health Care Products">Health Care Products</option>
+        <option value="Personal Care">Personal Care</option>
+        <option value="Beauty & Skincare">Beauty & Skincare</option>
+        <option value="Baby Care Products">Baby Care Products</option>
       </select>
     </div>
 
@@ -47,7 +53,7 @@
       </div>
     </div>
 
-    <div>
+    <!-- <div>
       <label class="text-sm font-semibold text-gray-700">
         Minimum Stock
       </label>
@@ -57,7 +63,7 @@
           class="w-20 text-center border rounded">
         <button type="button" class="step-up px-3 py-2 border rounded">+</button>
       </div>
-    </div>
+    </div> -->
 
   </div>
 

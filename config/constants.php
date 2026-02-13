@@ -7,7 +7,7 @@ define('USER_ROLE_RDC_SALES_REF', 'rdc_sales_ref');
 define('USER_ROLE_LOGISTICS_OFFICER', 'logistics_officer');
 define('USER_ROLE_RDC_DRIVER', 'rdc_driver');
 define('USER_ROLE_HEAD_OFFICE_MANAGER', 'head_office_manager');
-define(constant_name: 'USER_ROLE_SYSTEM_ADMIN', 'system_admin');
+define( 'USER_ROLE_SYSTEM_ADMIN', 'system_admin');
 
 define('ORDER_STATUS_PENDING', 'pending');
 define('ORDER_STATUS_CONFIRMED', 'confirmed');

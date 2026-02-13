@@ -113,11 +113,30 @@ require_once __DIR__ . '/../includes/functions.php';
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php 
                         $currentPage = $_GET['page'] ?? 'home';
+                        $currentTab = $_GET['tab'] ?? '';
                         $role = current_user_role();
                         $navItems = get_nav_items_for_role($role);
                         
                         foreach ($navItems as $page => $item): 
-                            $isActive = $currentPage === $page;
+                            $isActive = false;
+                            
+                            // Check for complex keys (e.g., page&tab=val)
+                            if (strpos($page, '&') !== false) {
+                                $parts = explode('&', $page, 2);
+                                if ($parts[0] === $currentPage) {
+                                    parse_str($parts[1], $params);
+                                    $targetTab = $params['tab'] ?? '';
+                                    if ($targetTab === $currentTab) {
+                                        $isActive = true;
+                                    } elseif ($currentTab === '' && $targetTab === 'overview') {
+                                        $isActive = true; // Default tab match
+                                    }
+                                }
+                            } else {
+                                // Simple match
+                                $isActive = ($currentPage === $page);
+                            }
+
                             $activeClass = $isActive ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50';
                         ?>
                             <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $page; ?>" 
@@ -127,7 +146,7 @@ require_once __DIR__ . '/../includes/functions.php';
                             </a>
                         <?php endforeach; ?>
                         
-                        <!-- User Profile Dropdown: My Profile + Logout only -->
+                        <!-- User Profile Dropdown: My Profile + Logout -->
                         <?php $profile_page = get_profile_page_for_role(current_user_role()); ?>
                         <div class="relative group ml-2 px-2" id="profile-dropdown-wrap">
                             <button type="button" onclick="toggleProfileDropdown()" class="flex items-center p-1 rounded-full text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 transition" aria-haspopup="true" aria-expanded="false">

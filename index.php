@@ -17,11 +17,15 @@ $protected_pages = [
     'payment',
     'rdc-manager-dashboard',
     'rdc-clerk-dashboard',
+    'clerk',
     'rdc-clerk-promotions',
     'rdc-sales-ref-dashboard',
+    'rep',
     'logistics-officer-dashboard',
     'rdc-driver-dashboard',
+    'driver',
     'head-office-manager-dashboard',
+    'ho',
     'system-admin-dashboard',
     'system-admin-users',
     'system-admin-products',
@@ -90,31 +94,25 @@ switch ($page) {
         break;
     case 'rdc-clerk-dashboard':
     case 'clerk':
-        require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
     case 'rdc-clerk-promotions':
         require __DIR__ . '/views/rdc-clerk/promotions.php';
         break;
-    case 'rdc-dashboard':
-        require __DIR__ . '/views/rdc/dashboard.php';
-        break;
+    case 'rdc-sales-ref-dashboard':
     case 'rep':
-        require __DIR__ . '/views/rdc/rep_dashboard.php';
+        require __DIR__ . '/views/rdc-sales-ref/dashboard.php';
         break;
     case 'driver':
-        require __DIR__ . '/views/rdc/driver_dashboard.php';
+    case 'rdc-driver-dashboard':
+        require __DIR__ . '/views/rdc-driver/dashboard.php';
         break;
+    case 'head-office-manager-dashboard':
     case 'ho':
-        require __DIR__ . '/views/ho/dashboard.php';
-        break;
-    case 'rdc-sales-ref-dashboard':
-        require __DIR__ . '/views/rdc-sales-ref/dashboard.php';
+        require __DIR__ . '/views/head-office-manager/dashboard.php';
         break;
     case 'logistics-officer-dashboard':
         require __DIR__ . '/views/logistics-officer/dashboard.php';
-        break;
-    case 'rdc-driver-dashboard':
-        require __DIR__ . '/views/rdc-driver/dashboard.php';
         break;
     case 'head-office-manager-dashboard':
         require __DIR__ . '/views/head-office-manager/dashboard.php';

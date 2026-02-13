@@ -27,7 +27,6 @@ function dashboard_page_for_role($role) {
     return $map[$role] ?? 'dashboard';
 }
 
-/** Profile page key for header link; system_admin uses system-admin-profile, others use profile. */
 function get_profile_page_for_role($role) {
     if ($role === 'system_admin') {
         return 'system-admin-profile';
@@ -44,19 +43,19 @@ function get_allowed_pages_for_role($role) {
             'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
-            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
+            'rdc-clerk-dashboard', 'clerk', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
         ],
         'rdc_sales_ref' => [
-            'rdc-sales-ref-dashboard', 'products', 'orders', 'profile'
+            'rdc-sales-ref-dashboard', 'rep', 'products', 'orders', 'profile'
         ],
         'logistics_officer' => [
             'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
         ],
         'rdc_driver' => [
-            'rdc-driver-dashboard', 'tracking', 'profile'
+            'rdc-driver-dashboard', 'driver', 'tracking', 'profile'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'profile'
+            'head-office-manager-dashboard', 'ho', 'stock-reports', 'delivery-report', 'profile'
         ],
         'system_admin' => [
             'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
@@ -123,6 +122,36 @@ function get_nav_items_for_role($role) {
             }
         }
         return $order ?: ['system-admin-users' => $labels['system-admin-users']];
+    }
+    
+    // RDC Driver: return specific tab links for the dashboard
+    if ($role === 'rdc_driver') {
+        return [
+            'rdc-driver-dashboard&tab=overview' => ['icon' => 'dashboard', 'label' => "Today's Route"],
+            'rdc-driver-dashboard&tab=map' => ['icon' => 'map', 'label' => "Route Map"],
+            'rdc-driver-dashboard&tab=history' => ['icon' => 'history', 'label' => "Delivery History"]
+        ];
+    }
+    
+    // RDC Sales Rep: return specific tab links for the dashboard
+    if ($role === 'rdc_sales_ref') {
+        return [
+            'rdc-sales-ref-dashboard&tab=dashboard' => ['icon' => 'dashboard', 'label' => "Overview"],
+            'rdc-sales-ref-dashboard&tab=customers' => ['icon' => 'groups', 'label' => "My Customers"],
+            'rdc-sales-ref-dashboard&tab=visits' => ['icon' => 'share_location', 'label' => "Visits & Route"],
+            'rdc-sales-ref-dashboard&tab=orders' => ['icon' => 'shopping_cart', 'label' => "Orders"],
+            'rdc-sales-ref-dashboard&tab=performance' => ['icon' => 'leaderboard', 'label' => "Performance"]
+        ];
+    }
+    
+    // RDC Clerk: return specific tab links for the dashboard
+    if ($role === 'rdc_clerk') {
+        return [
+            'rdc-clerk-dashboard&tab=dashboard' => ['icon' => 'dashboard', 'label' => "Overview"],
+            'rdc-clerk-dashboard&tab=orders' => ['icon' => 'receipt_long', 'label' => "Order Management"],
+            'rdc-clerk-dashboard&tab=products' => ['icon' => 'inventory_2', 'label' => "Products"],
+            'rdc-clerk-dashboard&tab=inventory' => ['icon' => 'warehouse', 'label' => "Inventory"],
+        ];
     }
 
     $allowed = get_allowed_pages_for_role($role);

@@ -1,0 +1,19 @@
+{
+    "name": "isdn/islandlink-sales-distribution-network",
+    "description": "ISDN - IslandLink Sales Distribution Network PHP MVC Application",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Isdn\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

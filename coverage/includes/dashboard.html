@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for D:\yasas\PersonalProjects\isdn\includes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/nv.d3.min.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=10.1.16" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">D:\yasas\PersonalProjects\isdn</a></li>
+         <li class="breadcrumb-item"><a href="index.html">includes</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="PdfWriter.php.html#6">PdfWriter</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#6">SmtpMailer</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#10">FPDF</a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="fpdf.php.html#10">FPDF</a></td><td class="text-right">183612</td></tr>
+       <tr><td><a href="PdfWriter.php.html#6">PdfWriter</a></td><td class="text-right">600</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#6">SmtpMailer</a></td><td class="text-right">240</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="PdfWriter.php.html#20"><abbr title="PdfWriter::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#26"><abbr title="PdfWriter::addObject">addObject</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#32"><abbr title="PdfWriter::escape">escape</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#37"><abbr title="PdfWriter::addPage">addPage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#46"><abbr title="PdfWriter::setFontSize">setFontSize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#51"><abbr title="PdfWriter::setTitleSize">setTitleSize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#56"><abbr title="PdfWriter::writeText">writeText</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#68"><abbr title="PdfWriter::writeLine">writeLine</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#74"><abbr title="PdfWriter::writeTitle">writeTitle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#80"><abbr title="PdfWriter::cell">cell</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#96"><abbr title="PdfWriter::ln">ln</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#102"><abbr title="PdfWriter::checkPageBreak">checkPageBreak</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#110"><abbr title="PdfWriter::finalizePage">finalizePage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="PdfWriter.php.html#117"><abbr title="PdfWriter::output">output</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#16"><abbr title="SmtpMailer::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#26"><abbr title="SmtpMailer::getLastError">getLastError</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#34"><abbr title="SmtpMailer::send">send</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#120"><abbr title="SmtpMailer::sendCommand">sendCommand</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#130"><abbr title="SmtpMailer::getResponse">getResponse</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#75"><abbr title="FPDF::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#168"><abbr title="FPDF::SetMargins">SetMargins</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#178"><abbr title="FPDF::SetLeftMargin">SetLeftMargin</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#186"><abbr title="FPDF::SetTopMargin">SetTopMargin</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#192"><abbr title="FPDF::SetRightMargin">SetRightMargin</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#198"><abbr title="FPDF::SetAutoPageBreak">SetAutoPageBreak</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#206"><abbr title="FPDF::SetDisplayMode">SetDisplayMode</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#219"><abbr title="FPDF::SetCompression">SetCompression</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#228"><abbr title="FPDF::SetTitle">SetTitle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#234"><abbr title="FPDF::SetAuthor">SetAuthor</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#240"><abbr title="FPDF::SetSubject">SetSubject</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#246"><abbr title="FPDF::SetKeywords">SetKeywords</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#252"><abbr title="FPDF::SetCreator">SetCreator</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#258"><abbr title="FPDF::AliasNbPages">AliasNbPages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#264"><abbr title="FPDF::Error">Error</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#270"><abbr title="FPDF::Close">Close</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#287"><abbr title="FPDF::AddPage">AddPage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#356"><abbr title="FPDF::Header">Header</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#361"><abbr title="FPDF::Footer">Footer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#366"><abbr title="FPDF::PageNo">PageNo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#372"><abbr title="FPDF::SetDrawColor">SetDrawColor</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#383"><abbr title="FPDF::SetFillColor">SetFillColor</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#395"><abbr title="FPDF::SetTextColor">SetTextColor</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#405"><abbr title="FPDF::GetStringWidth">GetStringWidth</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#417"><abbr title="FPDF::SetLineWidth">SetLineWidth</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#425"><abbr title="FPDF::Line">Line</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#431"><abbr title="FPDF::Rect">Rect</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#443"><abbr title="FPDF::AddFont">AddFont</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#475"><abbr title="FPDF::SetFont">SetFont</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#525"><abbr title="FPDF::SetFontSize">SetFontSize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#536"><abbr title="FPDF::AddLink">AddLink</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#544"><abbr title="FPDF::SetLink">SetLink</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#554"><abbr title="FPDF::Link">Link</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#560"><abbr title="FPDF::Text">Text</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#574"><abbr title="FPDF::AcceptPageBreak">AcceptPageBreak</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#580"><abbr title="FPDF::Cell">Cell</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#661"><abbr title="FPDF::MultiCell">MultiCell</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#776"><abbr title="FPDF::Write">Write</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#859"><abbr title="FPDF::Ln">Ln</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#869"><abbr title="FPDF::Image">Image</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#934"><abbr title="FPDF::GetPageWidth">GetPageWidth</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#940"><abbr title="FPDF::GetPageHeight">GetPageHeight</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#946"><abbr title="FPDF::GetX">GetX</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#952"><abbr title="FPDF::SetX">SetX</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#961"><abbr title="FPDF::GetY">GetY</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#967"><abbr title="FPDF::SetY">SetY</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#978"><abbr title="FPDF::SetXY">SetXY</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#985"><abbr title="FPDF::Output">Output</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1042"><abbr title="FPDF::_checkoutput">_checkoutput</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1062"><abbr title="FPDF::_getpagesize">_getpagesize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1081"><abbr title="FPDF::_beginpage">_beginpage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1129"><abbr title="FPDF::_endpage">_endpage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1134"><abbr title="FPDF::_loadfont">_loadfont</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1147"><abbr title="FPDF::_isascii">_isascii</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1159"><abbr title="FPDF::_httpencode">_httpencode</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1169"><abbr title="FPDF::_UTF8encode">_UTF8encode</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1191"><abbr title="FPDF::_UTF8toUTF16">_UTF8toUTF16</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1226"><abbr title="FPDF::_escape">_escape</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1235"><abbr title="FPDF::_textstring">_textstring</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1243"><abbr title="FPDF::_dounderline">_dounderline</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1252"><abbr title="FPDF::_parsejpg">_parsejpg</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1271"><abbr title="FPDF::_parsepng">_parsepng</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1282"><abbr title="FPDF::_parsepngstream">_parsepngstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1408"><abbr title="FPDF::_readstream">_readstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1425"><abbr title="FPDF::_readint">_readint</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1432"><abbr title="FPDF::_parsegif">_parsegif</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1457"><abbr title="FPDF::_out">_out</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1470"><abbr title="FPDF::_put">_put</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1476"><abbr title="FPDF::_getoffset">_getoffset</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1481"><abbr title="FPDF::_newobj">_newobj</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1490"><abbr title="FPDF::_putstream">_putstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1497"><abbr title="FPDF::_putstreamobject">_putstreamobject</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1513"><abbr title="FPDF::_putlinks">_putlinks</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1536"><abbr title="FPDF::_putpage">_putpage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1566"><abbr title="FPDF::_putpages">_putpages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1604"><abbr title="FPDF::_putfonts">_putfonts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1721"><abbr title="FPDF::_tounicodecmap">_tounicodecmap</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1772"><abbr title="FPDF::_putimages">_putimages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1782"><abbr title="FPDF::_putimage">_putimage</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1827"><abbr title="FPDF::_putxobjectdict">_putxobjectdict</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1833"><abbr title="FPDF::_putresourcedict">_putresourcedict</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1845"><abbr title="FPDF::_putresources">_putresources</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1857"><abbr title="FPDF::_putinfo">_putinfo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1865"><abbr title="FPDF::_putcatalog">_putcatalog</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1886"><abbr title="FPDF::_putheader">_putheader</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1891"><abbr title="FPDF::_puttrailer">_puttrailer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="fpdf.php.html#1898"><abbr title="FPDF::_enddoc">_enddoc</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="fpdf.php.html#580"><abbr title="FPDF::Cell">Cell</abbr></a></td><td class="text-right">812</td></tr>
+       <tr><td><a href="fpdf.php.html#1282"><abbr title="FPDF::_parsepngstream">_parsepngstream</abbr></a></td><td class="text-right">812</td></tr>
+       <tr><td><a href="fpdf.php.html#661"><abbr title="FPDF::MultiCell">MultiCell</abbr></a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="fpdf.php.html#1604"><abbr title="FPDF::_putfonts">_putfonts</abbr></a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="fpdf.php.html#869"><abbr title="FPDF::Image">Image</abbr></a></td><td class="text-right">420</td></tr>
+       <tr><td><a href="fpdf.php.html#475"><abbr title="FPDF::SetFont">SetFont</abbr></a></td><td class="text-right">240</td></tr>
+       <tr><td><a href="fpdf.php.html#776"><abbr title="FPDF::Write">Write</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="fpdf.php.html#985"><abbr title="FPDF::Output">Output</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="fpdf.php.html#1081"><abbr title="FPDF::_beginpage">_beginpage</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="fpdf.php.html#287"><abbr title="FPDF::AddPage">AddPage</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="fpdf.php.html#443"><abbr title="FPDF::AddFont">AddFont</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="fpdf.php.html#1782"><abbr title="FPDF::_putimage">_putimage</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="fpdf.php.html#75"><abbr title="FPDF::__construct">__construct</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="fpdf.php.html#206"><abbr title="FPDF::SetDisplayMode">SetDisplayMode</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="fpdf.php.html#1865"><abbr title="FPDF::_putcatalog">_putcatalog</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="fpdf.php.html#1252"><abbr title="FPDF::_parsejpg">_parsejpg</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="fpdf.php.html#1536"><abbr title="FPDF::_putpage">_putpage</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="PdfWriter.php.html#117"><abbr title="PdfWriter::output">output</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#34"><abbr title="SmtpMailer::send">send</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="fpdf.php.html#372"><abbr title="FPDF::SetDrawColor">SetDrawColor</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="fpdf.php.html#383"><abbr title="FPDF::SetFillColor">SetFillColor</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="fpdf.php.html#1566"><abbr title="FPDF::_putpages">_putpages</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#130"><abbr title="SmtpMailer::getResponse">getResponse</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#395"><abbr title="FPDF::SetTextColor">SetTextColor</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#560"><abbr title="FPDF::Text">Text</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1042"><abbr title="FPDF::_checkoutput">_checkoutput</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1191"><abbr title="FPDF::_UTF8toUTF16">_UTF8toUTF16</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1226"><abbr title="FPDF::_escape">_escape</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1408"><abbr title="FPDF::_readstream">_readstream</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1432"><abbr title="FPDF::_parsegif">_parsegif</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1457"><abbr title="FPDF::_out">_out</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1513"><abbr title="FPDF::_putlinks">_putlinks</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#1721"><abbr title="FPDF::_tounicodecmap">_tounicodecmap</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="fpdf.php.html#431"><abbr title="FPDF::Rect">Rect</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="fpdf.php.html#525"><abbr title="FPDF::SetFontSize">SetFontSize</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="fpdf.php.html#1062"><abbr title="FPDF::_getpagesize">_getpagesize</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="fpdf.php.html#1134"><abbr title="FPDF::_loadfont">_loadfont</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="fpdf.php.html#1169"><abbr title="FPDF::_UTF8encode">_UTF8encode</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="PdfWriter.php.html#80"><abbr title="PdfWriter::cell">cell</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#178"><abbr title="FPDF::SetLeftMargin">SetLeftMargin</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#270"><abbr title="FPDF::Close">Close</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#544"><abbr title="FPDF::SetLink">SetLink</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#967"><abbr title="FPDF::SetY">SetY</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#1147"><abbr title="FPDF::_isascii">_isascii</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="fpdf.php.html#1159"><abbr title="FPDF::_httpencode">_httpencode</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="PdfWriter.php.html#56"><abbr title="PdfWriter::writeText">writeText</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="PdfWriter.php.html#102"><abbr title="PdfWriter::checkPageBreak">checkPageBreak</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="PdfWriter.php.html#110"><abbr title="PdfWriter::finalizePage">finalizePage</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SmtpMailer.php.html#120"><abbr title="SmtpMailer::sendCommand">sendCommand</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#168"><abbr title="FPDF::SetMargins">SetMargins</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#219"><abbr title="FPDF::SetCompression">SetCompression</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#228"><abbr title="FPDF::SetTitle">SetTitle</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#234"><abbr title="FPDF::SetAuthor">SetAuthor</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#240"><abbr title="FPDF::SetSubject">SetSubject</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#246"><abbr title="FPDF::SetKeywords">SetKeywords</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#252"><abbr title="FPDF::SetCreator">SetCreator</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#405"><abbr title="FPDF::GetStringWidth">GetStringWidth</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#417"><abbr title="FPDF::SetLineWidth">SetLineWidth</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#859"><abbr title="FPDF::Ln">Ln</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#952"><abbr title="FPDF::SetX">SetX</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1235"><abbr title="FPDF::_textstring">_textstring</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1271"><abbr title="FPDF::_parsepng">_parsepng</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1481"><abbr title="FPDF::_newobj">_newobj</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1497"><abbr title="FPDF::_putstreamobject">_putstreamobject</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1772"><abbr title="FPDF::_putimages">_putimages</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1827"><abbr title="FPDF::_putxobjectdict">_putxobjectdict</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1833"><abbr title="FPDF::_putresourcedict">_putresourcedict</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1857"><abbr title="FPDF::_putinfo">_putinfo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="fpdf.php.html#1898"><abbr title="FPDF::_enddoc">_enddoc</abbr></a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 10.1.16</a> using <a href="https://www.php.net/" target="_top">PHP 8.2.12</a> and <a href="https://phpunit.de/">PHPUnit 10.5.63</a> at Thu Feb 12 16:51:06 CET 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/jquery.min.js?v=10.1.16" type="text/javascript"></script>
+  <script src="../_js/d3.min.js?v=10.1.16" type="text/javascript"></script>
+  <script src="../_js/nv.d3.min.js?v=10.1.16" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([3,0,0,0,0,0,0,0,0,0,0,0], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([106,0,0,0,0,0,0,0,0,0,0,0], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,24,"<a href=\"PdfWriter.php.html#6\">PdfWriter<\/a>"],[0,15,"<a href=\"SmtpMailer.php.html#6\">SmtpMailer<\/a>"],[0,428,"<a href=\"fpdf.php.html#10\">FPDF<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"PdfWriter.php.html#20\">PdfWriter::__construct<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#26\">PdfWriter::addObject<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#32\">PdfWriter::escape<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#37\">PdfWriter::addPage<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#46\">PdfWriter::setFontSize<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#51\">PdfWriter::setTitleSize<\/a>"],[0,2,"<a href=\"PdfWriter.php.html#56\">PdfWriter::writeText<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#68\">PdfWriter::writeLine<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#74\">PdfWriter::writeTitle<\/a>"],[0,3,"<a href=\"PdfWriter.php.html#80\">PdfWriter::cell<\/a>"],[0,1,"<a href=\"PdfWriter.php.html#96\">PdfWriter::ln<\/a>"],[0,2,"<a href=\"PdfWriter.php.html#102\">PdfWriter::checkPageBreak<\/a>"],[0,2,"<a href=\"PdfWriter.php.html#110\">PdfWriter::finalizePage<\/a>"],[0,6,"<a href=\"PdfWriter.php.html#117\">PdfWriter::output<\/a>"],[0,1,"<a href=\"SmtpMailer.php.html#16\">SmtpMailer::__construct<\/a>"],[0,1,"<a href=\"SmtpMailer.php.html#26\">SmtpMailer::getLastError<\/a>"],[0,6,"<a href=\"SmtpMailer.php.html#34\">SmtpMailer::send<\/a>"],[0,2,"<a href=\"SmtpMailer.php.html#120\">SmtpMailer::sendCommand<\/a>"],[0,5,"<a href=\"SmtpMailer.php.html#130\">SmtpMailer::getResponse<\/a>"],[0,10,"<a href=\"fpdf.php.html#75\">FPDF::__construct<\/a>"],[0,2,"<a href=\"fpdf.php.html#168\">FPDF::SetMargins<\/a>"],[0,3,"<a href=\"fpdf.php.html#178\">FPDF::SetLeftMargin<\/a>"],[0,1,"<a href=\"fpdf.php.html#186\">FPDF::SetTopMargin<\/a>"],[0,1,"<a href=\"fpdf.php.html#192\">FPDF::SetRightMargin<\/a>"],[0,1,"<a href=\"fpdf.php.html#198\">FPDF::SetAutoPageBreak<\/a>"],[0,10,"<a href=\"fpdf.php.html#206\">FPDF::SetDisplayMode<\/a>"],[0,2,"<a href=\"fpdf.php.html#219\">FPDF::SetCompression<\/a>"],[0,2,"<a href=\"fpdf.php.html#228\">FPDF::SetTitle<\/a>"],[0,2,"<a href=\"fpdf.php.html#234\">FPDF::SetAuthor<\/a>"],[0,2,"<a href=\"fpdf.php.html#240\">FPDF::SetSubject<\/a>"],[0,2,"<a href=\"fpdf.php.html#246\">FPDF::SetKeywords<\/a>"],[0,2,"<a href=\"fpdf.php.html#252\">FPDF::SetCreator<\/a>"],[0,1,"<a href=\"fpdf.php.html#258\">FPDF::AliasNbPages<\/a>"],[0,1,"<a href=\"fpdf.php.html#264\">FPDF::Error<\/a>"],[0,3,"<a href=\"fpdf.php.html#270\">FPDF::Close<\/a>"],[0,11,"<a href=\"fpdf.php.html#287\">FPDF::AddPage<\/a>"],[0,1,"<a href=\"fpdf.php.html#356\">FPDF::Header<\/a>"],[0,1,"<a href=\"fpdf.php.html#361\">FPDF::Footer<\/a>"],[0,1,"<a href=\"fpdf.php.html#366\">FPDF::PageNo<\/a>"],[0,6,"<a href=\"fpdf.php.html#372\">FPDF::SetDrawColor<\/a>"],[0,6,"<a href=\"fpdf.php.html#383\">FPDF::SetFillColor<\/a>"],[0,5,"<a href=\"fpdf.php.html#395\">FPDF::SetTextColor<\/a>"],[0,2,"<a href=\"fpdf.php.html#405\">FPDF::GetStringWidth<\/a>"],[0,2,"<a href=\"fpdf.php.html#417\">FPDF::SetLineWidth<\/a>"],[0,1,"<a href=\"fpdf.php.html#425\">FPDF::Line<\/a>"],[0,4,"<a href=\"fpdf.php.html#431\">FPDF::Rect<\/a>"],[0,11,"<a href=\"fpdf.php.html#443\">FPDF::AddFont<\/a>"],[0,15,"<a href=\"fpdf.php.html#475\">FPDF::SetFont<\/a>"],[0,4,"<a href=\"fpdf.php.html#525\">FPDF::SetFontSize<\/a>"],[0,1,"<a href=\"fpdf.php.html#536\">FPDF::AddLink<\/a>"],[0,3,"<a href=\"fpdf.php.html#544\">FPDF::SetLink<\/a>"],[0,1,"<a href=\"fpdf.php.html#554\">FPDF::Link<\/a>"],[0,5,"<a href=\"fpdf.php.html#560\">FPDF::Text<\/a>"],[0,1,"<a href=\"fpdf.php.html#574\">FPDF::AcceptPageBreak<\/a>"],[0,28,"<a href=\"fpdf.php.html#580\">FPDF::Cell<\/a>"],[0,27,"<a href=\"fpdf.php.html#661\">FPDF::MultiCell<\/a>"],[0,12,"<a href=\"fpdf.php.html#776\">FPDF::Write<\/a>"],[0,2,"<a href=\"fpdf.php.html#859\">FPDF::Ln<\/a>"],[0,20,"<a href=\"fpdf.php.html#869\">FPDF::Image<\/a>"],[0,1,"<a href=\"fpdf.php.html#934\">FPDF::GetPageWidth<\/a>"],[0,1,"<a href=\"fpdf.php.html#940\">FPDF::GetPageHeight<\/a>"],[0,1,"<a href=\"fpdf.php.html#946\">FPDF::GetX<\/a>"],[0,2,"<a href=\"fpdf.php.html#952\">FPDF::SetX<\/a>"],[0,1,"<a href=\"fpdf.php.html#961\">FPDF::GetY<\/a>"],[0,3,"<a href=\"fpdf.php.html#967\">FPDF::SetY<\/a>"],[0,1,"<a href=\"fpdf.php.html#978\">FPDF::SetXY<\/a>"],[0,12,"<a href=\"fpdf.php.html#985\">FPDF::Output<\/a>"],[0,5,"<a href=\"fpdf.php.html#1042\">FPDF::_checkoutput<\/a>"],[0,4,"<a href=\"fpdf.php.html#1062\">FPDF::_getpagesize<\/a>"],[0,12,"<a href=\"fpdf.php.html#1081\">FPDF::_beginpage<\/a>"],[0,1,"<a href=\"fpdf.php.html#1129\">FPDF::_endpage<\/a>"],[0,4,"<a href=\"fpdf.php.html#1134\">FPDF::_loadfont<\/a>"],[0,3,"<a href=\"fpdf.php.html#1147\">FPDF::_isascii<\/a>"],[0,3,"<a href=\"fpdf.php.html#1159\">FPDF::_httpencode<\/a>"],[0,4,"<a href=\"fpdf.php.html#1169\">FPDF::_UTF8encode<\/a>"],[0,5,"<a href=\"fpdf.php.html#1191\">FPDF::_UTF8toUTF16<\/a>"],[0,5,"<a href=\"fpdf.php.html#1226\">FPDF::_escape<\/a>"],[0,2,"<a href=\"fpdf.php.html#1235\">FPDF::_textstring<\/a>"],[0,1,"<a href=\"fpdf.php.html#1243\">FPDF::_dounderline<\/a>"],[0,7,"<a href=\"fpdf.php.html#1252\">FPDF::_parsejpg<\/a>"],[0,2,"<a href=\"fpdf.php.html#1271\">FPDF::_parsepng<\/a>"],[0,28,"<a href=\"fpdf.php.html#1282\">FPDF::_parsepngstream<\/a>"],[0,5,"<a href=\"fpdf.php.html#1408\">FPDF::_readstream<\/a>"],[0,1,"<a href=\"fpdf.php.html#1425\">FPDF::_readint<\/a>"],[0,5,"<a href=\"fpdf.php.html#1432\">FPDF::_parsegif<\/a>"],[0,5,"<a href=\"fpdf.php.html#1457\">FPDF::_out<\/a>"],[0,1,"<a href=\"fpdf.php.html#1470\">FPDF::_put<\/a>"],[0,1,"<a href=\"fpdf.php.html#1476\">FPDF::_getoffset<\/a>"],[0,2,"<a href=\"fpdf.php.html#1481\">FPDF::_newobj<\/a>"],[0,1,"<a href=\"fpdf.php.html#1490\">FPDF::_putstream<\/a>"],[0,2,"<a href=\"fpdf.php.html#1497\">FPDF::_putstreamobject<\/a>"],[0,5,"<a href=\"fpdf.php.html#1513\">FPDF::_putlinks<\/a>"],[0,7,"<a href=\"fpdf.php.html#1536\">FPDF::_putpage<\/a>"],[0,6,"<a href=\"fpdf.php.html#1566\">FPDF::_putpages<\/a>"],[0,27,"<a href=\"fpdf.php.html#1604\">FPDF::_putfonts<\/a>"],[0,5,"<a href=\"fpdf.php.html#1721\">FPDF::_tounicodecmap<\/a>"],[0,2,"<a href=\"fpdf.php.html#1772\">FPDF::_putimages<\/a>"],[0,11,"<a href=\"fpdf.php.html#1782\">FPDF::_putimage<\/a>"],[0,2,"<a href=\"fpdf.php.html#1827\">FPDF::_putxobjectdict<\/a>"],[0,2,"<a href=\"fpdf.php.html#1833\">FPDF::_putresourcedict<\/a>"],[0,1,"<a href=\"fpdf.php.html#1845\">FPDF::_putresources<\/a>"],[0,2,"<a href=\"fpdf.php.html#1857\">FPDF::_putinfo<\/a>"],[0,8,"<a href=\"fpdf.php.html#1865\">FPDF::_putcatalog<\/a>"],[0,1,"<a href=\"fpdf.php.html#1886\">FPDF::_putheader<\/a>"],[0,1,"<a href=\"fpdf.php.html#1891\">FPDF::_puttrailer<\/a>"],[0,2,"<a href=\"fpdf.php.html#1898\">FPDF::_enddoc<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

@@ -74,7 +74,7 @@
             <div class="border-t border-gray-800 mt-12 pt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <p class="text-gray-500 text-sm">
-                        &copy; 2025 <?php echo APP_NAME; ?>. All rights reserved.
+                        &copy; 2026 <?php echo APP_NAME; ?>. All rights reserved.
                     </p>
                     <div class="flex space-x-6 text-sm">
                         <a href="#" class="text-gray-500 hover:text-teal-400 transition">Privacy Policy</a>

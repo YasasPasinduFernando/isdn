@@ -33,6 +33,7 @@ $protected_pages = [
     'system-admin-profile',
     'system-admin-audit',
     'delivery-report',
+    'sales-report',
     'request-product-units',
     'send-product-units',
     'stock-reports'
@@ -136,6 +137,9 @@ switch ($page) {
         break;
     case 'delivery-report':
         require __DIR__ . '/views/reports/delivery_efficiency.php';
+        break;
+    case 'sales-report':
+        require __DIR__ . '/views/reports/sales_report.php';
         break;
     case 'request-product-units':
         require __DIR__ . '/views/stock-management/request_product_units.php';

@@ -140,38 +140,6 @@ $statusColors = [
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-            <!-- Users by Role -->
-            <div class="glass-panel rounded-3xl p-6 sm:p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <span class="material-symbols-rounded text-teal-500 text-2xl">pie_chart</span>
-                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Users by Role</h2>
-                </div>
-                <div class="h-72 flex items-center justify-center">
-                    <?php if (empty($roleChartData['labels'])): ?>
-                        <p class="text-sm text-gray-400">No user data</p>
-                    <?php else: ?>
-                        <canvas id="roleChart"></canvas>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <!-- Orders by Month -->
-            <div class="glass-panel rounded-3xl p-6 sm:p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <span class="material-symbols-rounded text-blue-500 text-2xl">bar_chart</span>
-                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Monthly Orders &amp; Revenue</h2>
-                </div>
-                <div class="h-72">
-                    <?php if (empty($orderChartData['labels'])): ?>
-                        <div class="flex items-center justify-center h-full"><p class="text-sm text-gray-400">No order data</p></div>
-                    <?php else: ?>
-                        <canvas id="ordersChart"></canvas>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
         <!-- Bottom: Recent Orders + Activity + Quick Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
             <!-- Recent Orders -->
@@ -283,51 +251,5 @@ $statusColors = [
 
     </div>
 </div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-(function() {
-    Chart.defaults.font.family = "'Outfit', 'Segoe UI', system-ui, sans-serif";
-    Chart.defaults.font.size = 11;
-    Chart.defaults.color = '#9ca3af';
-
-    var roleData  = <?php echo json_encode($roleChartData); ?>;
-    var roleColors = <?php echo json_encode(array_slice($roleColors, 0, count($roleChartData['labels']))); ?>;
-    var orderData = <?php echo json_encode($orderChartData); ?>;
-
-    var el = document.getElementById('roleChart');
-    if (el && roleData.labels.length > 0) {
-        new Chart(el, {
-            type: 'doughnut',
-            data: { labels: roleData.labels, datasets: [{ data: roleData.counts, backgroundColor: roleColors, borderWidth: 3, borderColor: 'rgba(255,255,255,0.8)', hoverOffset: 8 }] },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } } } }
-        });
-    }
-
-    el = document.getElementById('ordersChart');
-    if (el && orderData.labels.length > 0) {
-        new Chart(el, {
-            type: 'bar',
-            data: {
-                labels: orderData.labels,
-                datasets: [
-                    { label: 'Orders', data: orderData.orders, backgroundColor: '#14b8a6', borderRadius: 6, barPercentage: 0.5, yAxisID: 'y' },
-                    { label: 'Revenue (Rs)', data: orderData.revenues, type: 'line', borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 4, borderWidth: 2.5, yAxisID: 'y1' }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } } },
-                scales: {
-                    y:  { beginAtZero: true, position: 'left',  grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Orders', font: { size: 10 } } },
-                    y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: function(v){ return 'Rs.'+(v/1000)+'K'; } }, title: { display: true, text: 'Revenue', font: { size: 10 } } },
-                    x:  { grid: { display: false } }
-                }
-            }
-        });
-    }
-})();
-</script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

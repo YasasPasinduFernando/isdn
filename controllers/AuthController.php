@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role']     = $user['role'];
             $_SESSION['rdc_id']   = $user['rdc_id'] ?? null;
 
-            audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', null, "Logged in as {$user['role']}");
+            audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', (int) $user['id'], "Logged in as {$user['role']}");
 
             // Send login notification email
             send_login_notification($user['email'], $user['username'], $user['role']);
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'logout') {
         $userId = $_SESSION['user_id'] ?? null;
         if ($userId) {
-            audit_log($pdo, (int) $userId, 'LOGOUT', 'session', null, 'Logged out');
+            audit_log($pdo, (int) $userId, 'LOGOUT', 'session', (int) $userId, 'Logged out');
         }
         session_destroy();
         redirect('/index.php?page=login');
@@ -311,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $_SESSION['role']     = $user['role'];
         $_SESSION['rdc_id']   = $user['rdc_id'] ?? null;
 
-        audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', null, "Logged in via Google as {$user['role']}");
+        audit_log($pdo, (int) $user['id'], 'LOGIN', 'session', (int) $user['id'], "Logged in via Google as {$user['role']}");
 
         // Send login notification
         send_login_notification($user['email'], $user['username'], $user['role']);

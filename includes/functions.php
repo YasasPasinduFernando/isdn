@@ -138,7 +138,20 @@ function get_nav_items_for_role($role) {
 }
 
 function redirect($url) {
-    header("Location: " . BASE_PATH . $url);
+    $location = "Location: " . BASE_PATH . $url;
+
+    // Optional hooks for tests; production keeps native header() + exit() behavior.
+    if (isset($GLOBALS['__isdn_header_emitter']) && is_callable($GLOBALS['__isdn_header_emitter'])) {
+        $GLOBALS['__isdn_header_emitter']($location);
+    } else {
+        header($location);
+    }
+
+    if (isset($GLOBALS['__isdn_exit_handler']) && is_callable($GLOBALS['__isdn_exit_handler'])) {
+        $GLOBALS['__isdn_exit_handler']();
+        return;
+    }
+
     exit();
 }
 

@@ -40,7 +40,7 @@ function get_allowed_pages_for_role($role) {
             'dashboard', 'products', 'cart', 'orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
+            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile', 'stock-movement-management'
         ],
         'rdc_clerk' => [
             'rdc-clerk-dashboard', 'clerk', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'

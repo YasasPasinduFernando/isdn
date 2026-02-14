@@ -85,6 +85,12 @@ INSERT INTO retail_customers (name,email,user_id) VALUES
 ('Customer Two','customer2@mail.com',10),
 ('Customer Three','customer3@mail.com',11);
 
+INSERT INTO categories (name, description) VALUES
+('Construction', 'Materials used for building and construction purposes.'),
+('Finishing', 'Products used for finishing touches in construction.'),
+('Plumbing', 'Pipes and fittings for plumbing needs.'),
+('Raw Material', 'Basic raw materials for construction.');
+
 -- =====================================================
 -- PRODUCT CATEGORIES
 -- =====================================================

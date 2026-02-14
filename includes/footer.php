@@ -30,10 +30,11 @@
                 <div>
                     <h4 class="text-lg font-semibold mb-6 text-white">RDC Locations</h4>
                     <ul class="space-y-3 text-sm text-gray-400">
-                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Central Region - Colombo</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Central Region - Kandy</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Northern Region - Jaffna</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Southern Region - Galle</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Eastern Region - Batticaloa</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Western Region - Colombo</span></li>
                     </ul>
                 </div>
 

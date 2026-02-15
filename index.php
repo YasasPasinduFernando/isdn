@@ -12,7 +12,7 @@ $protected_pages = [
     'profile',
     'products',
     'cart',
-    'orders',
+    'customer-sales-orders',
     'tracking',
     'payment',
     'rdc-manager-dashboard',

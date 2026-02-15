@@ -38,7 +38,7 @@ function get_profile_page_for_role($role) {
 function get_allowed_pages_for_role($role) {
     $map = [
         'customer' => [
-            'dashboard', 'products', 'cart', 'orders', 'tracking', 'payment', 'profile'
+            'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
             'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
@@ -81,7 +81,7 @@ function get_nav_page_labels() {
     return [
         'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
-        'orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
+        'customer-sales-orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
         'cart' => ['icon' => 'shopping_cart', 'label' => 'Cart'],
         'tracking' => ['icon' => 'location_on', 'label' => 'Tracking'],
         'payment' => ['icon' => 'payment', 'label' => 'Payment'],

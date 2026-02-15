@@ -313,6 +313,58 @@ foreach ($statusChartData['labels'] as $label) {
         </div>
         <?php endif; ?>
 
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <span class="material-symbols-rounded text-blue-500 text-2xl">bar_chart</span>
+                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">RDC Sales</h2>
+                </div>
+                <div class="h-60">
+                    <?php if (empty($rdcChartData['labels'])): ?>
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="w-16 h-16 rounded-full bg-blue-100/50 flex items-center justify-center text-blue-300 mb-3"><span class="material-symbols-rounded text-3xl">bar_chart</span></div>
+                            <p class="text-sm text-gray-400">No RDC sales data yet</p>
+                        </div>
+                    <?php else: ?>
+                        <canvas id="rdcBarChart"></canvas>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="glass-panel rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <span class="material-symbols-rounded text-purple-500 text-2xl">show_chart</span>
+                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Monthly Revenue</h2>
+                </div>
+                <div class="h-60">
+                    <?php if (empty($monthlyChartData['labels'])): ?>
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="w-16 h-16 rounded-full bg-purple-100/50 flex items-center justify-center text-purple-300 mb-3"><span class="material-symbols-rounded text-3xl">show_chart</span></div>
+                            <p class="text-sm text-gray-400">No monthly revenue data</p>
+                        </div>
+                    <?php else: ?>
+                        <canvas id="monthlyLineChart"></canvas>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="glass-panel rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <span class="material-symbols-rounded text-green-500 text-2xl">pie_chart</span>
+                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Order Status</h2>
+                </div>
+                <div class="h-60">
+                    <?php if (empty($statusChartData['labels'])): ?>
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="w-16 h-16 rounded-full bg-green-100/50 flex items-center justify-center text-green-300 mb-3"><span class="material-symbols-rounded text-3xl">pie_chart</span></div>
+                            <p class="text-sm text-gray-400">No orders yet</p>
+                        </div>
+                    <?php else: ?>
+                        <canvas id="statusPieChart"></canvas>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom: Top Products + Delivery + Quick Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
             <!-- Top 5 Products -->
@@ -468,5 +520,49 @@ foreach ($statusChartData['labels'] as $label) {
 
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+    Chart.defaults.font.family = "'Outfit', 'Segoe UI', system-ui, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#9ca3af';
+
+    var rdcData     = <?php echo json_encode($rdcChartData); ?>;
+    var monthlyData = <?php echo json_encode($monthlyChartData); ?>;
+    var statusData  = <?php echo json_encode($statusChartData); ?>;
+    var pieColors   = <?php echo json_encode($pieColors); ?>;
+    var barPalette  = ['#14b8a6','#3b82f6','#8b5cf6','#f59e0b','#ef4444'];
+
+    var el;
+    el = document.getElementById('rdcBarChart');
+    if (el && rdcData.labels.length > 0) {
+        new Chart(el, {
+            type: 'bar',
+            data: { labels: rdcData.labels, datasets: [{ label: 'Revenue (Rs)', data: rdcData.revenues, backgroundColor: barPalette.slice(0, rdcData.labels.length), borderRadius: 8, barPercentage: 0.6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: function(v){return 'Rs.'+(v/1000)+'K';} } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    el = document.getElementById('monthlyLineChart');
+    if (el && monthlyData.labels.length > 0) {
+        new Chart(el, {
+            type: 'line',
+            data: { labels: monthlyData.labels, datasets: [{ label: 'Revenue (Rs)', data: monthlyData.revenues, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#8b5cf6', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: function(v){return 'Rs.'+(v/1000)+'K';} } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    el = document.getElementById('statusPieChart');
+    if (el && statusData.labels.length > 0) {
+        new Chart(el, {
+            type: 'doughnut',
+            data: { labels: statusData.labels, datasets: [{ data: statusData.counts, backgroundColor: pieColors, borderWidth: 3, borderColor: 'rgba(255,255,255,0.8)', hoverOffset: 8 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } } } }
+        });
+    }
+})();
+</script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

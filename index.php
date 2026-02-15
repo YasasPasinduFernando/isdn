@@ -32,7 +32,8 @@ $protected_pages = [
     'sales-report',
     'request-product-units',
     'send-product-units',
-    'stock-reports'
+    'stock-reports',
+    'stock-movement-management'
 ];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');

@@ -7,7 +7,7 @@ $current_user = [
     'name' => $_SESSION['username'] ?? 'User',
     'role' => $_SESSION['role'] ?? 'rdc_clerk', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
     'rdc_id' => $_SESSION['rdc_id'] ?? null,
-    'rdc_name' => $_SESSION['rdc_name'] ?? null,
+    'rdc_name' => $_SESSION['rdc_name'] ?? 'NORTH RDC',
     'rdc_code' => $_SESSION['rdc_code'] ?? null
 ];
 

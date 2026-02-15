@@ -41,7 +41,7 @@ function get_allowed_pages_for_role($role) {
             'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
+            'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
             'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
@@ -59,8 +59,7 @@ function get_allowed_pages_for_role($role) {
             'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
-            'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
-            'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
             'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];
@@ -102,6 +101,7 @@ function get_nav_page_labels() {
         'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Manage Products'],
         'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
         'system-admin-audit' => ['icon' => 'history', 'label' => 'Audit Log'],
+        'stock-movement-management' => ['icon' => 'swap_horiz', 'label' => 'Stock Movement']
     ];
 }
 

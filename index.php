@@ -91,9 +91,7 @@ switch ($page) {
         require __DIR__ . '/views/rdc-manager/dashboard.php';
         break;
     case 'rdc-clerk-dashboard':
-        break;
-    case 'clerk':
-        require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
     case 'rdc-clerk-promotions':
         require __DIR__ . '/views/rdc-clerk/promotions.php';

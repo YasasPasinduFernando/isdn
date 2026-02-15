@@ -23,6 +23,9 @@ TRUNCATE TABLE shopping_carts;
 TRUNCATE TABLE stock_movement_logs;
 TRUNCATE TABLE product_categories;
 TRUNCATE TABLE rdc_districts;
+TRUNCATE TABLE audit_logs;
+TRUNCATE TABLE email_logs;
+
 
 SET foreign_key_checks = 1;
 
@@ -42,21 +45,25 @@ INSERT INTO rdcs (rdc_code, rdc_name, province, address, contact_number) VALUES
 -- =====================================================
 
 INSERT INTO users (username, email, password, role, rdc_id) VALUES
-('sysadmin1','sysadmin1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','system_admin',NULL),
-('headoffice1','headoffice1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','head_office_manager',NULL),
+('sysadmin1','sysadmin1@mail.com','$2a$12$s8Xc5QDqwUTQxU7SNdZabuPozBRLhggDpIdT31Nq29CiYmO/dK11y','system_admin',NULL),
+('headoffice1','headoffice1@mail.com','$2a$12$xM5yN7l1gDsMv.6KnwO/mO5/oXuhIYVEobnR9e0tS./FSrj9ssjZ2','head_office_manager',NULL),
 
-('north_manager','north_manager@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_manager',1),
-('south_manager','south_manager@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_manager',2),
+('north_manager','north_manager@mail.com','$2a$12$jK7xBCebwjX73LaMZSHsUuv/v/i6Sm3u5I/PPUSuD6zepXz4n1abK','rdc_manager',1),
+('south_manager','south_manager@mail.com','$2a$12$jK7xBCebwjX73LaMZSHsUuv/v/i6Sm3u5I/PPUSuD6zepXz4n1abK','rdc_manager',2),
 
-('north_clerk1','north_clerk1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_clerk',1),
-('south_clerk1','south_clerk1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_clerk',2),
+('north_clerk1','north_clerk1@mail.com','$2a$12$rqbJDAiyDaIp5HnoBtQwau7Jrnn/yfK7w09t5LJdkcnuY81JifvPS','rdc_clerk',1),
+('south_clerk1','south_clerk1@mail.com','$2a$12$rqbJDAiyDaIp5HnoBtQwau7Jrnn/yfK7w09t5LJdkcnuY81JifvPS','rdc_clerk',2),
 
-('north_driver1','north_driver1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_driver',1),
-('south_driver1','south_driver1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','rdc_driver',2),
+('north_driver1','north_driver1@mail.com','$2a$12$Um4nmEuV/qQn6K.VWDdGEegwpkPWRE/5lEB5MU0D6TdI0KdRVPThy','rdc_driver',1),
+('south_driver1','south_driver1@mail.com','$2a$12$Um4nmEuV/qQn6K.VWDdGEegwpkPWRE/5lEB5MU0D6TdI0KdRVPThy','rdc_driver',2),
 
-('customer1','customer1@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','customer',1),
-('customer2','customer2@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','customer',2),
-('customer3','customer3@mail.com','$2y$10$EDm88GnNLzt4PAzal72PbeHYfTfZ6gCvESWfNy3evlVu6u0B1G8aO','customer',3);
+('customer1','customer1@mail.com','$2a$12$LmoUb76F4vbC0xM0HNvPOeJ2pMrSwC7/qo.0CQzx.prGoeLAeYV1u','customer',1),
+('customer2','customer2@mail.com','$2a$12$LmoUb76F4vbC0xM0HNvPOeJ2pMrSwC7/qo.0CQzx.prGoeLAeYV1u','customer',2),
+('customer3','customer3@mail.com','$2a$12$LmoUb76F4vbC0xM0HNvPOeJ2pMrSwC7/qo.0CQzx.prGoeLAeYV1u','customer',3),
+
+('north_sales_ref','north_sales_ref@mail.com','$2a$12$1HkXDI8UJLnc8wipwAlEyu02uARmJNJPgkFKA.VSKawpyMoBqhzUW','rdc_sales_ref',1),
+
+('north_logistics_officer','north_logistics_officer@mail.com','$2a$12$Ba1waognzY0yTamCnTx71eC6CRCm71J3WiI7Qg7b6BJ68RJPor4HW','logistics_officer',1);
 
 -- =====================================================
 -- ROLE TABLES
@@ -85,11 +92,18 @@ INSERT INTO retail_customers (name,email,user_id) VALUES
 ('Customer Two','customer2@mail.com',10),
 ('Customer Three','customer3@mail.com',11);
 
+INSERT INTO rdc_sales_refs (name,email,user_id) VALUES
+('North Sales Ref','north_sales_ref@mail.com',12);
+
+INSERT INTO rdc_logistics_officers (name,email,user_id) VALUES
+('North Logistics Officer','north_logistics_officer@mail.com',13);
+
 INSERT INTO categories (name, description) VALUES
 ('Construction', 'Materials used for building and construction purposes.'),
 ('Finishing', 'Products used for finishing touches in construction.'),
 ('Plumbing', 'Pipes and fittings for plumbing needs.'),
 ('Raw Material', 'Basic raw materials for construction.');
+
 
 -- =====================================================
 -- PRODUCT CATEGORIES
@@ -213,3 +227,66 @@ INSERT INTO `stock_movement_logs` (
 
 
 SET foreign_key_checks = 1;
+
+-- ============================================
+-- 🔐 System User Credentials
+
+-- 🛠 System Administrator
+
+-- Email: sysadmin1@mail.com
+
+-- Password: admin@123
+
+-- 🏢 Head Office Manager
+
+-- Email: headoffice1@mail.com
+
+-- Password: head@123
+
+-- 📍 RDC Managers
+
+-- Email: north_manager@mail.com
+
+-- Email: south_manager@mail.com
+
+-- Password: manager@123
+
+-- 🧾 RDC Clerks
+
+-- Email: north_clerk1@mail.com
+
+-- Email: south_clerk1@mail.com
+
+-- Password: clerk@123
+
+-- 🚚 RDC Drivers
+
+-- Email: north_driver1@mail.com
+
+-- Email: south_driver1@mail.com
+
+-- Password: driver@123
+
+-- 🛒 Customers
+
+-- Email: customer1@mail.com
+
+-- Email: customer2@mail.com
+
+-- Email: customer3@mail.com
+
+-- Password: customer@123
+
+-- 📊 RDC Sales Representative
+
+-- Email: north_sales_ref@mail.com
+
+-- Password: ref@123
+
+-- 🚛 RDC Logistics Officer
+
+-- Email: north_logistics_officer@mail.com
+
+-- Password: officer@123
+
+-- ============================================

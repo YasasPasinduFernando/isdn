@@ -2,7 +2,14 @@
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="min-h-screen flex items-center justify-center py-10 sm:py-12 px-4">
+<div class="hidden lg:block">
+    <?php
+    $authMode = 'register';
+    require __DIR__ . '/partials/auth_swap.php';
+    ?>
+</div>
+
+<div class="lg:hidden min-h-screen flex items-center justify-center py-10 sm:py-12 px-4">
     <div class="max-w-md w-full">
         <!-- Register Card -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 transform hover:scale-[1.01] transition duration-500">
@@ -30,13 +37,13 @@ require_once __DIR__ . '/../../includes/header.php';
             <!-- Register Form -->
             <form method="POST" action="<?php echo BASE_PATH; ?>/controllers/AuthController.php" class="space-y-5">
                 <input type="hidden" name="action" value="register">
-                
+
                 <!-- Full Name Input -->
                 <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span class="material-symbols-rounded text-gray-400 group-focus-within:text-teal-500 transition-colors">person</span>
                     </div>
-                    <input type="text" name="username" required 
+                    <input type="text" name="username" required
                         class="w-full pl-10 pr-4 py-3 bg-white/90 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all placeholder-gray-400 text-gray-700 shadow-sm"
                         placeholder="Full Name">
                 </div>
@@ -46,7 +53,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span class="material-symbols-rounded text-gray-400 group-focus-within:text-teal-500 transition-colors">mail</span>
                     </div>
-                    <input type="email" name="email" required 
+                    <input type="email" name="email" required
                         class="w-full pl-10 pr-4 py-3 bg-white/90 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all placeholder-gray-400 text-gray-700 shadow-sm"
                         placeholder="Email Address">
                 </div>
@@ -86,7 +93,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
 
                 <!-- Register Button -->
-                <button type="submit" 
+                <button type="submit"
                     class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-3.5 rounded-xl font-bold font-['Outfit'] hover:from-teal-600 hover:to-emerald-700 transition duration-300 transform hover:scale-[1.02] shadow-lg shadow-teal-500/30 flex items-center justify-center">
                     <span class="material-symbols-rounded mr-2">rocket_launch</span> Create Customer Account
                 </button>
@@ -116,7 +123,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
             <!-- Login Link -->
             <p class="text-center mt-6 text-gray-600 text-sm flex items-center justify-center">
-                Already have an account? 
+                Already have an account?
                 <a href="<?php echo BASE_PATH; ?>/index.php?page=login" class="text-teal-600 font-bold hover:text-teal-700 bg-teal-50 px-3 py-1 rounded-full hover:bg-teal-100 transition ml-1 flex items-center">
                     Login here <span class="material-symbols-rounded text-sm ml-1">arrow_forward</span>
                 </a>
@@ -145,7 +152,7 @@ require_once __DIR__ . '/../../includes/header.php';
 function togglePassword() {
     const password = document.getElementById('password');
     const icon = document.getElementById('toggleIcon');
-    
+
     if (password.type === 'password') {
         password.type = 'text';
         icon.textContent = 'visibility_off';
@@ -158,7 +165,7 @@ function togglePassword() {
 function toggleConfirmPassword() {
     const password = document.getElementById('confirm_password');
     const icon = document.getElementById('toggleConfirmIcon');
-    
+
     if (password.type === 'password') {
         password.type = 'text';
         icon.textContent = 'visibility_off';

@@ -59,8 +59,7 @@ function get_allowed_pages_for_role($role) {
             'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
-            'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
-            'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
             'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];

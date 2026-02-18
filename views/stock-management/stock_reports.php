@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../includes/header.php';
 $current_user = [
     'user_id' => $_SESSION['user_id'] ?? null,
     'name' => $_SESSION['username'] ?? 'User',
-    'role' => $_SESSION['role'] ?? 'rdc_clerk', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
+    'role' => 'rdc_manager', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
     'rdc_id' => $_SESSION['rdc_id'] ?? null,
     'rdc_name' => $_SESSION['rdc_name'] ?? 'NORTH RDC',
     'rdc_code' => $_SESSION['rdc_code'] ?? null
@@ -54,10 +54,10 @@ $all_rdcs = [
 // Dummy Data: Current Stock Levels
 $current_stock_data = [
     // North RDC
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 500, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 400, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 200, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OK'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 300, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'OK'],
+    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 10, 'minimum_level' => 20, 'unit_price' => 150.00, 'status' => 'LOW'],
+    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 2, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
+    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 200, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OUT_OF_STOCK'],
+    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 300, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'LOW'],
     ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 280, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
     ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 350, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'OK'],
     

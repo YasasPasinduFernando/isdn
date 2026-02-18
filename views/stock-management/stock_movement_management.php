@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../includes/header.php';
 $current_user = [
     'user_id' => 5,
     'name' => 'Kasun Silva',
-    'role' => 'head_office_manager', // Options: rdc_manager, head_office_manager
+    'role' => 'rdc_manager', // Options: rdc_manager, head_office_manager
     'rdc_id' => 2,
     'rdc_name' => 'South RDC',
     'rdc_code' => 'SOUTH'
@@ -49,7 +49,7 @@ $recent_movements = [
         'new_stock' => 120,
         'created_by_name' => 'Kasun Silva',
         'created_by_role' => 'RDC_MANAGER',
-        'note' => 'New delivery from supplier'
+        'note' => 'New delivery'
     ],
     [
         'movement_id' => 2,

@@ -675,9 +675,9 @@ $pending_transfers = [
             <div class="flex space-x-4">
                 <button type="submit" class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-lg">
                     <i class="fas fa-paper-plane"></i>
-                    <span>Submit Transfer Request</span>
+                    <span>Submit Transfer Request</span> 
                 </button>
-                
+             <!-- Need to change word of apply to submit when roles changed -->   
                 <button type="button" class="px-6 py-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
                     <i class="fas fa-times mr-2"></i>
                     Cancel

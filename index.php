@@ -88,7 +88,7 @@ switch ($page) {
         require __DIR__ . '/views/shared/profile_edit.php';
         break;
     case 'rdc-manager-dashboard':
-        require __DIR__ . '/views/rdc-manager/dashboard.php';
+        require_once __DIR__ . '/controllers/rdc-manager/DashboardController.php';
         break;
     case 'rdc-clerk-dashboard':
         require __DIR__ . '/views/rdc-clerk/dashboard.php';

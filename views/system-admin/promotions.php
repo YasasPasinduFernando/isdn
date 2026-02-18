@@ -1,4 +1,8 @@
 <?php
+// Start output buffering so POST handlers can safely redirect before flushed output
+if (!ob_get_level()) {
+    ob_start();
+}
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/SystemAdmin.php';

@@ -1,25 +1,22 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 
-// Simulated logged-in user data
-$current_user = [
-    'user_id' => 5,
-    'name' => $_SESSION['username'] ?? 'Manager',
-    'role' => 'RDC_MANAGER',
-    'rdc_id' => 2,
-    'rdc_name' => 'South RDC',
-    'rdc_code' => 'SOUTH'
-];
+// Use controller-provided data when available; otherwise fall back to sensible defaults / dummy data
+if (!isset($current_user)) {
+    $current_user = [
+        'user_id' => $_SESSION['user_id'] ?? 5,
+        'name' => $_SESSION['username'] ?? 'Manager',
+        'role' => $_SESSION['role'] ?? 'rdc_manager',
+        'rdc_id' => $_SESSION['rdc_id'] ?? 2,
+        'rdc_name' => $_SESSION['rdc_name'] ?? ($rdcName ?? 'South RDC'),
+        'rdc_code' => $_SESSION['rdc_code'] ?? ($rdcCode ?? 'SOUTH')
+    ];
+}
 
-// Dummy Data: Current Stock (from request_product_units.php)
-$current_stock = [
-    ['product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 20, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
-    ['product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 15, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
-    ['product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 5, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'CRITICAL'],
-    ['product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 30, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'CRITICAL'],
-    ['product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 150, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 80, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'LOW']
-];
+// Expect `$current_stock` to be provided by the controller. If not present, use an empty array
+if (!isset($current_stock) || !is_array($current_stock)) {
+    $current_stock = [];
+}
 
 // Calculate KPIs
 $total_products = count($current_stock);
@@ -28,25 +25,20 @@ $low_stock = count(array_filter($current_stock, fn($item) => $item['status'] ===
 $ok_stock = count(array_filter($current_stock, fn($item) => $item['status'] === 'OK'));
 $total_stock_value = array_sum(array_map(fn($item) => $item['current_stock'] * $item['unit_price'], $current_stock));
 
-// Dummy: Pending Transfer Requests
-$pending_transfers = [
-    ['transfer_number' => 'TRF-NORTH-SOUTH-001', 'source_rdc' => 'North RDC', 'items' => 3, 'status' => 'PENDING', 'is_urgent' => true, 'date' => '2026-02-13 10:30'],
-    ['transfer_number' => 'TRF-EAST-SOUTH-002', 'source_rdc' => 'East RDC', 'items' => 2, 'status' => 'APPROVED', 'is_urgent' => false, 'date' => '2026-02-12 14:15']
-];
+// Expect `$pending_transfers` to be provided by the controller. If not present, use an empty array
+if (!isset($pending_transfers) || !is_array($pending_transfers)) {
+    $pending_transfers = [];
+}
 
-// Dummy: Recent Orders
-$recent_orders = [
-    ['order_number' => 'ORD-2026-0045', 'customer' => 'ABC Supermarket', 'total' => 25000.00, 'status' => 'processing', 'date' => '2026-02-13 09:15'],
-    ['order_number' => 'ORD-2026-0044', 'customer' => 'Quick Mart', 'total' => 18500.00, 'status' => 'confirmed', 'date' => '2026-02-13 08:30'],
-    ['order_number' => 'ORD-2026-0043', 'customer' => 'City Store', 'total' => 32000.00, 'status' => 'delivered', 'date' => '2026-02-12 16:45']
-];
+// Expect `$recent_orders` to be provided by the controller. If not present, use an empty array
+if (!isset($recent_orders) || !is_array($recent_orders)) {
+    $recent_orders = [];
+}
 
-// Dummy: Recent Stock Movements
-$recent_movements = [
-    ['product' => 'Coca Cola 1L', 'type' => 'STOCK_IN', 'quantity' => 100, 'date' => '2026-02-10 10:30', 'user' => 'You'],
-    ['product' => 'Rice 5kg', 'type' => 'DAMAGED', 'quantity' => -10, 'date' => '2026-02-09 14:15', 'user' => 'You'],
-    ['product' => 'Sprite 1L', 'type' => 'EXPIRED', 'quantity' => -5, 'date' => '2026-02-09 09:00', 'user' => 'You']
-];
+// Expect `$recent_movements` to be provided by the controller. If not present, use an empty array
+if (!isset($recent_movements) || !is_array($recent_movements)) {
+    $recent_movements = [];
+}
 
 // Count pending approvals and urgent transfers
 $pending_approvals = count(array_filter($pending_transfers, fn($t) => $t['status'] === 'PENDING'));

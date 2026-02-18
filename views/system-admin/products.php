@@ -1,138 +1,433 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../models/SystemAdmin.php';
+
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== USER_ROLE_SYSTEM_ADMIN) {
+    redirect('/index.php?page=login');
+}
+
+$admin  = new SystemAdmin($pdo);
+$action = $_GET['action'] ?? 'list';
+
+// ── Handle POST ──────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $act = $_POST['form_action'] ?? '';
+
+        if ($act === 'create' || $act === 'update') {
+            $imgUrl = null;
+            if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $imgUrl = $admin->handleImageUpload($_FILES['image']);
+                if (!$imgUrl) {
+                    flash_message('Invalid image file. Max 5MB, JPEG/PNG/GIF/WEBP only.', 'error');
+                    redirect('/index.php?page=system-admin-products&action=' . ($act === 'update' ? 'edit&id='.$_POST['product_id'] : 'add'));
+                }
+            }
+
+            $data = [
+                'product_code'        => trim($_POST['product_code'] ?? ''),
+                'product_name'        => trim($_POST['product_name'] ?? ''),
+                'category'            => trim($_POST['category'] ?? ''),
+                'unit_price'          => (float) ($_POST['unit_price'] ?? 0),
+                'minimum_stock_level' => (int) ($_POST['minimum_stock_level'] ?? 100),
+                'is_active'           => isset($_POST['is_active']) ? 1 : 0,
+            ];
+            if ($imgUrl) $data['image_url'] = $imgUrl;
+
+            if ($act === 'create') {
+                $id = $admin->createProduct($data);
+                $admin->logAction($_SESSION['user_id'], 'CREATE', 'product', $id, "Created product: " . $data['product_name']);
+                flash_message('Product created!', 'success');
+            } else {
+                $pid = (int) $_POST['product_id'];
+                $admin->updateProduct($pid, $data);
+                $admin->logAction($_SESSION['user_id'], 'UPDATE', 'product', $pid, "Updated product: " . $data['product_name']);
+                flash_message('Product updated!', 'success');
+            }
+            redirect('/index.php?page=system-admin-products');
+
+        } elseif ($act === 'toggle' && !empty($_POST['product_id'])) {
+            $pid = (int) $_POST['product_id'];
+            $admin->toggleProductActive($pid);
+            $admin->logAction($_SESSION['user_id'], 'TOGGLE', 'product', $pid, "Toggled product active status");
+            flash_message('Product status updated.', 'success');
+            redirect('/index.php?page=system-admin-products');
+
+        } elseif ($act === 'delete' && !empty($_POST['product_id'])) {
+            $pid = (int) $_POST['product_id'];
+            $p = $admin->getProductById($pid);
+            $admin->deleteProduct($pid);
+            $admin->logAction($_SESSION['user_id'], 'DELETE', 'product', $pid, "Deleted product: " . ($p['product_name'] ?? '#'.$pid));
+            flash_message('Product deleted.', 'success');
+            redirect('/index.php?page=system-admin-products');
+        }
+    } catch (Exception $e) {
+        flash_message('Error: ' . $e->getMessage(), 'error');
+        redirect('/index.php?page=system-admin-products');
+    }
+}
+
+// ── FORM VIEW ────────────────────────────────────────────────
+if ($action === 'add' || $action === 'edit') {
+    $editProduct = null;
+    if ($action === 'edit' && !empty($_GET['id'])) {
+        $editProduct = $admin->getProductById((int) $_GET['id']);
+        if (!$editProduct) {
+            flash_message('Product not found.', 'error');
+            redirect('/index.php?page=system-admin-products');
+        }
+    }
+    $categories = $admin->getProductCategories();
 ?>
 
-<div class="min-h-screen py-8">
-    <div class="container mx-auto px-4">
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <?php display_flash(); ?>
 
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div class="flex items-center gap-3 mb-8">
+            <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products" class="w-10 h-10 rounded-xl bg-white/50 border border-white/60 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-white/70 transition"><span class="material-symbols-rounded">arrow_back</span></a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800 font-['Outfit']">All Products</h1>
-                <p class="text-gray-600 mt-1">Manage All ISDN Products</p>
-            </div>
-            <div class="flex gap-2">
-                <div class="flex-1">
-                    <input type="text" name="product_name" required placeholder="Search products..."
-                        class="w-full md:w-96 border border-gray-200 rounded-lg px-3 py-3 text-sm text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <button id="openFilter" class="bg-white/60 backdrop-blur-sm border border-white/60 px-4 py-2 rounded-xl shadow-sm
-         text-teal-700 font-semibold hover:bg-white transition flex items-center">
-                    <span class="material-symbols-rounded mr-2 text-lg">filter_alt</span>
-                    Filter
-                </button>
-                <button
-                    class="bg-teal-600 px-4 py-2 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center">
-                    <span class="material-symbols-rounded mr-2 text-lg">add</span>New
-                </button>
-                <button
-                    class="bg-teal-600 px-4 py-2 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center">
-                    <span class="material-symbols-rounded mr-2 text-lg">download</span>Report
-                </button>
+                <h1 class="text-2xl font-bold text-gray-800 font-['Outfit']"><?php echo $editProduct ? 'Edit Product' : 'Add New Product'; ?></h1>
+                <p class="text-sm text-gray-500"><?php echo $editProduct ? 'Update '.$editProduct['product_code'] : 'Add a new catalogue item'; ?></p>
             </div>
         </div>
 
-        <!-- Order List Container -->
-        <div class="glass-panel rounded-3xl overflow-hidden shadow-xl border border-white/50">
+        <form method="POST" enctype="multipart/form-data" action="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products" class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+            <input type="hidden" name="form_action" value="<?php echo $editProduct ? 'update' : 'create'; ?>">
+            <?php if ($editProduct): ?><input type="hidden" name="product_id" value="<?php echo $editProduct['product_id']; ?>"><?php endif; ?>
 
-            <!-- Desktop Table Header -->
-            <div
-                class="hidden md:grid grid-cols-7 gap-5 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
-                <div class="col-span-1">Photo</div>
-                <div class="col-span-1">Name</div>
-                <div class="col-span-1">Code</div>
-                <div class="col-span-1">Category</div>
-                <div class="col-span-1">Description </div>
-                <div class="col-span-1 text-center">Unit Price</div>
-                <div class="col-span-1 text-center">Action</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Product Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="product_code" required value="<?php echo htmlspecialchars($editProduct['product_code'] ?? ''); ?>"
+                           class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm" placeholder="e.g. P009">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Product Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="product_name" required value="<?php echo htmlspecialchars($editProduct['product_name'] ?? ''); ?>"
+                           class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+                </div>
             </div>
-            <!-- Order Items Mock List -->
-            <div class="p-5 hover:bg-white/40 transition duration-200 group">
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-5 items-center">
-                    <!-- Mobile Label -->
-                    <?php foreach ($products as $product): ?>
 
-                        <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Category <span class="text-red-500">*</span></label>
+                    <input type="text" name="category" required list="categoryList" value="<?php echo htmlspecialchars($editProduct['category'] ?? ''); ?>"
+                           class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm" placeholder="e.g. Construction">
+                    <datalist id="categoryList">
+                        <?php foreach ($categories as $cat): ?><option value="<?php echo htmlspecialchars($cat); ?>"><?php endforeach; ?>
+                    </datalist>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Unit Price (Rs) <span class="text-red-500">*</span></label>
+                    <input type="number" name="unit_price" required step="0.01" min="0" value="<?php echo htmlspecialchars($editProduct['unit_price'] ?? ''); ?>"
+                           class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Min Stock Level</label>
+                    <input type="number" name="minimum_stock_level" min="0" value="<?php echo htmlspecialchars($editProduct['minimum_stock_level'] ?? 100); ?>"
+                           class="w-full border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 transition shadow-sm">
+                </div>
+            </div>
 
-                        <div class="col-span-1 flex items-center space-x-4">
-                            <div>
-                                <img src="<?php echo BASE_PATH . $product['image_url'] ?>"
-                                    alt="<?php echo $product['product_name']; ?>"
-                                    class="max-h-20 w-auto object-contain transition duration-500">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Product Image</label>
+                <div class="flex items-center gap-4">
+                    <?php if (!empty($editProduct['image_url'])): ?>
+                        <img src="<?php echo BASE_PATH . '/' . htmlspecialchars($editProduct['image_url']); ?>" alt="Current" class="w-16 h-16 rounded-xl object-cover border border-white/60 shadow-sm">
+                    <?php endif; ?>
+                    <input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"
+                           class="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition">
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Max 5MB. JPEG, PNG, GIF, or WebP.</p>
+            </div>
 
-                            </div>
-                        </div>
-                        <div class="col-span-1 flex items-center space-x-4">
-                            <div>
-                                <h3 class="font-bold text-gray-800 font-['Outfit']">
-                                    <?php echo $product['product_name'] ?>
-                                </h3>
-                            </div>
-                        </div>
+            <div class="flex items-center gap-3">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_active" value="1" class="sr-only peer" <?php echo (!$editProduct || ($editProduct['is_active'] ?? 1)) ? 'checked' : ''; ?>>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                </label>
+                <span class="text-sm font-medium text-gray-700">Product Active</span>
+            </div>
 
-                        <div class="col-span-1 font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2">Date:</span>
-                            <?php echo $product['product_code'] ?>
-                        </div>
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/50">
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products" class="px-5 py-2.5 rounded-xl text-gray-600 hover:bg-white/50 transition text-sm font-medium">Cancel</a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-200/50 hover:scale-[1.02] transition flex items-center gap-2">
+                    <span class="material-symbols-rounded text-base"><?php echo $editProduct ? 'save' : 'add_box'; ?></span>
+                    <?php echo $editProduct ? 'Save Changes' : 'Create Product'; ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-                        <div class="col-span-1 text-sm text-gray-600 font-medium">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
-                            <?php echo $product['category'] ?>
-                        </div>
-                        <div class="col-span-1 font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
-                            <?php echo $product['description'] ?>
-                        </div>
+<?php
+    require_once __DIR__ . '/../../includes/footer.php';
+    return;
+}
 
-                        <div class="col-span-1 text-center font-bold text-gray-800">
-                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
-                            Rs. <?php echo number_format($product['unit_price'], 2); ?>
-                        </div>
+// ── LIST VIEW ────────────────────────────────────────────────
+$search    = trim($_GET['search'] ?? '');
+$catFilter = trim($_GET['category'] ?? '');
+$page      = max(1, (int) ($_GET['pg'] ?? 1));
+$perPage   = 10;
 
-                        <div class="col-span-1 flex md:justify-center pr-6 space-x-2">
+$products      = $admin->getProducts($page, $perPage, $search, $catFilter);
+$totalProducts = $admin->countProducts($search, $catFilter);
+$totalPages    = max(1, ceil($totalProducts / $perPage));
+$categories    = $admin->getProductCategories();
+$totalAllProds = $admin->countProducts('', '');
+$lowStockCount = 0;
+foreach ($products as $p) {
+    if (($p['total_stock'] ?? 0) < ($p['minimum_stock_level'] ?? 0)) $lowStockCount++;
+}
+?>
 
-                            <!-- Edit -->
-                            <a href="#"
-                                class="text-blue-600 hover:text-white hover:bg-blue-600 p-2 rounded-full transition duration-200 shadow-sm border border-blue-100"
-                                title="Edit Product">
-                                <span class="material-symbols-rounded text-[20px]">edit</span>
-                            </a>
+<div class="admin-page min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <?php display_flash(); ?>
 
-                            <!-- Delete -->
-                            <a href="#"
-                                class="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-full transition duration-200 shadow-sm border border-red-100"
-                                title="Delete Product">
-                                <span class="material-symbols-rounded text-[20px]">delete</span>
-                            </a>
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div class="admin-heading-box flex items-center gap-3 flex-1">
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-dashboard" class="admin-back-btn flex items-center justify-center flex-shrink-0" aria-label="Back"><span class="material-symbols-rounded">arrow_back</span></a>
+                <div class="min-w-0">
+                    <h1 class="admin-title text-2xl">Product Management</h1>
+                    <p class="admin-subtitle">Catalogue and inventory</p>
+                </div>
+            </div>
+            <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products&action=add" class="admin-cta inline-flex items-center gap-2 flex-shrink-0">
+                <span class="material-symbols-rounded text-lg">add_box</span> Add Product
+            </a>
+        </div>
 
-                        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon flex-shrink-0"><span class="material-symbols-rounded text-2xl">inventory_2</span></div>
+                <div class="min-w-0">
+                    <p class="stat-value"><?php echo number_format($totalAllProds); ?></p>
+                    <p class="stat-label">Total Products</p>
+                </div>
+            </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon flex-shrink-0"><span class="material-symbols-rounded text-2xl">filter_list</span></div>
+                <div class="min-w-0">
+                    <p class="stat-value"><?php echo number_format($totalProducts); ?></p>
+                    <p class="stat-label"><?php echo ($search || $catFilter) ? 'Showing (filtered)' : 'In list'; ?></p>
+                </div>
+            </div>
+            <div class="stat-card flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+                <div class="stat-icon flex-shrink-0"><span class="material-symbols-rounded text-2xl">warning</span></div>
+                <div class="min-w-0">
+                    <p class="stat-value text-xl"><?php echo $lowStockCount; ?></p>
+                    <p class="stat-label">Low stock (this page)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="GET" class="admin-filters mb-6 flex flex-wrap gap-4 items-end">
+            <input type="hidden" name="page" value="system-admin-products">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Search</label>
+                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Name or code..."
+                       class="w-full px-4 py-2.5 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Category</label>
+                <select name="category" class="px-3 py-2.5 text-sm min-w-[160px]">
+                    <option value="">All</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo $catFilter === $cat ? 'selected' : ''; ?>><?php echo htmlspecialchars($cat); ?></option>
                     <?php endforeach; ?>
-
-                </div>
+                </select>
             </div>
+            <button type="submit" class="btn-search px-5 py-2.5 text-sm flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-base">search</span> Search
+            </button>
+            <?php if ($search || $catFilter): ?>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products" class="btn-reset px-4 py-2.5 text-sm flex items-center gap-1"><span class="material-symbols-rounded text-base">refresh</span> Reset</a>
+            <?php endif; ?>
+        </form>
 
-
-            <!-- Pagination -->
-            <div
-                class="bg-white/30 backdrop-blur-sm px-6 py-4 border-t border-gray-100/50 flex items-center justify-between">
-                <span class="text-sm text-gray-600 font-medium">Showing 1-8 of 45 Products</span>
-                <div class="flex space-x-2">
-                    <button
-                        class="px-3 py-1 bg-white/50 border border-white/60 rounded-lg hover:bg-white text-gray-600 disabled:opacity-50 transition"
-                        disabled>Previous</button>
-                    <button class="px-3 py-1 bg-teal-600 text-white rounded-lg shadow-md shadow-teal-500/20">1</button>
-                    <button
-                        class="px-3 py-1 bg-white/50 border border-white/60 rounded-lg hover:bg-white text-gray-600 transition">2</button>
-                    <button
-                        class="px-3 py-1 bg-white/50 border border-white/60 rounded-lg hover:bg-white text-gray-600 transition">3</button>
-                    <button
-                        class="px-3 py-1 bg-white/50 border border-white/60 rounded-lg hover:bg-white text-gray-600 transition">Next</button>
+        <!-- Products Table -->
+        <div class="admin-table-wrap mb-6">
+            <?php if (empty($products)): ?>
+                <div class="admin-empty">
+                    <div class="admin-empty-icon"><span class="material-symbols-rounded text-4xl">inventory_2</span></div>
+                    <p class="admin-empty-title">No products found</p>
+                    <p class="admin-empty-text">Try adjusting search or add a new product</p>
                 </div>
-            </div>
+            <?php else: ?>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm admin-table">
+                        <thead>
+                            <tr class="text-left">
+                                <th>Code</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <?php foreach ($products as $p): ?>
+                            <tr class="table-row-hover" data-product="<?php echo htmlspecialchars(json_encode(['product_id' => $p['product_id'], 'product_code' => $p['product_code'], 'product_name' => $p['product_name'], 'category' => $p['category'] ?? '', 'unit_price' => $p['unit_price'], 'total_stock' => $p['total_stock'] ?? 0, 'minimum_stock_level' => $p['minimum_stock_level'] ?? 0, 'is_active' => (int)($p['is_active'] ?? 1), 'image_url' => $p['image_url'] ?? ''])); ?>">
+                                <td class="font-mono text-xs text-gray-500"><?php echo htmlspecialchars($p['product_code']); ?></td>
+                                <td>
+                                    <button type="button" onclick="openViewProduct(this.closest('tr'))" class="text-left flex items-center gap-3 w-full hover:opacity-90 transition">
+                                        <?php if ($p['image_url']): ?>
+                                            <img src="<?php echo BASE_PATH . '/' . htmlspecialchars($p['image_url']); ?>" class="w-10 h-10 rounded-xl object-cover border border-white/60 flex-shrink-0" alt="">
+                                        <?php else: ?>
+                                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0"><span class="material-symbols-rounded">image</span></div>
+                                        <?php endif; ?>
+                                        <span class="font-semibold text-gray-800"><?php echo htmlspecialchars($p['product_name']); ?></span>
+                                    </button>
+                                </td>
+                                <td><span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700"><?php echo htmlspecialchars($p['category'] ?? '-'); ?></span></td>
+                                <td class="font-semibold text-gray-800">Rs.<?php echo number_format($p['unit_price'], 2); ?></td>
+                                <td>
+                                    <?php $stockClass = ($p['total_stock'] ?? 0) < ($p['minimum_stock_level'] ?? 100) ? 'text-red-600 font-bold' : 'text-gray-600'; ?>
+                                    <span class="<?php echo $stockClass; ?>"><?php echo number_format($p['total_stock'] ?? 0); ?></span>
+                                    <span class="text-gray-400 text-xs">/ <?php echo number_format($p['minimum_stock_level'] ?? 0); ?></span>
+                                </td>
+                                <td>
+                                    <?php if ($p['is_active']): ?>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600"><span class="w-2 h-2 rounded-full bg-green-500"></span>Active</span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-500"><span class="w-2 h-2 rounded-full bg-red-400"></span>Inactive</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products&action=edit&id=<?php echo $p['product_id']; ?>" class="admin-action-btn admin-action-btn-edit" title="Edit"><span class="material-symbols-rounded text-lg">edit</span></a>
+                                        <button type="button" onclick="openConfirmProduct(<?php echo $p['product_id']; ?>, 'toggle', '<?php echo $p['is_active'] ? 'Deactivate' : 'Activate'; ?> this product?')" class="admin-action-btn admin-action-btn-toggle <?php echo $p['is_active'] ? '' : 'on'; ?>" title="Toggle"><span class="material-symbols-rounded text-lg"><?php echo $p['is_active'] ? 'visibility_off' : 'visibility'; ?></span></button>
+                                        <button type="button" onclick="openConfirmProduct(<?php echo $p['product_id']; ?>, 'delete', 'Delete this product permanently? This cannot be undone.')" class="admin-action-btn admin-action-btn-delete" title="Delete"><span class="material-symbols-rounded text-lg">delete</span></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
 
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+        <div class="admin-pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++):
+                $isActive = $i === $page;
+                $qs = http_build_query(array_merge($_GET, ['pg' => $i]));
+            ?>
+                <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $qs; ?>" class="<?php echo $isActive ? 'pagination-active' : ''; ?>">
+                    <?php echo $i; ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- View Product Modal -->
+<div id="modal-view-product" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-view-product-title">
+    <div class="modal-box modal-box-lg" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modal-view-product-title" class="text-lg font-bold text-gray-800">Product Details</h2>
+            <button type="button" class="btn-modal-close" onclick="closeViewProduct()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
+                    <div id="view-product-image-wrap" class="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 overflow-hidden">
+                        <span class="material-symbols-rounded text-4xl">image</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p id="view-product-name" class="text-lg font-bold text-gray-800 truncate"></p>
+                        <p id="view-product-code" class="text-sm font-mono text-gray-500"></p>
+                    </div>
+                </div>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div><dt class="text-gray-500 font-medium">Category</dt><dd id="view-product-category" class="font-semibold text-gray-800 mt-0.5"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">Unit price</dt><dd id="view-product-price" class="font-semibold text-gray-800 mt-0.5"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">Stock</dt><dd id="view-product-stock" class="mt-0.5 font-semibold"></dd></div>
+                    <div><dt class="text-gray-500 font-medium">Status</dt><dd id="view-product-status" class="mt-0.5"></dd></div>
+                </dl>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeViewProduct()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition">Close</button>
+            <a id="view-product-edit-link" href="#" class="btn-primary-modal inline-flex items-center gap-1.5">Edit product</a>
         </div>
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../../components/filter_drawer.php'; ?>
+<!-- Confirm Action Modal (Toggle / Delete) -->
+<div id="modal-confirm-product" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-product-title">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modal-confirm-product-title" class="text-lg font-bold text-gray-800">Confirm</h2>
+            <button type="button" class="btn-modal-close" onclick="closeConfirmProduct()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <form method="POST" id="form-confirm-product" action="<?php echo BASE_PATH; ?>/index.php?page=system-admin-products">
+            <input type="hidden" name="form_action" id="confirm-product-action" value="">
+            <input type="hidden" name="product_id" id="confirm-product-id" value="">
+            <div class="modal-body">
+                <p id="modal-confirm-product-message" class="text-gray-600"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeConfirmProduct()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" id="modal-confirm-product-submit" class="px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var BASE_PATH_PRODUCTS = '<?php echo BASE_PATH; ?>';
+(function() {
+    function openViewProduct(tr) {
+        var data = JSON.parse(tr.getAttribute('data-product'));
+        document.getElementById('view-product-name').textContent = data.product_name || '-';
+        document.getElementById('view-product-code').textContent = data.product_code || '-';
+        document.getElementById('view-product-category').textContent = data.category || '-';
+        document.getElementById('view-product-price').textContent = 'Rs.' + (parseFloat(data.unit_price) || 0).toLocaleString('en', { minimumFractionDigits: 2 });
+        var low = (data.total_stock || 0) < (data.minimum_stock_level || 0);
+        document.getElementById('view-product-stock').innerHTML = '<span class="' + (low ? 'text-red-600' : 'text-gray-800') + '">' + (data.total_stock || 0) + ' / min ' + (data.minimum_stock_level || 0) + '</span>';
+        document.getElementById('view-product-status').innerHTML = data.is_active ? '<span class="text-green-600 font-semibold">Active</span>' : '<span class="text-red-600 font-semibold">Inactive</span>';
+        var imgWrap = document.getElementById('view-product-image-wrap');
+        if (data.image_url) {
+            imgWrap.innerHTML = '<img src="' + BASE_PATH_PRODUCTS + '/' + data.image_url.replace(/^\/+/, '') + '" alt="" class="w-full h-full object-cover">';
+        } else {
+            imgWrap.innerHTML = '<span class="material-symbols-rounded text-4xl">image</span>';
+        }
+        document.getElementById('view-product-edit-link').href = BASE_PATH_PRODUCTS + '/index.php?page=system-admin-products&action=edit&id=' + data.product_id;
+        document.getElementById('modal-view-product').classList.add('modal-open');
+    }
+    function closeViewProduct() {
+        document.getElementById('modal-view-product').classList.remove('modal-open');
+    }
+    window.openViewProduct = openViewProduct;
+    window.closeViewProduct = closeViewProduct;
+    document.getElementById('modal-view-product').addEventListener('click', closeViewProduct);
+})();
+function openConfirmProduct(productId, action, message) {
+    document.getElementById('confirm-product-id').value = productId;
+    document.getElementById('confirm-product-action').value = action;
+    document.getElementById('modal-confirm-product-message').textContent = message;
+    var btn = document.getElementById('modal-confirm-product-submit');
+    btn.textContent = action === 'delete' ? 'Delete' : 'Confirm';
+    btn.className = 'px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition ' + (action === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-500 hover:bg-amber-600');
+    document.getElementById('modal-confirm-product').classList.add('modal-open');
+}
+function closeConfirmProduct() {
+    document.getElementById('modal-confirm-product').classList.remove('modal-open');
+}
+document.getElementById('modal-confirm-product').addEventListener('click', function(e) { if (e.target === this) closeConfirmProduct(); });
+</script>
+
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

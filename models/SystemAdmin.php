@@ -15,6 +15,9 @@
 class SystemAdmin
 {
     private PDO $pdo;
+    private ?string $categoryTable = null;
+    private ?bool $productsHasCategoryId = null;
+    private ?bool $productsHasCategory = null;
 
     public function __construct(PDO $pdo)
     {
@@ -237,22 +240,44 @@ class SystemAdmin
         $offset = ($page - 1) * $perPage;
         $conditions = [];
         $params = [];
+        $categoryTable = $this->getCategoryTableName();
+        $hasCategoryId = $this->productsHasCategoryId();
+        $hasCategory = $this->productsHasCategory();
+
+        $join = '';
+        $categorySelect = "'' AS category";
+        if ($hasCategoryId && $categoryTable !== null) {
+            $join = " LEFT JOIN {$categoryTable} ct ON p.category_id = ct.category_id";
+            $categorySelect = "ct.name AS category";
+        } elseif ($hasCategory) {
+            $categorySelect = "p.category AS category";
+        }
 
         if ($search !== '') {
-            $conditions[] = "(p.product_name LIKE :search OR p.product_code LIKE :search2)";
+            $conditions[] = "(p.product_name LIKE :search OR p.product_code LIKE :search2" .
+                (($hasCategoryId && $categoryTable !== null) ? " OR ct.name LIKE :search3" : ($hasCategory ? " OR p.category LIKE :search3" : "")) .
+                ")";
             $params['search']  = "%{$search}%";
             $params['search2'] = "%{$search}%";
+            $params['search3'] = "%{$search}%";
         }
         if ($category !== '') {
-            $conditions[] = "p.category = :category";
-            $params['category'] = $category;
+            if ($hasCategoryId && $categoryTable !== null) {
+                $conditions[] = "ct.name = :category";
+                $params['category'] = $category;
+            } elseif ($hasCategory) {
+                $conditions[] = "p.category = :category";
+                $params['category'] = $category;
+            }
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
         $sql = "SELECT p.*,
+                       {$categorySelect},
                        COALESCE((SELECT SUM(ps.available_quantity) FROM product_stocks ps WHERE ps.product_id = p.product_id), 0) AS total_stock
                 FROM products p
+                {$join}
                 {$where}
                 ORDER BY p.created_at DESC
                 LIMIT {$perPage} OFFSET {$offset}";
@@ -266,45 +291,102 @@ class SystemAdmin
     {
         $conditions = [];
         $params = [];
+        $categoryTable = $this->getCategoryTableName();
+        $hasCategoryId = $this->productsHasCategoryId();
+        $hasCategory = $this->productsHasCategory();
+
+        $join = '';
+        if ($hasCategoryId && $categoryTable !== null) {
+            $join = " LEFT JOIN {$categoryTable} ct ON p.category_id = ct.category_id";
+        }
 
         if ($search !== '') {
-            $conditions[] = "(product_name LIKE :search OR product_code LIKE :search2)";
+            $conditions[] = "(p.product_name LIKE :search OR p.product_code LIKE :search2" .
+                (($hasCategoryId && $categoryTable !== null) ? " OR ct.name LIKE :search3" : ($hasCategory ? " OR p.category LIKE :search3" : "")) .
+                ")";
             $params['search']  = "%{$search}%";
             $params['search2'] = "%{$search}%";
+            $params['search3'] = "%{$search}%";
         }
         if ($category !== '') {
-            $conditions[] = "category = :category";
-            $params['category'] = $category;
+            if ($hasCategoryId && $categoryTable !== null) {
+                $conditions[] = "ct.name = :category";
+                $params['category'] = $category;
+            } elseif ($hasCategory) {
+                $conditions[] = "p.category = :category";
+                $params['category'] = $category;
+            }
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM products {$where}");
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM products p
+             {$join}
+             {$where}"
+        );
         $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
 
     public function getProductById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM products WHERE product_id = :id");
+        $categoryTable = $this->getCategoryTableName();
+        $hasCategoryId = $this->productsHasCategoryId();
+        $hasCategory = $this->productsHasCategory();
+
+        $join = '';
+        $categorySelect = "'' AS category";
+        if ($hasCategoryId && $categoryTable !== null) {
+            $join = " LEFT JOIN {$categoryTable} ct ON p.category_id = ct.category_id";
+            $categorySelect = "ct.name AS category";
+        } elseif ($hasCategory) {
+            $categorySelect = "p.category AS category";
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, {$categorySelect}
+             FROM products p
+             {$join}
+             WHERE p.product_id = :id"
+        );
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function createProduct(array $data): int
     {
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO products (product_code, product_name, category, unit_price, minimum_stock_level, image_url, is_active)
-             VALUES (:code, :name, :category, :price, :min_stock, :image, :active)"
-        );
-        $stmt->execute([
-            'code'      => $data['product_code'],
-            'name'      => $data['product_name'],
-            'category'  => $data['category'],
-            'price'     => $data['unit_price'],
-            'min_stock' => $data['minimum_stock_level'] ?? 100,
-            'image'     => $data['image_url'] ?? null,
-            'active'    => isset($data['is_active']) ? (int) $data['is_active'] : 1,
-        ]);
+        if ($this->productsHasCategoryId()) {
+            $categoryId = $this->resolveProductCategoryId((string) ($data['category'] ?? ''));
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO products (product_code, product_name, category_id, unit_price, minimum_stock_level, image_url, is_active)
+                 VALUES (:code, :name, :category_id, :price, :min_stock, :image, :active)"
+            );
+            $stmt->execute([
+                'code'        => $data['product_code'],
+                'name'        => $data['product_name'],
+                'category_id' => $categoryId,
+                'price'       => $data['unit_price'],
+                'min_stock'   => $data['minimum_stock_level'] ?? 100,
+                'image'       => $data['image_url'] ?? null,
+                'active'      => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+            ]);
+        } elseif ($this->productsHasCategory()) {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO products (product_code, product_name, category, unit_price, minimum_stock_level, image_url, is_active)
+                 VALUES (:code, :name, :category, :price, :min_stock, :image, :active)"
+            );
+            $stmt->execute([
+                'code'      => $data['product_code'],
+                'name'      => $data['product_name'],
+                'category'  => $data['category'] ?? '',
+                'price'     => $data['unit_price'],
+                'min_stock' => $data['minimum_stock_level'] ?? 100,
+                'image'     => $data['image_url'] ?? null,
+                'active'    => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+            ]);
+        } else {
+            throw new RuntimeException('Products table does not contain category_id or category column.');
+        }
         return (int) $this->pdo->lastInsertId();
     }
 
@@ -313,7 +395,6 @@ class SystemAdmin
         $fields = [
             'product_code = :code',
             'product_name = :name',
-            'category = :category',
             'unit_price = :price',
             'minimum_stock_level = :min_stock',
             'is_active = :active',
@@ -322,11 +403,18 @@ class SystemAdmin
             'id'        => $id,
             'code'      => $data['product_code'],
             'name'      => $data['product_name'],
-            'category'  => $data['category'],
             'price'     => $data['unit_price'],
             'min_stock' => $data['minimum_stock_level'] ?? 100,
             'active'    => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ];
+
+        if ($this->productsHasCategoryId()) {
+            $fields[] = 'category_id = :category_id';
+            $params['category_id'] = $this->resolveProductCategoryId((string) ($data['category'] ?? ''));
+        } elseif ($this->productsHasCategory()) {
+            $fields[] = 'category = :category';
+            $params['category'] = $data['category'] ?? '';
+        }
 
         if (!empty($data['image_url'])) {
             $fields[] = 'image_url = :image';
@@ -352,9 +440,89 @@ class SystemAdmin
 
     public function getProductCategories(): array
     {
-        return $this->pdo->query(
-            "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category"
-        )->fetchAll(PDO::FETCH_COLUMN);
+        $categoryTable = $this->getCategoryTableName();
+        if ($categoryTable !== null) {
+            return $this->pdo->query("SELECT name FROM {$categoryTable} ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
+        }
+        if ($this->productsHasCategory()) {
+            return $this->pdo->query(
+                "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category"
+            )->fetchAll(PDO::FETCH_COLUMN);
+        }
+        return [];
+    }
+
+    private function resolveProductCategoryId(string $categoryName): int
+    {
+        $categoryTable = $this->getCategoryTableName();
+        if ($categoryTable === null) {
+            throw new RuntimeException('No category table found (product_categories/categories).');
+        }
+
+        $categoryName = trim($categoryName);
+        if ($categoryName === '') {
+            throw new InvalidArgumentException('Category is required.');
+        }
+
+        $find = $this->pdo->prepare("SELECT category_id FROM {$categoryTable} WHERE name = :name LIMIT 1");
+        $find->execute(['name' => $categoryName]);
+        $id = $find->fetchColumn();
+        if ($id) {
+            return (int) $id;
+        }
+
+        $insert = $this->pdo->prepare(
+            "INSERT INTO {$categoryTable} (name, description) VALUES (:name, :description)"
+        );
+        $insert->execute([
+            'name' => $categoryName,
+            'description' => $categoryName,
+        ]);
+
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    private function getCategoryTableName(): ?string
+    {
+        if ($this->categoryTable !== null) {
+            return $this->categoryTable;
+        }
+        $candidates = ['product_categories', 'categories'];
+        foreach ($candidates as $table) {
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*)
+                 FROM information_schema.tables
+                 WHERE table_schema = DATABASE() AND table_name = :table"
+            );
+            $stmt->execute(['table' => $table]);
+            if ($stmt->fetchColumn()) {
+                $this->categoryTable = $table;
+                return $this->categoryTable;
+            }
+        }
+        return null;
+    }
+
+    private function productsHasCategoryId(): bool
+    {
+        if ($this->productsHasCategoryId !== null) {
+            return $this->productsHasCategoryId;
+        }
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM products LIKE 'category_id'");
+        $stmt->execute();
+        $this->productsHasCategoryId = (bool) $stmt->fetchColumn();
+        return $this->productsHasCategoryId;
+    }
+
+    private function productsHasCategory(): bool
+    {
+        if ($this->productsHasCategory !== null) {
+            return $this->productsHasCategory;
+        }
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM products LIKE 'category'");
+        $stmt->execute();
+        $this->productsHasCategory = (bool) $stmt->fetchColumn();
+        return $this->productsHasCategory;
     }
 
     /* ================================================================

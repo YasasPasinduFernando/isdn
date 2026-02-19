@@ -136,7 +136,7 @@ if ($action === 'add' || $action === 'edit') {
                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Product Image</label>
                 <div class="flex items-center gap-4">
                     <?php if (!empty($editProduct['image_url'])): ?>
-                        <img src="<?php echo BASE_PATH . '/' . htmlspecialchars($editProduct['image_url']); ?>" alt="Current" class="w-16 h-16 rounded-xl object-cover border border-white/60 shadow-sm">
+                        <img src="<?php echo htmlspecialchars(app_url_path((string) $editProduct['image_url'])); ?>" alt="Current" class="w-16 h-16 rounded-xl object-cover border border-white/60 shadow-sm">
                     <?php endif; ?>
                     <input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"
                            class="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition">
@@ -282,7 +282,7 @@ foreach ($products as $p) {
                                 <td>
                                     <button type="button" onclick="openViewProduct(this.closest('tr'))" class="text-left flex items-center gap-3 w-full hover:opacity-90 transition">
                                         <?php if ($p['image_url']): ?>
-                                            <img src="<?php echo BASE_PATH . '/' . htmlspecialchars($p['image_url']); ?>" class="w-10 h-10 rounded-xl object-cover border border-white/60 flex-shrink-0" alt="">
+                                            <img src="<?php echo htmlspecialchars(app_url_path((string) $p['image_url'])); ?>" class="w-10 h-10 rounded-xl object-cover border border-white/60 flex-shrink-0" alt="">
                                         <?php else: ?>
                                             <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0"><span class="material-symbols-rounded">image</span></div>
                                         <?php endif; ?>
@@ -390,6 +390,11 @@ foreach ($products as $p) {
 
 <script>
 var BASE_PATH_PRODUCTS = '<?php echo BASE_PATH; ?>';
+function toAppPath(path) {
+    var clean = String(path || '').replace(/^\/+/, '');
+    var base = String(BASE_PATH_PRODUCTS || '').replace(/\/+$/, '');
+    return base + '/' + clean;
+}
 (function() {
     function openViewProduct(tr) {
         var data = JSON.parse(tr.getAttribute('data-product'));
@@ -402,7 +407,7 @@ var BASE_PATH_PRODUCTS = '<?php echo BASE_PATH; ?>';
         document.getElementById('view-product-status').innerHTML = data.is_active ? '<span class="text-green-600 font-semibold">Active</span>' : '<span class="text-red-600 font-semibold">Inactive</span>';
         var imgWrap = document.getElementById('view-product-image-wrap');
         if (data.image_url) {
-            imgWrap.innerHTML = '<img src="' + BASE_PATH_PRODUCTS + '/' + data.image_url.replace(/^\/+/, '') + '" alt="" class="w-full h-full object-cover">';
+            imgWrap.innerHTML = '<img src="' + toAppPath(data.image_url) + '" alt="" class="w-full h-full object-cover">';
         } else {
             imgWrap.innerHTML = '<span class="material-symbols-rounded text-4xl">image</span>';
         }

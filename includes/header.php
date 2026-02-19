@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+
+// Prevent stale HTML/flash UI after redirects on hosted environments.
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

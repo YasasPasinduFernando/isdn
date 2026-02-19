@@ -143,6 +143,16 @@ function redirect($url) {
 }
 
 /**
+ * Build an absolute in-app URL path safely.
+ * Example: BASE_PATH='/isdn' and input '/assets/a.png' => '/isdn/assets/a.png'
+ */
+function app_url_path(string $path): string {
+    $base = rtrim((string) BASE_PATH, '/');
+    $cleanPath = '/' . ltrim($path, '/');
+    return $base . $cleanPath;
+}
+
+/**
  * Write an audit log entry. Use for login, logout, and any tracked action.
  */
 function audit_log(PDO $pdo, int $userId, string $action, string $entityType, ?int $entityId = null, string $details = ''): void {

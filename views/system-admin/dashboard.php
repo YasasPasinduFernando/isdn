@@ -328,6 +328,16 @@ $statusColors = [
         });
     }
 })();
+
+// Light auto-refresh so recent activity / metrics feel live on hosted env.
+(function() {
+    var refreshMs = 30000;
+    setInterval(function() {
+        if (document.visibilityState === 'visible') {
+            window.location.reload();
+        }
+    }, refreshMs);
+})();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

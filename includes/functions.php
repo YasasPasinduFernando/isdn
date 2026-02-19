@@ -169,8 +169,28 @@ function get_flash_message() {
 function display_flash() {
     $flash = get_flash_message();
     if ($flash) {
-        $bgColor = $flash['type'] === 'success' ? 'bg-green-500' : 'bg-red-500';
-        echo "<div class='$bgColor text-white px-6 py-4 rounded-lg mb-4'>{$flash['message']}</div>";
+        $isSuccess = $flash['type'] === 'success';
+        $bgColor = $isSuccess ? 'bg-emerald-600' : 'bg-red-600';
+        $icon = $isSuccess ? 'check_circle' : 'error';
+        $message = htmlspecialchars($flash['message'], ENT_QUOTES, 'UTF-8');
+
+        echo "
+        <div id='flash-toast' class='fixed top-20 right-4 z-[9999] {$bgColor} text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 max-w-md'>
+            <span class='material-symbols-rounded text-[20px]'>{$icon}</span>
+            <span class='text-sm font-semibold'>{$message}</span>
+        </div>
+        <script>
+        (function () {
+            var toast = document.getElementById('flash-toast');
+            if (!toast) return;
+            setTimeout(function () {
+                toast.style.transition = 'opacity .35s ease, transform .35s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(function () { toast.remove(); }, 380);
+            }, 3200);
+        })();
+        </script>";
     }
 }
 ?>

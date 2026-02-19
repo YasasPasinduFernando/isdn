@@ -30,10 +30,11 @@
                 <div>
                     <h4 class="text-lg font-semibold mb-6 text-white">RDC Locations</h4>
                     <ul class="space-y-3 text-sm text-gray-400">
-                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Central Region - Colombo</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Central Region - Kandy</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Northern Region - Jaffna</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Southern Region - Galle</span></li>
                         <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Eastern Region - Batticaloa</span></li>
+                        <li class="flex items-start"><span class="material-symbols-rounded text-teal-500 mt-0.5 mr-2 text-[18px]">location_on</span><span>Western Region - Colombo</span></li>
                     </ul>
                 </div>
 
@@ -74,7 +75,7 @@
             <div class="border-t border-gray-800 mt-12 pt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <p class="text-gray-500 text-sm">
-                        &copy; 2025 <?php echo APP_NAME; ?>. All rights reserved.
+                        &copy; 2026 <?php echo APP_NAME; ?>. All rights reserved.
                     </p>
                     <div class="flex space-x-6 text-sm">
                         <a href="#" class="text-gray-500 hover:text-teal-400 transition">Privacy Policy</a>
@@ -98,6 +99,22 @@
             menu.classList.toggle('hidden');
         }
 
+        // Profile dropdown toggle (click to open/close; desktop also supports hover)
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!menu) return;
+            menu.classList.toggle('opacity-0');
+            menu.classList.toggle('invisible');
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('profile-dropdown-wrap');
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (!wrap || !menu) return;
+            if (!wrap.contains(e.target)) {
+                menu.classList.add('opacity-0', 'invisible');
+            }
+        });
+
         // Back to top button
         window.addEventListener('scroll', function() {
             const backToTop = document.getElementById('backToTop');
@@ -115,5 +132,8 @@
         <script src="js/product.js?v=<?= time() ?>"></script>
         <script src="js/shopping_cart.js?v=<?= time() ?>"></script>
         <script src="js/sales_order.js?v=<?= time() ?>"></script>
+        <script src="js/filter_drawer.js?v=<?= time() ?>"></script>
+        <script src="js/customer_orders_filter_drawer.js?v=<?= time() ?>"></script>
+        <script src="js/checkout.js?v=<?= time() ?>"></script>
 </body>
 </html>

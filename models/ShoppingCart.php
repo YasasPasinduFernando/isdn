@@ -13,10 +13,10 @@ class ShoppingCart {
                 sc.id AS cart_id,
                 sc.product_id,
                 sc.quantity,
-                p.name,
+                p.product_name,
                 p.unit_price
-            FROM shopping_cart sc
-            JOIN products p ON p.id = sc.product_id
+            FROM shopping_carts sc
+            JOIN products p ON p.product_id = sc.product_id
             WHERE sc.user_id = :user_id
         ");
         $stmt->execute(['user_id' => $userId]);
@@ -27,7 +27,7 @@ class ShoppingCart {
 
         // Check if product already exists in cart
         $checkStmt = $this->pdo->prepare(
-            "SELECT id, quantity FROM shopping_cart 
+            "SELECT id, quantity FROM shopping_carts 
              WHERE user_id = :user_id AND product_id = :product_id"
         );
         $checkStmt->execute([
@@ -40,7 +40,7 @@ class ShoppingCart {
         if ($existing) {
             // Update quantity
             $updateStmt = $this->pdo->prepare(
-                "UPDATE shopping_cart 
+                "UPDATE shopping_carts 
                  SET quantity = quantity + :qty 
                  WHERE id = :id"
             );
@@ -51,7 +51,7 @@ class ShoppingCart {
         } else {
             // Insert new row
             $insertStmt = $this->pdo->prepare(
-                "INSERT INTO shopping_cart (user_id, product_id, quantity)
+                "INSERT INTO shopping_carts (user_id, product_id, quantity)
                  VALUES (:user_id, :product_id, :quantity)"
             );
             return $insertStmt->execute([
@@ -68,7 +68,7 @@ class ShoppingCart {
         }
 
         $stmt = $this->pdo->prepare("
-            UPDATE shopping_cart 
+            UPDATE shopping_carts 
             SET quantity = :qty
             WHERE user_id = :user_id AND product_id = :product_id
         ");
@@ -81,7 +81,7 @@ class ShoppingCart {
 
     public function removeItem($userId, $productId) {
         $stmt = $this->pdo->prepare("
-            DELETE FROM shopping_cart 
+            DELETE FROM shopping_carts 
             WHERE user_id = :user_id AND product_id = :product_id
         ");
         return $stmt->execute([
@@ -92,7 +92,7 @@ class ShoppingCart {
 
     public function clearCart($userId) {
         $stmt = $this->pdo->prepare("
-            DELETE FROM shopping_cart WHERE user_id = :user_id
+            DELETE FROM shopping_carts WHERE user_id = :user_id
         ");
         return $stmt->execute(['user_id' => $userId]);
     }

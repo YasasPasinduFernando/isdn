@@ -94,14 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $pdo->prepare("SELECT o.*, u.username as customer_name 
                        FROM orders o 
                        JOIN users u ON o.customer_id = u.id 
-                       WHERE o.rdc_id = ? AND o.status = 'pending' 
+                       WHERE o.status = 'pending' 
                        ORDER BY o.created_at ASC");
-$stmt->execute([$rdc_id]);
+$stmt->execute();
 $pendingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // B. Processed Today (Confirmed)
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE rdc_id = ? AND status = 'confirmed' AND DATE(updated_at) = CURDATE()");
-$stmt->execute([$rdc_id]);
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE status = 'confirmed' AND DATE(updated_at) = CURDATE()");
+$stmt->execute();
 $processedToday = $stmt->fetchColumn();
 
 // C. Stock Inventory
@@ -124,9 +124,9 @@ $stmt = $pdo->prepare("SELECT o.*, u.username as customer_name, p.amount as paid
                        FROM orders o
                        JOIN users u ON o.customer_id = u.id
                        LEFT JOIN payments p ON o.order_number = p.order_id
-                       WHERE o.rdc_id = ? AND o.status = 'delivered'
+                       WHERE o.status = 'delivered'
                        LIMIT 10");
-$stmt->execute([$rdc_id]);
+$stmt->execute();
 $billingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 function getStockForOrder($pdo, $orderId, $rdcId) {

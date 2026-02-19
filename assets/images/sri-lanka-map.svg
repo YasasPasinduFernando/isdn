@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 540" aria-label="Sri Lanka - Delivery Efficiency Map">
+  <!-- Simplified Sri Lanka with 5 regions: North, South, East, West, Central -->
+  <defs>
+    <filter id="dropShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <style>
+      .region { fill: #e5e7eb; stroke: #6b7280; stroke-width: 2; transition: all 0.25s ease; cursor: pointer; }
+      .region:hover { filter: brightness(1.08); stroke-width: 2.5; }
+      .region-good { fill: #10b981; stroke: #059669; }
+      .region-medium { fill: #f59e0b; stroke: #d97706; }
+      .region-bad { fill: #ef4444; stroke: #dc2626; }
+      .region-empty { fill: #f3f4f6; stroke: #d1d5db; }
+    </style>
+  </defs>
+  <!-- Island outline background -->
+  <path fill="#f9fafb" stroke="#d1d5db" stroke-width="1" d="M 200 30 Q 280 20 320 90 L 350 200 Q 360 280 340 360 L 300 450 Q 250 500 200 510 Q 150 500 100 450 L 60 360 Q 40 280 70 200 L 100 90 Q 120 20 200 30 Z" filter="url(#dropShadow)"/>
+  <!-- Central (Kandy region) -->
+  <path id="region-CENTRAL" class="region" data-rdc="CENTRAL" d="M 175 220 L 225 210 L 245 260 L 235 320 L 195 340 L 165 320 L 155 270 Z"/>
+  <!-- North (Jaffna) -->
+  <path id="region-NORTH" class="region" data-rdc="NORTH" d="M 165 70 L 235 60 L 265 140 L 255 210 L 225 210 L 175 220 L 155 200 L 135 140 Z"/>
+  <!-- South (Galle, Matara) -->
+  <path id="region-SOUTH" class="region" data-rdc="SOUTH" d="M 165 340 L 235 320 L 255 380 L 245 440 L 205 480 L 165 470 L 145 410 L 155 360 Z"/>
+  <!-- East (Batticaloa, Trinco) -->
+  <path id="region-EAST" class="region" data-rdc="EAST" d="M 255 110 L 315 95 L 345 200 L 335 300 L 285 320 L 245 300 L 255 260 L 250 180 Z"/>
+  <!-- West (Colombo, Gampaha) -->
+  <path id="region-WEST" class="region" data-rdc="WEST" d="M 75 140 L 155 120 L 175 220 L 165 320 L 135 360 L 95 340 L 65 260 L 55 200 Z"/>
+</svg>

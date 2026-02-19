@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+
+// Prevent stale HTML/flash UI after redirects on hosted environments.
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +15,7 @@ require_once __DIR__ . '/../includes/functions.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com "></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/style.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/custom.css?v=<?= time() ?>">
     <!-- Google Material Symbols Rounded -->
@@ -70,20 +77,27 @@ require_once __DIR__ . '/../includes/functions.php';
     </div>
 
     <script>
-        // Force loader for at least 2 seconds
-        window.addEventListener('load', () => {
-             setTimeout(() => {
-                 const loader = document.getElementById('page-loader');
-                 if(loader) {
+        // Hide loader: show for at least 1s, then fade out.
+        // Uses DOMContentLoaded (faster) + fallback max timeout of 4s.
+        (function() {
+            var dismissed = false;
+            function hideLoader() {
+                if (dismissed) return;
+                dismissed = true;
+                var loader = document.getElementById('page-loader');
+                if (loader) {
                     loader.style.opacity = '0';
-                    loader.style.visibility = 'hidden'; 
-                    // Remove from DOM after transition
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 500); 
-                 }
-             }, 2000); // 2000ms = 2 seconds
-        });
+                    loader.style.visibility = 'hidden';
+                    setTimeout(function() { loader.style.display = 'none'; }, 500);
+                }
+            }
+            // Primary: after DOM is ready + 1s delay
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(hideLoader, 1000);
+            });
+            // Fallback: max 4 seconds no matter what
+            setTimeout(hideLoader, 4000);
+        })();
     </script>
     
     <!-- Sticky Top Header -->
@@ -106,11 +120,30 @@ require_once __DIR__ . '/../includes/functions.php';
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php 
                         $currentPage = $_GET['page'] ?? 'home';
+                        $currentTab = $_GET['tab'] ?? '';
                         $role = current_user_role();
                         $navItems = get_nav_items_for_role($role);
                         
                         foreach ($navItems as $page => $item): 
-                            $isActive = $currentPage === $page;
+                            $isActive = false;
+                            
+                            // Check for complex keys (e.g., page&tab=val)
+                            if (strpos($page, '&') !== false) {
+                                $parts = explode('&', $page, 2);
+                                if ($parts[0] === $currentPage) {
+                                    parse_str($parts[1], $params);
+                                    $targetTab = $params['tab'] ?? '';
+                                    if ($targetTab === $currentTab) {
+                                        $isActive = true;
+                                    } elseif ($currentTab === '' && $targetTab === 'overview') {
+                                        $isActive = true; // Default tab match
+                                    }
+                                }
+                            } else {
+                                // Simple match
+                                $isActive = ($currentPage === $page);
+                            }
+
                             $activeClass = $isActive ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50';
                         ?>
                             <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $page; ?>" 
@@ -120,17 +153,19 @@ require_once __DIR__ . '/../includes/functions.php';
                             </a>
                         <?php endforeach; ?>
                         
-                        <!-- User Profile Dropdown Trigger (Separate from nav pill) -->
-                        <div class="relative group ml-2 px-2">
-                        <div class="relative group ml-2 px-2">
-                             <a href="<?php echo BASE_PATH; ?>/index.php?page=profile" class="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition">
+                        <!-- User Profile Dropdown: My Profile + Logout -->
+                        <?php $profile_page = get_profile_page_for_role(current_user_role()); ?>
+                        <div class="relative group ml-2 px-2" id="profile-dropdown-wrap">
+                            <button type="button" onclick="toggleProfileDropdown()" class="flex items-center p-1 rounded-full text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 transition" aria-haspopup="true" aria-expanded="false">
                                 <span class="material-symbols-rounded text-3xl">account_circle</span>
-                            </a>
-                             <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50">
-                                <a href="<?php echo BASE_PATH; ?>/index.php?page=profile" class="flex items-center px-4 py-3 text-gray-600 hover:bg-teal-50 hover:text-teal-700 rounded-t-xl transition">
+                            </button>
+                            <div id="profile-dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible md:group-hover:opacity-100 md:group-hover:visible transition-all duration-300 origin-top-right z-50">
+                                <?php if ($profile_page): ?>
+                                <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $profile_page; ?>" class="flex items-center px-4 py-3 text-gray-600 hover:bg-teal-50 hover:text-teal-700 rounded-t-xl transition">
                                     <span class="material-symbols-rounded mr-2 text-lg">person</span> My Profile
                                 </a>
-                                <a href="<?php echo BASE_PATH; ?>/controllers/AuthController.php?action=logout" class="flex items-center px-4 py-3 text-red-500 hover:bg-red-50 rounded-b-xl transition">
+                                <?php endif; ?>
+                                <a href="<?php echo BASE_PATH; ?>/controllers/AuthController.php?action=logout" class="flex items-center px-4 py-3 text-red-500 hover:bg-red-50 rounded-b-xl transition<?php echo $profile_page ? '' : ' rounded-t-xl'; ?>">
                                     <span class="material-symbols-rounded mr-2 text-lg">logout</span> Logout
                                 </a>
                             </div>
@@ -169,6 +204,11 @@ require_once __DIR__ . '/../includes/functions.php';
                         <span class="material-symbols-rounded mr-3"><?php echo $item['icon']; ?></span> <?php echo $item['label']; ?>
                     </a>
                 <?php endforeach; ?>
+                <?php $profile_page = get_profile_page_for_role($role); if ($profile_page): ?>
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=<?php echo $profile_page; ?>" class="flex items-center text-white py-2 hover:bg-teal-700 rounded px-3">
+                    <span class="material-symbols-rounded mr-3">person</span> My Profile
+                </a>
+                <?php endif; ?>
                 <a href="<?php echo BASE_PATH; ?>/controllers/AuthController.php?action=logout" class="flex items-center text-red-200 py-2 hover:bg-teal-700 rounded px-3">
                     <span class="material-symbols-rounded mr-3">logout</span> Logout
                 </a>

@@ -1,11 +1,10 @@
 <?php
 // Database Configuration
-// Database Configuration
-define('DB_HOST', '10.1.1.23');
-define('DB_PORT', '3310');
-define('DB_NAME', 'isdn_db');
+define('DB_HOST', 'localhost');
+define('DB_PORT', '3307');
+define('DB_NAME', 'isdn');
 define('DB_USER', 'root');
-define('DB_PASS', 'root');
+define('DB_PASS', 'yasas');
 define('DB_CHARSET', 'utf8mb4');
 
 try {
@@ -25,6 +24,9 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false
         ]
     );
+
+    // Keep DB session timestamps aligned with Sri Lanka time for logs/reports.
+    $pdo->exec("SET time_zone = '+05:30'");
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

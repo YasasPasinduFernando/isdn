@@ -727,6 +727,25 @@ $pending_transfers = [
                         <div id="modal-total-items" class="text-sm font-bold text-green-900"></div>
                     </div>
                 </div>
+                   <!-- ✨ ADD THIS: Track Transfer Button Section -->
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold text-gray-900 mb-1 flex items-center">
+                                <i class="fas fa-shipping-fast mr-2 text-blue-600"></i>
+                                Track this Transfer Request
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                View detailed progress timeline and status history
+                            </div>
+                        </div>
+                        <button onclick="openTrackingModal(transfers[currentTransferIndex])" 
+                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                            <i class="fas fa-route"></i>
+                            <span>Track Transfer</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Request Details -->
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -1262,4 +1281,5 @@ document.getElementById('transfer-request-form').addEventListener('submit', func
 });
 </script>
 
+<?php require_once __DIR__ . '/tracking_modal.php'; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

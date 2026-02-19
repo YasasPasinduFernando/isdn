@@ -34,7 +34,7 @@ $role_permissions = [
         'can_export' => false
     ],
     'system_admin' => [
-        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary', 'stock_valuation'],
+        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
         'view_scope' => 'all_rdcs',
         'can_export' => true
     ]
@@ -234,11 +234,6 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Stock Reports</h1>
                 <p class="text-gray-600 mt-1">Real-time inventory analytics and insights</p>
-            </div>
-            <div class="text-right">
-                <div class="text-sm text-gray-500">Logged in as</div>
-                <div class="font-semibold text-gray-900"><?php echo $current_user['name']; ?></div>
-                <div class="text-xs text-gray-500"><?php echo ucfirst(str_replace('_', ' ', $current_user['role'])); ?></div>
             </div>
         </div>
     </div>

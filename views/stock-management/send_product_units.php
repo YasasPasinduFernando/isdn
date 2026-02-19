@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/tracking_modal.php';
 
 
 // ============================================
@@ -33,7 +34,7 @@ $pending_transfers = [
         'requested_date' => '2026-02-03 10:30:00',
         'request_reason' => 'High demand in Galle area for weekend sales. Need urgent stock replenishment.',
         'is_urgent' => true,
-        'approval_status' => 'CLERK_REQUESTED',
+        'approval_status' => 'PENDING',
         'total_items' => 350,
         'product_count' => 3,
         'items' => [
@@ -81,7 +82,7 @@ $pending_transfers = [
         'requested_date' => '2026-02-02 14:15:00',
         'request_reason' => 'Stock replenishment for regular operations.',
         'is_urgent' => false,
-        'approval_status' => 'CLERK_REQUESTED',
+        'approval_status' => 'PENDING',
         'total_items' => 200,
         'product_count' => 2,
         'items' => [
@@ -119,7 +120,7 @@ $pending_transfers = [
         'requested_date' => '2026-02-01 09:00:00',
         'request_reason' => 'Customer orders pending. Need immediate transfer.',
         'is_urgent' => true,
-        'approval_status' => 'CLERK_REQUESTED',
+        'approval_status' => 'PENDING',
         'total_items' => 80,
         'product_count' => 1,
         'items' => [
@@ -679,8 +680,33 @@ $processed_transfers = [
                                 <div class="text-lg font-bold text-green-900">${transfer.total_items} units</div>
                                 <div class="text-xs text-green-700">${transfer.product_count} products</div>
                             </div>
-                        </div>
+                        </div>      
                         
+                              <!-- ============================================
+                    ✨ INSERT THIS ENTIRE SECTION
+                    ============================================ -->
+                <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900 mb-1 flex items-center">
+                                <i class="fas fa-shipping-fast mr-2 text-blue-600"></i>
+                                Track Transfer Progress
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                View detailed timeline and status history for this transfer request
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation(); openTrackingModal(${JSON.stringify(transfer).replace(/"/g, '&quot;')})" 
+                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center space-x-2 whitespace-nowrap">
+                            <i class="fas fa-route"></i>
+                            <span>Track Transfer</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- ============================================
+                    ✨ END OF TRACKING SECTION
+                    ============================================ -->
+         
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
@@ -737,7 +763,7 @@ $processed_transfers = [
                         
                         <div class="mb-4">
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Select Status</label>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-2 gap-3">
                                 <button onclick="selectStatus(${transfer.transfer_id}, 'APPROVED')" 
                                         class="status-btn status-btn-approve px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition flex items-center justify-center">
                                     <i class="fas fa-check-circle text-green-600 mr-2"></i>
@@ -747,11 +773,6 @@ $processed_transfers = [
                                         class="status-btn status-btn-reject px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition flex items-center justify-center">
                                     <i class="fas fa-times-circle text-red-600 mr-2"></i>
                                     <span class="font-semibold text-gray-700">Reject</span>
-                                </button>
-                                <button onclick="selectStatus(${transfer.transfer_id}, 'CANCELLED')" 
-                                        class="status-btn status-btn-cancel px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition flex items-center justify-center">
-                                    <i class="fas fa-ban text-gray-600 mr-2"></i>
-                                    <span class="font-semibold text-gray-700">Cancel</span>
                                 </button>
                             </div>
                         </div>
@@ -901,3 +922,4 @@ $processed_transfers = [
             });
         }
     </script>
+

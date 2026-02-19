@@ -13,5 +13,6 @@ CREATE TABLE IF NOT EXISTS orders (
     estimated_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES retail_customers(id)
+    FOREIGN KEY (customer_id) REFERENCES retail_customers(id),
+    KEY idx_orders_created (created_at)
 );

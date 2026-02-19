@@ -1,5 +1,5 @@
 -- ============================================
--- shopping cart Table
+-- Shopping Cart Table
 -- ============================================
 
 CREATE TABLE `shopping_carts` (

@@ -4,12 +4,12 @@ require_once __DIR__ . '/../../includes/header.php';
 // Use controller-provided data when available; otherwise fall back to sensible defaults / dummy data
 if (!isset($current_user)) {
     $current_user = [
-        'user_id' => $_SESSION['user_id'] ?? 5,
+        'user_id' => $_SESSION['user_id'] ?? null,
         'name' => $_SESSION['username'] ?? 'Manager',
-        'role' => $_SESSION['role'] ?? 'rdc_manager',
-        'rdc_id' => $_SESSION['rdc_id'] ?? 2,
-        'rdc_name' => $_SESSION['rdc_name'] ?? ($rdcName ?? 'South RDC'),
-        'rdc_code' => $_SESSION['rdc_code'] ?? ($rdcCode ?? 'SOUTH')
+        'role' => $_SESSION['role'] ?? '',
+        'rdc_id' => $_SESSION['rdc_id'] ?? null,
+        'rdc_name' => $_SESSION['rdc_name'] ?? '',
+        'rdc_code' => $_SESSION['rdc_code'] ?? ''
     ];
 }
 

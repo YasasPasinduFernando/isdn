@@ -138,7 +138,14 @@ function get_nav_items_for_role($role) {
 }
 
 function redirect($url) {
-    header("Location: " . BASE_PATH . $url);
+    $target = BASE_PATH . $url;
+    if (!headers_sent()) {
+        header("Location: " . $target);
+    } else {
+        $safe = htmlspecialchars($target, ENT_QUOTES, 'UTF-8');
+        echo "<script>window.location.href='{$safe}';</script>";
+        echo "<noscript><meta http-equiv='refresh' content='0;url={$safe}'></noscript>";
+    }
     exit();
 }
 

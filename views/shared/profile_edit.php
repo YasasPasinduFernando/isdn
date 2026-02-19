@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/Profile.php';
 
@@ -50,6 +49,8 @@ if (!$profile) {
 }
 
 $dashboardPage = dashboard_page_for_role($role);
+
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">

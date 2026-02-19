@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/SystemAdmin.php';
 
@@ -43,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $profile = $admin->getAdminProfile($userId);
 $loginHistory = $admin->getLoginHistory($userId, 15);
+
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">

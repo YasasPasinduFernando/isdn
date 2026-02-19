@@ -1,13 +1,26 @@
-const CACHE_NAME = 'isdn-cache-v2';
+/*
+ * ISDN Service Worker (subfolder-safe for /isdn)
+ * - Versioned cache name
+ * - Network-first for HTML/documents
+ * - Cache-first for static assets
+ * - Offline fallback to /isdn/index.php
+ * - Old cache cleanup on activate
+ */
+
+const APP_SCOPE = '/isdn/';
+const OFFLINE_FALLBACK = '/isdn/index.php';
+const CACHE_NAME = 'isdn-cache-v3';
+
 const STATIC_ASSETS = [
-  './',
-  './manifest.json',
-  './assets/css/style.css',
-  './assets/css/custom.css',
-  './assets/js/main.js',
-  './assets/js/validation.js',
-  './assets/images/icons/icon-192.svg',
-  './assets/images/icons/icon-512.svg'
+  '/isdn/',
+  '/isdn/index.php',
+  '/isdn/manifest.json',
+  '/isdn/assets/css/style.css',
+  '/isdn/assets/css/custom.css',
+  '/isdn/assets/js/main.js',
+  '/isdn/assets/js/validation.js',
+  '/isdn/assets/images/icons/icon-192.png',
+  '/isdn/assets/images/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -20,7 +33,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -29,12 +42,15 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const requestUrl = new URL(event.request.url);
-  const isSameOrigin = requestUrl.origin === self.location.origin;
-  if (!isSameOrigin) return;
+  const reqUrl = new URL(event.request.url);
+  if (reqUrl.origin !== self.location.origin) return;
+  if (!reqUrl.pathname.startsWith(APP_SCOPE)) return;
 
-  // HTML/documents: network-first to avoid stale admin/user pages after updates.
-  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+  const isDocument =
+    event.request.mode === 'navigate' || event.request.destination === 'document';
+
+  if (isDocument) {
+    // Network-first for HTML to keep dynamic PHP pages fresh.
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -42,16 +58,19 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(event.request).then((r) => r || caches.match('./')))
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_FALLBACK))
+        )
     );
     return;
   }
 
-  // Static assets: cache-first for faster repeat loads.
+  // Cache-first for static assets.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         return response;

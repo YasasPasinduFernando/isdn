@@ -24,6 +24,9 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false
         ]
     );
+
+    // Keep DB session timestamps aligned with Sri Lanka time for logs/reports.
+    $pdo->exec("SET time_zone = '+05:30'");
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

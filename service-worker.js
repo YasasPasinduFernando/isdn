@@ -9,7 +9,7 @@
 
 const APP_SCOPE = '/isdn/';
 const OFFLINE_FALLBACK = '/isdn/index.php';
-const CACHE_NAME = 'isdn-cache-v3';
+const CACHE_NAME = 'isdn-cache-v4';
 
 const STATIC_ASSETS = [
   '/isdn/',
@@ -19,8 +19,8 @@ const STATIC_ASSETS = [
   '/isdn/assets/css/custom.css',
   '/isdn/assets/js/main.js',
   '/isdn/assets/js/validation.js',
-  '/isdn/assets/images/icons/icon-192.png',
-  '/isdn/assets/images/icons/icon-512.png'
+  '/isdn/assets/images/icons/icon-192.svg',
+  '/isdn/assets/images/icons/icon-512.svg'
 ];
 
 self.addEventListener('install', (event) => {

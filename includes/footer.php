@@ -209,9 +209,21 @@
 
             if (!overlay || !textEl || !iosStepsEl || !installBtn || !laterBtn || !hideCheck) return;
 
+            function getCookie(name) {
+                var value = '; ' + document.cookie;
+                var parts = value.split('; ' + name + '=');
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            }
+
+            function setCookie(name, value, maxAgeSeconds) {
+                var secure = window.location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = name + '=' + value + '; Max-Age=' + maxAgeSeconds + '; Path=/; SameSite=Lax' + secure;
+            }
+
             var isSecureContextOk = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            if (!isSecureContextOk || isStandalone || localStorage.getItem(HIDE_KEY) === '1') return;
+            if (!isSecureContextOk || isStandalone || getCookie(HIDE_KEY) === '1') return;
 
             var ua = navigator.userAgent.toLowerCase();
             var isIOS = /iphone|ipad|ipod/.test(ua);
@@ -236,7 +248,7 @@
             }
 
             function closeModal() {
-                if (hideCheck.checked) localStorage.setItem(HIDE_KEY, '1');
+                if (hideCheck.checked) setCookie(HIDE_KEY, '1', 86400); // 1 day
                 overlay.classList.remove('is-open');
                 overlay.setAttribute('aria-hidden', 'true');
             }

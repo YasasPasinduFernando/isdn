@@ -7,192 +7,31 @@ require_once __DIR__ . '/../../includes/header.php';
 // For: RDC_CLERK and RDC_MANAGER
 // ============================================
 
-// Logged-in user data (from session)
-$role = $_SESSION['role'] ?? 'rdc_clerk';
-$role_upper = strtoupper($role);
-$current_user = [
-    'user_id' => $_SESSION['user_id'] ?? null,
-    'name' => $_SESSION['username'] ?? 'User',
-    'role' => $role_upper,
-    'rdc_id' => $_SESSION['rdc_id'] ?? null,
-    'rdc_name' => $_SESSION['rdc_name'] ?? 'SOUTH RDC',
-    'rdc_code' => $_SESSION['rdc_code'] ?? ''
-];
+// Use controller-provided data when available; otherwise fall back to safe defaults
+if (!isset($current_user)) {
+    $role = $_SESSION['role'] ?? 'rdc_clerk';
+    $role_upper = strtoupper($role);
+    $current_user = [
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'name' => $_SESSION['username'] ?? 'User',
+        'role' => $role_upper,
+        'rdc_id' => $_SESSION['rdc_id'] ?? null,
+        'rdc_name' => $_SESSION['rdc_name'] ?? 'SOUTH RDC',
+        'rdc_code' => $_SESSION['rdc_code'] ?? ''
+    ];
+}
 
-// Dummy data: Other RDCs
-$other_rdcs = [
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'rdc_code' => 'NORTH'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'rdc_code' => 'EAST'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'rdc_code' => 'WEST'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'rdc_code' => 'CENTRAL']
-];
+if (!isset($other_rdcs) || !is_array($other_rdcs)) {
+    $other_rdcs = [];
+}
 
-// Dummy data: Low stock products at current RDC (South)
-$low_stock_products = [
-    [
-        'product_id' => 1,
-        'product_code' => 'BEV001',
-        'product_name' => 'Coca Cola 1L',
-        'category' => 'Beverages',
-        'current_stock' => 20,
-        'minimum_level' => 100,
-        'unit' => 'Bottles',
-        'status' => 'low'
-    ],
-    [
-        'product_id' => 2,
-        'product_code' => 'BEV002',
-        'product_name' => 'Sprite 1L',
-        'category' => 'Beverages',
-        'current_stock' => 15,
-        'minimum_level' => 100,
-        'unit' => 'Bottles',
-        'status' => 'low'
-    ],
-    [
-        'product_id' => 3,
-        'product_code' => 'FOOD001',
-        'product_name' => 'Rice 5kg',
-        'category' => 'Packaged Foods',
-        'current_stock' => 5,
-        'minimum_level' => 50,
-        'unit' => 'Bags',
-        'status' => 'critical'
-    ],
-    [
-        'product_id' => 4,
-        'product_code' => 'FOOD002',
-        'product_name' => 'Bread Loaf',
-        'category' => 'Packaged Foods',
-        'current_stock' => 30,
-        'minimum_level' => 200,
-        'unit' => 'Pieces',
-        'status' => 'low'
-    ],
-    [
-        'product_id' => 6,
-        'product_code' => 'CARE001',
-        'product_name' => 'Toothpaste 100ml',
-        'category' => 'Personal Care',
-        'current_stock' => 80,
-        'minimum_level' => 150,
-        'unit' => 'Tubes',
-        'status' => 'low'
-    ]
-];
+if (!isset($low_stock_products) || !is_array($low_stock_products)) {
+    $low_stock_products = [];
+}
 
-// Dummy data: Pending transfer requests with FULL DETAILS
-$pending_transfers = [
-    [
-        'transfer_id' => 1,
-        'transfer_number' => 'TRF-NORTH-SOUTH-001',
-        'source_rdc_id' => 1,
-        'source_rdc' => 'North RDC',
-        'destination_rdc_id' => 2,
-        'destination_rdc' => 'South RDC',
-        'requested_by_name' => 'Kasun Silva',
-        'requested_by_role' => 'RDC_CLERK',
-        'product_count' => 3,
-        'total_items' => 350,
-        'requested_date' => '2026-02-02 10:30 AM',
-        'request_reason' => 'High demand in Galle area for weekend sales. Need urgent stock replenishment.',
-        'status' => 'CLERK_REQUESTED',
-        'is_urgent' => true,
-        'items' => [
-            [
-                'product_id' => 1,
-                'product_code' => 'BEV001',
-                'product_name' => 'Coca Cola 1L',
-                'category' => 'Beverages',
-                'requested_quantity' => 100,
-                'source_stock' => 500, // Stock at North RDC
-                'destination_stock' => 20 // Current stock at South RDC
-            ],
-            [
-                'product_id' => 2,
-                'product_code' => 'BEV002',
-                'product_name' => 'Sprite 1L',
-                'category' => 'Beverages',
-                'requested_quantity' => 150,
-                'source_stock' => 400,
-                'destination_stock' => 15
-            ],
-            [
-                'product_id' => 3,
-                'product_code' => 'FOOD001',
-                'product_name' => 'Rice 5kg',
-                'category' => 'Packaged Foods',
-                'requested_quantity' => 100,
-                'source_stock' => 200,
-                'destination_stock' => 5
-            ]
-        ]
-    ],
-    [
-        'transfer_id' => 2,
-        'transfer_number' => 'TRF-EAST-SOUTH-002',
-        'source_rdc_id' => 3,
-        'source_rdc' => 'East RDC',
-        'destination_rdc_id' => 2,
-        'destination_rdc' => 'South RDC',
-        'requested_by_name' => 'Priya Fernando',
-        'requested_by_role' => 'RDC_MANAGER',
-        'product_count' => 2,
-        'total_items' => 150,
-        'requested_date' => '2026-02-01 02:15 PM',
-        'request_reason' => 'Stock replenishment for regular operations.',
-        'status' => 'PENDING',
-        'is_urgent' => false,
-        'items' => [
-            [
-                'product_id' => 4,
-                'product_code' => 'FOOD002',
-                'product_name' => 'Bread Loaf',
-                'category' => 'Packaged Foods',
-                'requested_quantity' => 100,
-                'source_stock' => 300,
-                'destination_stock' => 30
-            ],
-            [
-                'product_id' => 6,
-                'product_code' => 'CARE001',
-                'product_name' => 'Toothpaste 100ml',
-                'category' => 'Personal Care',
-                'requested_quantity' => 50,
-                'source_stock' => 350,
-                'destination_stock' => 80
-            ]
-        ]
-    ],
-    [
-        'transfer_id' => 3,
-        'transfer_number' => 'TRF-WEST-SOUTH-003',
-        'source_rdc_id' => 4,
-        'source_rdc' => 'West RDC',
-        'destination_rdc_id' => 2,
-        'destination_rdc' => 'South RDC',
-        'requested_by_name' => 'Saman Kumar',
-        'requested_by_role' => 'RDC_CLERK',
-        'product_count' => 1,
-        'total_items' => 80,
-        'requested_date' => '2026-02-03 09:00 AM',
-        'request_reason' => 'Customer orders pending. Immediate transfer required.',
-        'status' => 'APPROVED',
-        'is_urgent' => true,
-        'approval_remarks' => 'Approved by North RDC Manager. Ready for dispatch.',
-        'items' => [
-            [
-                'product_id' => 2,
-                'product_code' => 'BEV002',
-                'product_name' => 'Sprite 1L',
-                'category' => 'Beverages',
-                'requested_quantity' => 80,
-                'source_stock' => 320,
-                'destination_stock' => 15
-            ]
-        ]
-    ]
-];
+if (!isset($pending_transfers) || !is_array($pending_transfers)) {
+    $pending_transfers = [];
+}
 ?>
 
 <head>
@@ -507,7 +346,7 @@ $pending_transfers = [
     </div>
 
     <!-- Products Grid -->
-    <form id="transfer-request-form" method="POST" action="process_transfer_request.php">
+    <form id="transfer-request-form" method="POST" action="/index.php?page=request-product-units">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <?php foreach ($low_stock_products as $product): ?>
             <div class="product-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1173,13 +1012,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Dummy stock data for other RDCs
-const otherRDCStock = {
-    1: { 1: 500, 2: 400, 3: 200, 4: 300, 6: 350 },
-    3: { 1: 250, 2: 180, 3: 0, 4: 220, 6: 190 },
-    4: { 1: 320, 2: 290, 3: 150, 4: 0, 6: 280 },
-    5: { 1: 410, 2: 350, 3: 180, 4: 260, 6: 310 }
-};
+// Stock data for other RDCs provided by controller
+const otherRDCStock = <?php echo json_encode($other_rdc_stocks ?? []); ?>;
 
 // Check Stock Button
 document.getElementById('check-stock-btn').addEventListener('click', function() {

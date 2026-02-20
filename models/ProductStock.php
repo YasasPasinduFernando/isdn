@@ -14,10 +14,10 @@ class ProductStock
      */
     public function getStocksByRdc(int $rdcId): array
     {
-        $sql = "SELECT p.product_code, p.product_name, pc.name AS category, 
-                       COALESCE(ps.available_quantity, 0) AS current_stock, 
-                       COALESCE(p.minimum_stock_level, 0) AS minimum_level,
-                       COALESCE(p.unit_price, 0) AS unit_price
+    $sql = "SELECT p.product_id, p.product_code, p.product_name, pc.name AS category, 
+               COALESCE(ps.available_quantity, 0) AS current_stock, 
+               COALESCE(p.minimum_stock_level, 0) AS minimum_level,
+               COALESCE(p.unit_price, 0) AS unit_price
                 FROM product_stocks ps
                 JOIN products p ON ps.product_id = p.product_id
                 LEFT JOIN product_categories pc ON p.category_id = pc.category_id
@@ -39,6 +39,7 @@ class ProductStock
             }
 
             $out[] = [
+                'product_id'      => (int)$r['product_id'],
                 'product_code'    => $r['product_code'],
                 'product_name'    => $r['product_name'],
                 'category'        => $r['category'] ?? 'Uncategorized',

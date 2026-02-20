@@ -28,7 +28,9 @@ if (!headers_sent()) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ISDN">
-    <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.svg">
+    <link rel="icon" type="image/png" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
+    <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
     <style>
         /* Gradient animations */
         @keyframes gradient {

@@ -1,26 +1,26 @@
 /*
- * ISDN Service Worker (subfolder-safe for /isdn)
+ * ISDN Service Worker (root + subfolder safe)
  * - Versioned cache name
  * - Network-first for HTML/documents
  * - Cache-first for static assets
- * - Offline fallback to /isdn/index.php
+ * - Offline fallback to index.php within current scope
  * - Old cache cleanup on activate
  */
 
-const APP_SCOPE = '/isdn/';
-const OFFLINE_FALLBACK = '/isdn/index.php';
-const CACHE_NAME = 'isdn-cache-v4';
+const SCOPE_PATH = new URL(self.registration.scope).pathname.replace(/\/+$/, '/') || '/';
+const OFFLINE_FALLBACK = `${SCOPE_PATH}index.php`;
+const CACHE_NAME = 'isdn-cache-v7';
 
 const STATIC_ASSETS = [
-  '/isdn/',
-  '/isdn/index.php',
-  '/isdn/manifest.json',
-  '/isdn/assets/css/style.css',
-  '/isdn/assets/css/custom.css',
-  '/isdn/assets/js/main.js',
-  '/isdn/assets/js/validation.js',
-  '/isdn/assets/images/icons/icon-192.svg',
-  '/isdn/assets/images/icons/icon-512.svg'
+  SCOPE_PATH,
+  `${SCOPE_PATH}index.php`,
+  `${SCOPE_PATH}manifest.json`,
+  `${SCOPE_PATH}assets/css/style.css`,
+  `${SCOPE_PATH}assets/css/custom.css`,
+  `${SCOPE_PATH}assets/js/main.js`,
+  `${SCOPE_PATH}assets/js/validation.js`,
+  `${SCOPE_PATH}assets/images/icons/icon-192.png`,
+  `${SCOPE_PATH}assets/images/icons/icon-512.png`
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
 
   const reqUrl = new URL(event.request.url);
   if (reqUrl.origin !== self.location.origin) return;
-  if (!reqUrl.pathname.startsWith(APP_SCOPE)) return;
+  if (!reqUrl.pathname.startsWith(SCOPE_PATH)) return;
 
   const isDocument =
     event.request.mode === 'navigate' || event.request.destination === 'document';

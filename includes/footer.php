@@ -230,11 +230,20 @@
             var isSafari = /safari/.test(ua) && !/crios|fxios|edgios|opr|opera|chrome/.test(ua);
             var isAndroid = /android/.test(ua);
             var isDesktop = !isIOS && !isAndroid;
+            var hasPromptEvent = false;
 
             function openModal(mode) {
                 if (mode === 'ios-guide') {
                     textEl.textContent = 'Install on iPhone/iPad using Safari:';
                     iosStepsEl.style.display = '';
+                    installBtn.style.display = 'none';
+                } else if (mode === 'ios-open-safari') {
+                    textEl.textContent = 'To install on iPhone/iPad, open this site in Safari first, then use Share > Add to Home Screen.';
+                    iosStepsEl.style.display = 'none';
+                    installBtn.style.display = 'none';
+                } else if (mode === 'manual-guide') {
+                    textEl.textContent = 'Install manually from browser menu: tap menu (three dots) and choose Install app or Add to Home screen.';
+                    iosStepsEl.style.display = 'none';
                     installBtn.style.display = 'none';
                 } else {
                     textEl.textContent = isAndroid
@@ -279,6 +288,7 @@
 
             // Android + Windows (Chrome/Edge)
             window.addEventListener('beforeinstallprompt', function (event) {
+                hasPromptEvent = true;
                 event.preventDefault(); // prevent browser mini-infobar
                 deferredPrompt = event;
                 openModal('install');
@@ -293,6 +303,16 @@
             // iOS Safari fallback guide (no forced install prompt support).
             if (isIOS && isSafari) {
                 setTimeout(function () { openModal('ios-guide'); }, 900);
+            } else if (isIOS) {
+                // iOS non-Safari browsers cannot install PWAs directly.
+                setTimeout(function () { openModal('ios-open-safari'); }, 900);
+            } else if (isAndroid || isDesktop) {
+                // If install prompt event does not appear, show manual install steps.
+                setTimeout(function () {
+                    if (!hasPromptEvent && !deferredPrompt) {
+                        openModal('manual-guide');
+                    }
+                }, 2500);
             }
         })();
 

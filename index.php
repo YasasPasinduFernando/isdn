@@ -148,7 +148,7 @@ switch ($page) {
         require_once __DIR__ . '/controllers/stock-management/RequestProductUnitController.php';
         break;
     case 'send-product-units':
-        require __DIR__ . '/views/stock-management/send_product_units.php';
+        require_once __DIR__ . '/controllers/stock-management/SendProductUnitController.php';
         break;
     case 'stock-reports':
         require __DIR__ . '/views/stock-management/stock_reports.php';

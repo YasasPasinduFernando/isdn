@@ -20,149 +20,14 @@ $current_user = [
     'rdc_code' => $_SESSION['rdc_code'] ?? ''
 ];
 
-// Dummy data: Pending transfer requests TO this RDC (North)
-$pending_transfers = [
-    [
-        'transfer_id' => 1,
-        'transfer_number' => 'TRF-SOUTH-NORTH-20260203-001',
-        'source_rdc_id' => 2,
-        'source_rdc_name' => 'South RDC',
-        'source_rdc_code' => 'SOUTH',
-        'destination_rdc_id' => 1,
-        'destination_rdc_name' => 'North RDC',
-        'requested_by' => 'Nuwan Perera (RDC_CLERK)',
-        'requested_date' => '2026-02-03 10:30:00',
-        'request_reason' => 'High demand in Galle area for weekend sales. Need urgent stock replenishment.',
-        'is_urgent' => true,
-        'approval_status' => 'PENDING',
-        'total_items' => 350,
-        'product_count' => 3,
-        'items' => [
-            [
-                'product_id' => 1,
-                'product_code' => 'BEV001',
-                'product_name' => 'Coca Cola 1L',
-                'category' => 'Beverages',
-                'unit_price' => 150.00,
-                'requested_quantity' => 100,
-                'current_stock_source' => 20,
-                'available_stock_here' => 500
-            ],
-            [
-                'product_id' => 2,
-                'product_code' => 'BEV002',
-                'product_name' => 'Sprite 1L',
-                'category' => 'Beverages',
-                'unit_price' => 150.00,
-                'requested_quantity' => 150,
-                'current_stock_source' => 15,
-                'available_stock_here' => 400
-            ],
-            [
-                'product_id' => 3,
-                'product_code' => 'BEV003',
-                'product_name' => 'Fanta Orange 1L',
-                'category' => 'Beverages',
-                'unit_price' => 150.00,
-                'requested_quantity' => 100,
-                'current_stock_source' => 45,
-                'available_stock_here' => 350
-            ]
-        ]
-    ],
-    [
-        'transfer_id' => 2,
-        'transfer_number' => 'TRF-EAST-NORTH-20260202-001',
-        'source_rdc_id' => 3,
-        'source_rdc_name' => 'East RDC',
-        'source_rdc_code' => 'EAST',
-        'destination_rdc_id' => 1,
-        'destination_rdc_name' => 'North RDC',
-        'requested_by' => 'Saman Kumar (RDC_CLERK)',
-        'requested_date' => '2026-02-02 14:15:00',
-        'request_reason' => 'Stock replenishment for regular operations.',
-        'is_urgent' => false,
-        'approval_status' => 'PENDING',
-        'total_items' => 200,
-        'product_count' => 2,
-        'items' => [
-            [
-                'product_id' => 4,
-                'product_code' => 'FOOD001',
-                'product_name' => 'Rice 5kg',
-                'category' => 'Packaged Foods',
-                'unit_price' => 850.00,
-                'requested_quantity' => 100,
-                'current_stock_source' => 0,
-                'available_stock_here' => 200
-            ],
-            [
-                'product_id' => 5,
-                'product_code' => 'FOOD002',
-                'product_name' => 'Bread Loaf',
-                'category' => 'Packaged Foods',
-                'unit_price' => 120.00,
-                'requested_quantity' => 100,
-                'current_stock_source' => 220,
-                'available_stock_here' => 300
-            ]
-        ]
-    ],
-    [
-        'transfer_id' => 3,
-        'transfer_number' => 'TRF-WEST-NORTH-20260201-001',
-        'source_rdc_id' => 4,
-        'source_rdc_name' => 'West RDC',
-        'source_rdc_code' => 'WEST',
-        'destination_rdc_id' => 1,
-        'destination_rdc_name' => 'North RDC',
-        'requested_by' => 'Priya Fernando (RDC_MANAGER)',
-        'requested_date' => '2026-02-01 09:00:00',
-        'request_reason' => 'Customer orders pending. Need immediate transfer.',
-        'is_urgent' => true,
-        'approval_status' => 'PENDING',
-        'total_items' => 80,
-        'product_count' => 1,
-        'items' => [
-            [
-                'product_id' => 9,
-                'product_code' => 'CARE001',
-                'product_name' => 'Toothpaste 100ml',
-                'category' => 'Personal Care',
-                'unit_price' => 180.00,
-                'requested_quantity' => 80,
-                'current_stock_source' => 80,
-                'available_stock_here' => 350
-            ]
-        ]
-    ]
-];
+// Use controller-provided data when available; otherwise fall back to empty arrays
+if (!isset($pending_transfers) || !is_array($pending_transfers)) {
+    $pending_transfers = [];
+}
 
-// Dummy data: Already processed transfers (for history)
-$processed_transfers = [
-    [
-        'transfer_id' => 4,
-        'transfer_number' => 'TRF-CENTRAL-NORTH-20260131-001',
-        'source_rdc_name' => 'Central RDC',
-        'requested_date' => '2026-01-31',
-        'approval_status' => 'APPROVED',
-        'approved_by' => 'You',
-        'approval_date' => '2026-01-31 11:30:00',
-        'product_count' => 2,
-        'total_items' => 150
-    ],
-    [
-        'transfer_id' => 5,
-        'transfer_number' => 'TRF-SOUTH-NORTH-20260130-002',
-        'source_rdc_name' => 'South RDC',
-        'requested_date' => '2026-01-30',
-        'approval_status' => 'REJECTED',
-        'approved_by' => 'You',
-        'approval_date' => '2026-01-30 16:45:00',
-        'product_count' => 1,
-        'total_items' => 50
-    ]
-];
+if (!isset($processed_transfers) || !is_array($processed_transfers)) {
+    $processed_transfers = [];
+}
 ?>
     <style>
         * {
@@ -449,13 +314,13 @@ $processed_transfers = [
                                         </span>
                                         <?php endif; ?>
                                         <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                                            <?php echo str_replace('_', ' ', $transfer['approval_status']); ?>
+                                            <?php echo str_replace('_', ' ', $transfer['status']); ?>
                                         </span>
                                     </div>
                                     <div class="flex items-center space-x-4 text-sm text-gray-600">
                                         <span class="flex items-center">
                                             <i class="fas fa-building mr-2 text-gray-400"></i>
-                                            From: <strong class="ml-1 text-gray-900"><?php echo $transfer['source_rdc_name']; ?></strong>
+                                            From: <strong class="ml-1 text-gray-900"><?php echo $transfer['source_rdc']; ?></strong>
                                         </span>
                                         <span class="text-gray-400">•</span>
                                         <span class="flex items-center">
@@ -869,57 +734,84 @@ $processed_transfers = [
         }
         
         // Submit approval decision
-        function submitApproval(transferId) {
-            const remarks = document.getElementById(`remarks-${transferId}`).value.trim();
+        async function submitApproval(transferId) {
+            const remarksEl = document.getElementById(`remarks-${transferId}`);
+            const remarks = remarksEl ? remarksEl.value.trim() : '';
             const status = selectedStatuses[transferId];
-            
-            if (!remarks) {
-                alert('Please add approval remarks before submitting!');
-                return;
+
+            // Inline alert area (create if not exists)
+            let alertEl = document.getElementById(`approval-alert-${transferId}`);
+            if (!alertEl) {
+                alertEl = document.createElement('div');
+                alertEl.id = `approval-alert-${transferId}`;
+                alertEl.className = 'form-alert error mb-4 hidden';
+                alertEl.innerHTML = `<span id="approval-alert-text-${transferId}"></span>`;
+                const approvalSection = document.getElementById(`approval-section-${transferId}`);
+                approvalSection.insertBefore(alertEl, approvalSection.firstChild);
             }
-            
-            if (!status) {
-                alert('Please select a status!');
-                return;
-            }
-            
-            // In real implementation, this would be an AJAX call
-            // For now, show success message
-            const approvalSection = document.getElementById(`approval-section-${transferId}`);
-            
-            const statusColors = {
-                'APPROVED': { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-700', icon: 'fa-check-circle' },
-                'REJECTED': { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-700', icon: 'fa-times-circle' },
-                'CANCELLED': { bg: 'bg-gray-50', border: 'border-gray-500', text: 'text-gray-700', icon: 'fa-ban' }
+
+            const showAlert = (msg) => {
+                alertEl.classList.remove('hidden');
+                alertEl.classList.add('show');
+                alertEl.classList.remove('success');
+                alertEl.classList.add('error');
+                document.getElementById(`approval-alert-text-${transferId}`).textContent = msg;
+                setTimeout(() => { alertEl.classList.remove('show'); alertEl.classList.add('hidden'); }, 4000);
             };
-            
-            const color = statusColors[status];
-            
-            approvalSection.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="h-16 w-16 ${color.bg} rounded-full flex items-center justify-center mx-auto mb-4 checkmark">
-                        <i class="fas ${color.icon} ${color.text} text-3xl"></i>
+
+            if (!remarks) { showAlert('Please add approval remarks before submitting!'); return; }
+            if (!status) { showAlert('Please select a status!'); return; }
+
+            // Build form data
+            const form = new FormData();
+            form.append('action', 'submit_approval');
+            form.append('transfer_id', transferId);
+            form.append('new_status', status);
+            form.append('remarks', remarks);
+
+            try {
+                const resp = await fetch('/index.php?page=send-product-units', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'same-origin'
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    showAlert(data.message || 'Failed to submit decision.');
+                    return;
+                }
+
+                // Success: replace approval section with confirmation (reuse previous UI)
+                const approvalSection = document.getElementById(`approval-section-${transferId}`);
+                const statusColors = {
+                    'APPROVED': { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-700', icon: 'fa-check-circle' },
+                    'REJECTED': { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-700', icon: 'fa-times-circle' }
+                };
+                const color = statusColors[status] || { bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-700', icon: 'fa-info-circle' };
+
+                approvalSection.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="h-16 w-16 ${color.bg} rounded-full flex items-center justify-center mx-auto mb-4 checkmark">
+                            <i class="fas ${color.icon} ${color.text} text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold ${color.text} mb-2">Decision Submitted!</h3>
+                        <p class="text-gray-600 mb-4">Transfer status has been updated to <strong>${status}</strong></p>
+                        <div class="${color.bg} ${color.border} border rounded-lg p-4 mb-4">
+                            <div class="text-sm font-medium ${color.text} mb-2">Your Remarks:</div>
+                            <div class="text-sm text-gray-700">${remarks}</div>
+                        </div>
+                        <button onclick="closeDetailView()" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
+                            Close
+                        </button>
                     </div>
-                    <h3 class="text-2xl font-bold ${color.text} mb-2">Decision Submitted!</h3>
-                    <p class="text-gray-600 mb-4">Transfer status has been updated to <strong>${status}</strong></p>
-                    <div class="${color.bg} ${color.border} border rounded-lg p-4 mb-4">
-                        <div class="text-sm font-medium ${color.text} mb-2">Your Remarks:</div>
-                        <div class="text-sm text-gray-700">${remarks}</div>
-                    </div>
-                    <button onclick="closeDetailView()" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
-                        Close
-                    </button>
-                </div>
-            `;
-            
-            // In real app: Make AJAX request to update database
-            console.log('Submitting approval:', {
-                transferId,
-                status,
-                remarks,
-                approvedBy: <?php echo $current_user['user_id']; ?>,
-                approvedDate: new Date().toISOString()
-            });
+                `;
+
+                // Optionally update the Pending/History tab counts and move this transfer to history in the UI
+                // (a full refresh would be more robust; left minimal here)
+
+            } catch (err) {
+                showAlert('Error submitting decision: ' + (err.message || err));
+            }
         }
     </script>
 

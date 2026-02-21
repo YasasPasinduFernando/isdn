@@ -41,59 +41,68 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <style>
         * {
             font-family: 'Outfit', sans-serif;
         }
-        
+
         .mono {
             font-family: 'Space Mono', monospace;
         }
-        
+
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 4px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-        
+
         /* Animations */
         @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes scaleIn {
@@ -101,16 +110,17 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 opacity: 0;
                 transform: scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
             }
         }
-        
+
         .slide-down {
             animation: slideDown 0.3s ease-out;
         }
-        
+
         .pulse-slow {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
@@ -122,50 +132,50 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
         .scale-in {
             animation: scaleIn 0.2s ease-out;
         }
-        
+
         /* Stock level indicator */
         .stock-critical {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
-        
+
         .stock-low {
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
         }
-        
+
         .stock-warning {
             background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
         }
-        
+
         /* Product card hover effect */
         .product-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .product-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        
+
         /* Checkbox styling */
         .custom-checkbox:checked {
             background-color: #3b82f6;
             border-color: #3b82f6;
         }
-        
+
         /* Badge animations */
         .badge-urgent {
             animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
         /* Gradient backgrounds */
         .bg-gradient-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .bg-gradient-success {
             background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
         }
-        
+
         .bg-gradient-danger {
             background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
         }
@@ -188,69 +198,106 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             height: 100%;
             transition: width 0.3s ease;
         }
+
+        /* Transfer list scrollable container: show up to 3 items then scroll */
+        .transfer-list {
+            max-height: calc(3 * 84px);
+            /* approx 3 items of 84px height each */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-right: 0.25rem;
+        }
+
+        /* Simple alert banner for form validation */
+        .form-alert {
+            display: none;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-alert.show {
+            display: block;
+        }
+
+        .form-alert.error {
+            background: #fff1f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
     </style>
 </head>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
+
     <!-- Pending Transfers Alert Banner -->
     <?php if (count($pending_transfers) > 0): ?>
-    <div class="mb-6 slide-down">
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg shadow-sm p-4">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-blue-500 text-xl"></i>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">
-                        Active Transfer Requests
-                    </h3>
-                    <div class="space-y-2">
-                        <?php $transfer_index = 0; foreach ($pending_transfers as $transfer): ?>
-                        <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
-                            <div class="flex items-center space-x-3">
-                                <span class="mono text-xs font-semibold text-gray-700"><?php echo $transfer['transfer_number']; ?></span>
-                                <span class="text-xs text-gray-500">From: <?php echo $transfer['source_rdc']; ?></span>
-                                <span class="text-xs text-gray-500">•</span>
-                                <span class="text-xs text-gray-500"><?php echo $transfer['product_count']; ?> products (<?php echo $transfer['total_items']; ?> units)</span>
-                                <?php if ($transfer['is_urgent']): ?>
-                                <span class="badge-urgent px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                                    <i class="fas fa-bolt text-xs"></i> URGENT
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <span class="transfer-status px-3 py-1 text-xs font-semibold rounded-full <?php 
-                                    $statusColors = [
-                                        'CLERK_REQUESTED' => 'bg-yellow-100 text-yellow-700',
-                                        'PENDING' => 'bg-blue-100 text-blue-700',
-                                        'APPROVED' => 'bg-green-100 text-green-700',
-                                        'REJECTED' => 'bg-red-100 text-red-700',
-                                        'CANCELLED' => 'bg-gray-100 text-gray-700',
-                                        'RECEIVED' => 'bg-purple-100 text-purple-700'
-                                    ];
-                                    echo $statusColors[$transfer['status']] ?? 'bg-gray-100 text-gray-700';
-                                ?>">
-                                    <?php echo str_replace('_', ' ', $transfer['status']); ?>
-                                </span>
-                                <button class="view-transfer-btn text-blue-600 hover:text-blue-700 text-sm font-medium" data-index="<?php echo $transfer_index++; ?>">
-                                    View Details <i class="fas fa-arrow-right text-xs ml-1"></i>
-                                </button>
-                            </div>
+        <div class="mb-6 slide-down">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg shadow-sm p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-2">
+                            Active Transfer Requests
+                        </h3>
+                        <div class="transfer-list" style="max-height: calc(3 * 84px); overflow-y: auto;">
+                            <?php
+                            // Ensure descending order by requested_date (most recent first)
+                            usort($pending_transfers, function ($a, $b) {
+                                $ta = strtotime($a['requested_date'] ?? 0);
+                                $tb = strtotime($b['requested_date'] ?? 0);
+                                return $tb <=> $ta; // recent first
+                            });
+                            $transfer_index = 0;
+                            foreach ($pending_transfers as $transfer): ?>
+                                <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="mono text-xs font-semibold text-gray-700"><?php echo $transfer['transfer_number']; ?></span>
+                                        <span class="text-xs text-gray-500">From: <?php echo $transfer['source_rdc']; ?></span>
+                                        <span class="text-xs text-gray-500">•</span>
+                                        <span class="text-xs text-gray-500"><?php echo $transfer['product_count']; ?> products (<?php echo $transfer['total_items']; ?> units)</span>
+                                        <?php if (!empty($transfer['is_urgent'])): ?>
+                                            <span class="badge-urgent px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                                                <i class="fas fa-bolt text-xs"></i> URGENT
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="transfer-status px-3 py-1 text-xs font-semibold rounded-full <?php
+                                                                                                                    $statusColors = [
+                                                                                                                        'CLERK_REQUESTED' => 'bg-yellow-100 text-yellow-700',
+                                                                                                                        'PENDING' => 'bg-blue-100 text-blue-700',
+                                                                                                                        'APPROVED' => 'bg-green-100 text-green-700',
+                                                                                                                        'REJECTED' => 'bg-red-100 text-red-700',
+                                                                                                                        'CANCELLED' => 'bg-gray-100 text-gray-700',
+                                                                                                                        'RECEIVED' => 'bg-purple-100 text-purple-700'
+                                                                                                                    ];
+                                                                                                                    echo $statusColors[$transfer['status']] ?? 'bg-gray-100 text-gray-700';
+                                                                                                                    ?>">
+                                            <?php echo str_replace('_', ' ', $transfer['status']); ?>
+                                        </span>
+                                        <button class="view-transfer-btn text-blue-600 hover:text-blue-700 text-sm font-medium" data-index="<?php echo $transfer_index++; ?>">
+                                            View Details <i class="fas fa-arrow-right text-xs ml-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     <?php endif; ?>
 
     <!-- Page Title & Stats -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Request Product Units</h1>
         <p class="text-gray-600 mb-6">Select products with low stock and request units from other RDCs</p>
-        
+
         <!-- Quick Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
@@ -264,7 +311,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -276,7 +323,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -288,7 +335,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -311,26 +358,31 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 <p class="text-sm text-gray-600">Select an RDC to view their available stock for comparison</p>
             </div>
         </div>
-        
+        <div id="form-alert-select-rdc" class="form-alert error hidden">
+            <span id="form-alert-select-rdc-text"></span>
+        </div>
         <div class="flex flex-col sm:flex-row gap-4">
+
             <div class="flex-1">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Select RDC to Check</label>
                 <select id="check-rdc-dropdown" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                     <option value="">-- Select RDC --</option>
                     <?php foreach ($other_rdcs as $rdc): ?>
-                    <option value="<?php echo $rdc['rdc_id']; ?>"><?php echo $rdc['rdc_name']; ?></option>
+                        <option value="<?php echo $rdc['rdc_id']; ?>"><?php echo $rdc['rdc_name']; ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            
+
+
             <div class="flex items-end">
+
                 <button id="check-stock-btn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
                     <i class="fas fa-search"></i>
                     <span>Check Stock</span>
                 </button>
             </div>
         </div>
-        
+
         <!-- Checked RDC Badge (shown after checking) -->
         <div id="checked-rdc-badge" class="hidden mt-4 p-3 bg-gradient-success rounded-lg border border-green-200">
             <div class="flex items-center justify-between">
@@ -349,81 +401,81 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     <form id="transfer-request-form" method="POST" action="/index.php?page=request-product-units">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <?php foreach ($low_stock_products as $product): ?>
-            <div class="product-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <!-- Product Header -->
-                <div class="p-4 border-b border-gray-100">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 mb-1">
-                                <input type="checkbox" 
-                                       name="selected_products[]" 
-                                       value="<?php echo $product['product_id']; ?>"
-                                       class="custom-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="mono text-xs text-gray-500"><?php echo $product['product_code']; ?></span>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1"><?php echo $product['product_name']; ?></h3>
-                            <span class="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded">
-                                <?php echo $product['category']; ?>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Stock Level Indicator -->
-                    <div class="mt-3">
-                        <?php
-                        $stock_class = '';
-                        $stock_text = '';
-                        $stock_icon = '';
-                        
-                        if ($product['status'] === 'critical') {
-                            $stock_class = 'stock-critical';
-                            $stock_text = 'CRITICAL';
-                            $stock_icon = 'fa-times-circle';
-                        } elseif ($product['status'] === 'low') {
-                            $stock_class = 'stock-low';
-                            $stock_text = 'LOW STOCK';
-                            $stock_icon = 'fa-exclamation-triangle';
-                        }
-                        ?>
-                        <div class="<?php echo $stock_class; ?> rounded-lg p-3 text-white">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-semibold uppercase tracking-wider flex items-center">
-                                    <i class="fas <?php echo $stock_icon; ?> mr-2"></i>
-                                    <?php echo $stock_text; ?>
+                <div class="product-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <!-- Product Header -->
+                    <div class="p-4 border-b border-gray-100">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <input type="checkbox"
+                                        name="selected_products[]"
+                                        value="<?php echo $product['product_id']; ?>"
+                                        class="custom-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="mono text-xs text-gray-500"><?php echo $product['product_code']; ?></span>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1"><?php echo $product['product_name']; ?></h3>
+                                <span class="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded">
+                                    <?php echo $product['category']; ?>
                                 </span>
                             </div>
-                            <div class="flex items-end justify-between">
-                                <div>
-                                    <div class="text-2xl font-bold"><?php echo $product['current_stock']; ?></div>
-                                    <div class="text-xs opacity-90"><?php echo $product['unit']; ?> available</div>
+                        </div>
+
+                        <!-- Stock Level Indicator -->
+                        <div class="mt-3">
+                            <?php
+                            $stock_class = '';
+                            $stock_text = '';
+                            $stock_icon = '';
+
+                            if ($product['status'] === 'critical') {
+                                $stock_class = 'stock-critical';
+                                $stock_text = 'CRITICAL';
+                                $stock_icon = 'fa-times-circle';
+                            } elseif ($product['status'] === 'low') {
+                                $stock_class = 'stock-low';
+                                $stock_text = 'LOW STOCK';
+                                $stock_icon = 'fa-exclamation-triangle';
+                            }
+                            ?>
+                            <div class="<?php echo $stock_class; ?> rounded-lg p-3 text-white">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold uppercase tracking-wider flex items-center">
+                                        <i class="fas <?php echo $stock_icon; ?> mr-2"></i>
+                                        <?php echo $stock_text; ?>
+                                    </span>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-xs opacity-90">Minimum</div>
-                                    <div class="text-sm font-semibold"><?php echo $product['minimum_level']; ?> <?php echo $product['unit']; ?></div>
+                                <div class="flex items-end justify-between">
+                                    <div>
+                                        <div class="text-2xl font-bold"><?php echo $product['current_stock']; ?></div>
+                                        <div class="text-xs opacity-90"><?php echo $product['unit']; ?> available</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs opacity-90">Minimum</div>
+                                        <div class="text-sm font-semibold"><?php echo $product['minimum_level']; ?> <?php echo $product['unit']; ?></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Request Input -->
-                <div class="p-4 bg-gray-50">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Request Quantity</label>
-                    <input type="number" 
-                           name="request_qty_<?php echo $product['product_id']; ?>"
-                           min="1"
-                           placeholder="Enter quantity needed"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    
-                    <!-- Other RDC Stock Info (Hidden by default, shown after checking) -->
-                    <div class="other-rdc-stock hidden mt-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-medium text-gray-600">Stock at checked RDC:</span>
-                            <span class="stock-value text-sm font-bold text-green-600">Loading...</span>
+
+                    <!-- Request Input -->
+                    <div class="p-4 bg-gray-50">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Request Quantity</label>
+                        <input type="number"
+                            name="request_qty_<?php echo $product['product_id']; ?>"
+                            min="1"
+                            placeholder="Enter quantity needed"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                        <!-- Other RDC Stock Info (Hidden by default, shown after checking) -->
+                        <div class="other-rdc-stock hidden mt-3 p-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-gray-600">Stock at checked RDC:</span>
+                                <span class="stock-value text-sm font-bold text-green-600">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             <?php endforeach; ?>
         </div>
 
@@ -433,7 +485,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 <i class="fas fa-paper-plane mr-2 text-blue-600"></i>
                 Submit Transfer Request
             </h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <!-- Source RDC Selection -->
                 <div>
@@ -443,11 +495,11 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     <select name="source_rdc_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">-- Select Source RDC --</option>
                         <?php foreach ($other_rdcs as $rdc): ?>
-                        <option value="<?php echo $rdc['rdc_id']; ?>"><?php echo $rdc['rdc_name']; ?></option>
+                            <option value="<?php echo $rdc['rdc_id']; ?>"><?php echo $rdc['rdc_name']; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <!-- Priority -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -467,19 +519,19 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Reason -->
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                     Reason for Request <span class="text-red-500">*</span>
                 </label>
-                <textarea name="reason" 
-                          rows="4" 
-                          required
-                          placeholder="Explain why this transfer is needed..."
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                <textarea name="reason"
+                    rows="4"
+                    required
+                    placeholder="Explain why this transfer is needed..."
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
             </div>
-            
+
             <!-- Estimated Delivery -->
             <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex items-center justify-between">
@@ -498,7 +550,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Selected Products Summary -->
             <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="flex items-center justify-between mb-2">
@@ -509,14 +561,16 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     No products selected yet. Check the boxes on product cards above.
                 </div>
             </div>
-            
+            <div id="form-alert" class="form-alert error hidden">
+                <span id="form-alert-text"></span>
+            </div>
             <!-- Submit Button -->
             <div class="flex space-x-4">
                 <button type="submit" class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-lg">
                     <i class="fas fa-paper-plane"></i>
-                    <span>Submit Transfer Request</span> 
+                    <span>Submit Transfer Request</span>
                 </button>
-             <!-- Need to change word of apply to submit when roles changed -->   
+                <!-- Need to change word of apply to submit when roles changed -->
                 <button type="button" class="px-6 py-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
                     <i class="fas fa-times mr-2"></i>
                     Cancel
@@ -546,7 +600,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
             <!-- Modal Body -->
             <div class="p-6 space-y-6">
-                
+
                 <!-- Transfer Information -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
@@ -566,7 +620,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                         <div id="modal-total-items" class="text-sm font-bold text-green-900"></div>
                     </div>
                 </div>
-                   <!-- ✨ ADD THIS: Track Transfer Button Section -->
+                <!-- ✨ ADD THIS: Track Transfer Button Section -->
                 <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
                     <div class="flex items-center justify-between">
                         <div>
@@ -578,8 +632,8 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                                 View detailed progress timeline and status history
                             </div>
                         </div>
-                        <button onclick="openTrackingModal(transfers[currentTransferIndex])" 
-                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                        <button onclick="openTrackingModal(transfers[currentTransferIndex])"
+                            class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
                             <i class="fas fa-route"></i>
                             <span>Track Transfer</span>
                         </button>
@@ -648,10 +702,10 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Remarks <span class="text-red-500">*</span>
                         </label>
-                        <textarea id="status-remarks" 
-                                  rows="3" 
-                                  placeholder="Add your comments..."
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                        <textarea id="status-remarks"
+                            rows="3"
+                            placeholder="Add your comments..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
                     </div>
 
                     <!-- Submit Button -->
@@ -685,44 +739,44 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
 <!-- JavaScript -->
 <script>
-// PHP data passed to JavaScript
-const transfers = <?php echo json_encode($pending_transfers); ?>;
-const currentUser = <?php echo json_encode($current_user); ?>;
-let currentTransferIndex = null;
-let selectedNewStatus = null;
+    // PHP data passed to JavaScript
+    const transfers = <?php echo json_encode($pending_transfers); ?>;
+    const currentUser = <?php echo json_encode($current_user); ?>;
+    let currentTransferIndex = null;
+    let selectedNewStatus = null;
 
-// Open Transfer Modal
-function openTransferModal(index) {
-    currentTransferIndex = index;
-    selectedNewStatus = null;
-    const transfer = transfers[index];
-    if (!transfer) return;
+    // Open Transfer Modal
+    function openTransferModal(index) {
+        currentTransferIndex = index;
+        selectedNewStatus = null;
+        const transfer = transfers[index];
+        if (!transfer) return;
 
-    // Fill basic info
-    document.getElementById('modal-transfer-number').textContent = transfer.transfer_number;
-    document.getElementById('modal-source-rdc').textContent = transfer.source_rdc;
-    document.getElementById('modal-destination-rdc').textContent = transfer.destination_rdc;
-    document.getElementById('modal-requested-date').textContent = transfer.requested_date;
-    document.getElementById('modal-total-items').textContent = transfer.product_count + ' products (' + transfer.total_items + ' units)';
-    document.getElementById('modal-requested-by').textContent = transfer.requested_by_name + ' (' + transfer.requested_by_role + ')';
-    document.getElementById('modal-request-reason').textContent = transfer.request_reason;
+        // Fill basic info
+        document.getElementById('modal-transfer-number').textContent = transfer.transfer_number;
+        document.getElementById('modal-source-rdc').textContent = transfer.source_rdc;
+        document.getElementById('modal-destination-rdc').textContent = transfer.destination_rdc;
+        document.getElementById('modal-requested-date').textContent = transfer.requested_date;
+        document.getElementById('modal-total-items').textContent = transfer.product_count + ' products (' + transfer.total_items + ' units)';
+        document.getElementById('modal-requested-by').textContent = transfer.requested_by_name + ' (' + transfer.requested_by_role + ')';
+        document.getElementById('modal-request-reason').textContent = transfer.request_reason;
 
-    // Urgent badge
-    if (transfer.is_urgent) {
-        document.getElementById('modal-urgent-badge').classList.remove('hidden');
-    } else {
-        document.getElementById('modal-urgent-badge').classList.add('hidden');
-    }
+        // Urgent badge
+        if (transfer.is_urgent) {
+            document.getElementById('modal-urgent-badge').classList.remove('hidden');
+        } else {
+            document.getElementById('modal-urgent-badge').classList.add('hidden');
+        }
 
-    // Build products list with stock check
-    const productsList = document.getElementById('modal-products-list');
-    productsList.innerHTML = '';
-    
-    transfer.items.forEach(item => {
-        const canFulfill = item.source_stock >= item.requested_quantity;
-        const stockPercentage = Math.min((item.source_stock / item.requested_quantity) * 100, 100);
-        
-        const productCard = `
+        // Build products list with stock check
+        const productsList = document.getElementById('modal-products-list');
+        productsList.innerHTML = '';
+
+        transfer.items.forEach(item => {
+            const canFulfill = item.source_stock >= item.requested_quantity;
+            const stockPercentage = Math.min((item.source_stock / item.requested_quantity) * 100, 100);
+
+            const productCard = `
             <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
                 <div class="flex justify-between items-start mb-3">
                     <div>
@@ -765,60 +819,60 @@ function openTransferModal(index) {
                 }
             </div>
         `;
-        productsList.innerHTML += productCard;
-    });
+            productsList.innerHTML += productCard;
+        });
 
-    // Show approval remarks if exists
-    if (transfer.approval_remarks) {
-        document.getElementById('approval-remarks-text').textContent = transfer.approval_remarks;
-        document.getElementById('approval-remarks-display').classList.remove('hidden');
-    } else {
-        document.getElementById('approval-remarks-display').classList.add('hidden');
+        // Show approval remarks if exists
+        if (transfer.approval_remarks) {
+            document.getElementById('approval-remarks-text').textContent = transfer.approval_remarks;
+            document.getElementById('approval-remarks-display').classList.remove('hidden');
+        } else {
+            document.getElementById('approval-remarks-display').classList.add('hidden');
+        }
+
+        // Status management (only for RDC_MANAGER)
+        if (currentUser.role === 'RDC_MANAGER') {
+            setupStatusManagement(transfer);
+        } else {
+            document.getElementById('status-management-section').classList.add('hidden');
+        }
+
+        // Show modal
+        document.getElementById('transfer-modal').classList.remove('hidden');
+        document.getElementById('transfer-modal').classList.add('flex');
     }
 
-    // Status management (only for RDC_MANAGER)
-    if (currentUser.role === 'RDC_MANAGER') {
-        setupStatusManagement(transfer);
-    } else {
-        document.getElementById('status-management-section').classList.add('hidden');
-    }
+    // Setup Status Management based on current status
+    function setupStatusManagement(transfer) {
+        const section = document.getElementById('status-management-section');
+        const currentStatusDisplay = document.getElementById('current-status-display');
+        const statusChangeOptions = document.getElementById('status-change-options');
+        const remarksSection = document.getElementById('remarks-section');
+        const submitSection = document.getElementById('submit-status-section');
 
-    // Show modal
-    document.getElementById('transfer-modal').classList.remove('hidden');
-    document.getElementById('transfer-modal').classList.add('flex');
-}
+        section.classList.remove('hidden');
 
-// Setup Status Management based on current status
-function setupStatusManagement(transfer) {
-    const section = document.getElementById('status-management-section');
-    const currentStatusDisplay = document.getElementById('current-status-display');
-    const statusChangeOptions = document.getElementById('status-change-options');
-    const remarksSection = document.getElementById('remarks-section');
-    const submitSection = document.getElementById('submit-status-section');
+        // Display current status
+        const statusColors = {
+            'CLERK_REQUESTED': 'text-yellow-700',
+            'PENDING': 'text-blue-700',
+            'APPROVED': 'text-green-700',
+            'REJECTED': 'text-red-700',
+            'CANCELLED': 'text-gray-700',
+            'RECEIVED': 'text-purple-700'
+        };
+        currentStatusDisplay.textContent = transfer.status.replace(/_/g, ' ');
+        currentStatusDisplay.className = 'text-lg font-bold ' + statusColors[transfer.status];
 
-    section.classList.remove('hidden');
-    
-    // Display current status
-    const statusColors = {
-        'CLERK_REQUESTED': 'text-yellow-700',
-        'PENDING': 'text-blue-700',
-        'APPROVED': 'text-green-700',
-        'REJECTED': 'text-red-700',
-        'CANCELLED': 'text-gray-700',
-        'RECEIVED': 'text-purple-700'
-    };
-    currentStatusDisplay.textContent = transfer.status.replace(/_/g, ' ');
-    currentStatusDisplay.className = 'text-lg font-bold ' + statusColors[transfer.status];
+        // Check if all products can be fulfilled
+        const allCanFulfill = transfer.items.every(item => item.source_stock >= item.requested_quantity);
 
-    // Check if all products can be fulfilled
-    const allCanFulfill = transfer.items.every(item => item.source_stock >= item.requested_quantity);
-    
-    // Status-specific options
-    statusChangeOptions.innerHTML = '';
-    
-    if (transfer.status === 'CLERK_REQUESTED') {
-        // Can change to PENDING or CANCELLED
-        statusChangeOptions.innerHTML = `
+        // Status-specific options
+        statusChangeOptions.innerHTML = '';
+
+        if (transfer.status === 'CLERK_REQUESTED') {
+            // Can change to PENDING or CANCELLED
+            statusChangeOptions.innerHTML = `
             <div class="bg-white rounded-lg p-4 border border-gray-200">
                 <p class="text-sm text-gray-700 mb-4">
                     ${allCanFulfill 
@@ -837,11 +891,11 @@ function setupStatusManagement(transfer) {
                 </div>
             </div>
         `;
-        remarksSection.classList.remove('hidden');
-        
-    } else if (transfer.status === 'PENDING') {
-        // Waiting for approval from source RDC
-        statusChangeOptions.innerHTML = `
+            remarksSection.classList.remove('hidden');
+
+        } else if (transfer.status === 'PENDING') {
+            // Waiting for approval from source RDC
+            statusChangeOptions.innerHTML = `
             <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <p class="text-sm text-blue-800">
                     <i class="fas fa-clock text-blue-600 mr-2"></i>
@@ -849,12 +903,12 @@ function setupStatusManagement(transfer) {
                 </p>
             </div>
         `;
-        remarksSection.classList.add('hidden');
-        submitSection.classList.add('hidden');
-        
-    } else if (transfer.status === 'APPROVED') {
-        // Can mark as RECEIVED
-        statusChangeOptions.innerHTML = `
+            remarksSection.classList.add('hidden');
+            submitSection.classList.add('hidden');
+
+        } else if (transfer.status === 'APPROVED') {
+            // Can mark as RECEIVED
+            statusChangeOptions.innerHTML = `
             <div class="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
                 <p class="text-sm text-green-800">
                     <i class="fas fa-check-circle text-green-600 mr-2"></i>
@@ -866,12 +920,12 @@ function setupStatusManagement(transfer) {
                 <span class="font-semibold text-purple-900">Mark as Received</span>
             </button>
         `;
-        remarksSection.classList.remove('hidden');
-        document.getElementById('status-remarks').placeholder = 'Add delivery notes (optional)...';
-        
-    } else if (transfer.status === 'RECEIVED') {
-        // Already completed
-        statusChangeOptions.innerHTML = `
+            remarksSection.classList.remove('hidden');
+            document.getElementById('status-remarks').placeholder = 'Add delivery notes (optional)...';
+
+        } else if (transfer.status === 'RECEIVED') {
+            // Already completed
+            statusChangeOptions.innerHTML = `
             <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
                 <p class="text-sm text-purple-800">
                     <i class="fas fa-check-double text-purple-600 mr-2"></i>
@@ -879,240 +933,269 @@ function setupStatusManagement(transfer) {
                 </p>
             </div>
         `;
-        remarksSection.classList.add('hidden');
-        submitSection.classList.add('hidden');
-        
-    } else {
-        // REJECTED or CANCELLED - no actions available
-        statusChangeOptions.innerHTML = `
+            remarksSection.classList.add('hidden');
+            submitSection.classList.add('hidden');
+
+        } else {
+            // REJECTED or CANCELLED - no actions available
+            statusChangeOptions.innerHTML = `
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <p class="text-sm text-gray-700">
                     This transfer request has been ${transfer.status.toLowerCase()}.
                 </p>
             </div>
         `;
-        remarksSection.classList.add('hidden');
-        submitSection.classList.add('hidden');
-    }
-}
-
-// Select new status
-function selectStatus(status) {
-    selectedNewStatus = status;
-    
-    // Highlight selected button
-    document.querySelectorAll('.status-option-btn').forEach(btn => {
-        btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'border-gray-500', 'bg-gray-100');
-        btn.classList.add('border-gray-300');
-    });
-    
-    event.target.closest('.status-option-btn').classList.remove('border-gray-300');
-    if (status === 'PENDING') {
-        event.target.closest('.status-option-btn').classList.add('border-blue-500', 'bg-blue-50');
-    } else if (status === 'RECEIVED') {
-        event.target.closest('.status-option-btn').classList.add('border-purple-500', 'bg-purple-100');
-    } else {
-        event.target.closest('.status-option-btn').classList.add('border-gray-500', 'bg-gray-100');
-    }
-    
-    document.getElementById('submit-status-section').classList.remove('hidden');
-}
-
-// Submit status change
-document.getElementById('submit-status-btn')?.addEventListener('click', function() {
-    if (!selectedNewStatus) {
-        alert('Please select a status first!');
-        return;
-    }
-    
-    const transfer = transfers[currentTransferIndex];
-    const remarks = document.getElementById('status-remarks').value.trim();
-    
-    // Validate remarks for certain statuses
-    if ((selectedNewStatus === 'CANCELLED' || selectedNewStatus === 'PENDING') && !remarks) {
-        alert('Please add remarks before updating status!');
-        return;
-    }
-    
-    // In real app, this would be an AJAX call
-    console.log('Updating transfer status:', {
-        transfer_id: transfer.transfer_id,
-        old_status: transfer.status,
-        new_status: selectedNewStatus,
-        remarks: remarks,
-        updated_by: currentUser.user_id
-    });
-    
-    // Update local data
-    transfer.status = selectedNewStatus;
-    if (remarks) {
-        transfer.approval_remarks = remarks;
-    }
-    
-    // Show success message
-    alert(`Transfer status updated to ${selectedNewStatus}!`);
-    
-    // Close modal and refresh list
-    closeTransferModal();
-    
-    // Update status badge in list
-    updateTransferStatusInList(currentTransferIndex, selectedNewStatus);
-});
-
-// Update status in the list
-function updateTransferStatusInList(index, newStatus) {
-    const buttons = document.querySelectorAll('.view-transfer-btn');
-    if (buttons[index]) {
-        const statusBadge = buttons[index].closest('.flex').querySelector('.transfer-status');
-        if (statusBadge) {
-            statusBadge.textContent = newStatus.replace(/_/g, ' ');
-            
-            // Update colors
-            const statusColors = {
-                'CLERK_REQUESTED': 'bg-yellow-100 text-yellow-700',
-                'PENDING': 'bg-blue-100 text-blue-700',
-                'APPROVED': 'bg-green-100 text-green-700',
-                'REJECTED': 'bg-red-100 text-red-700',
-                'CANCELLED': 'bg-gray-100 text-gray-700',
-                'RECEIVED': 'bg-purple-100 text-purple-700'
-            };
-            
-            statusBadge.className = 'transfer-status px-3 py-1 text-xs font-semibold rounded-full ' + statusColors[newStatus];
+            remarksSection.classList.add('hidden');
+            submitSection.classList.add('hidden');
         }
     }
-}
 
-// Close modal
-function closeTransferModal() {
-    document.getElementById('transfer-modal').classList.add('hidden');
-    document.getElementById('transfer-modal').classList.remove('flex');
-    currentTransferIndex = null;
-    selectedNewStatus = null;
-}
+    // Select new status
+    function selectStatus(status) {
+        selectedNewStatus = status;
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // View transfer buttons
-    document.querySelectorAll('.view-transfer-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const index = parseInt(this.getAttribute('data-index'));
-            openTransferModal(index);
+        // Highlight selected button
+        document.querySelectorAll('.status-option-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'border-gray-500', 'bg-gray-100');
+            btn.classList.add('border-gray-300');
+        });
+
+        event.target.closest('.status-option-btn').classList.remove('border-gray-300');
+        if (status === 'PENDING') {
+            event.target.closest('.status-option-btn').classList.add('border-blue-500', 'bg-blue-50');
+        } else if (status === 'RECEIVED') {
+            event.target.closest('.status-option-btn').classList.add('border-purple-500', 'bg-purple-100');
+        } else {
+            event.target.closest('.status-option-btn').classList.add('border-gray-500', 'bg-gray-100');
+        }
+
+        document.getElementById('submit-status-section').classList.remove('hidden');
+    }
+
+    // Submit status change
+    document.getElementById('submit-status-btn')?.addEventListener('click', function() {
+        if (!selectedNewStatus) {
+            alert('Please select a status first!');
+            return;
+        }
+
+        const transfer = transfers[currentTransferIndex];
+        const remarks = document.getElementById('status-remarks').value.trim();
+
+        // Validate remarks for certain statuses
+        if ((selectedNewStatus === 'CANCELLED' || selectedNewStatus === 'PENDING') && !remarks) {
+            alert('Please add remarks before updating status!');
+            return;
+        }
+
+        // In real app, this would be an AJAX call
+        console.log('Updating transfer status:', {
+            transfer_id: transfer.transfer_id,
+            old_status: transfer.status,
+            new_status: selectedNewStatus,
+            remarks: remarks,
+            updated_by: currentUser.user_id
+        });
+
+        // Update local data
+        transfer.status = selectedNewStatus;
+        if (remarks) {
+            transfer.approval_remarks = remarks;
+        }
+
+        // Show success message
+        alert(`Transfer status updated to ${selectedNewStatus}!`);
+
+        // Close modal and refresh list
+        closeTransferModal();
+
+        // Update status badge in list
+        updateTransferStatusInList(currentTransferIndex, selectedNewStatus);
+    });
+
+    // Update status in the list
+    function updateTransferStatusInList(index, newStatus) {
+        const buttons = document.querySelectorAll('.view-transfer-btn');
+        if (buttons[index]) {
+            const statusBadge = buttons[index].closest('.flex').querySelector('.transfer-status');
+            if (statusBadge) {
+                statusBadge.textContent = newStatus.replace(/_/g, ' ');
+
+                // Update colors
+                const statusColors = {
+                    'CLERK_REQUESTED': 'bg-yellow-100 text-yellow-700',
+                    'PENDING': 'bg-blue-100 text-blue-700',
+                    'APPROVED': 'bg-green-100 text-green-700',
+                    'REJECTED': 'bg-red-100 text-red-700',
+                    'CANCELLED': 'bg-gray-100 text-gray-700',
+                    'RECEIVED': 'bg-purple-100 text-purple-700'
+                };
+
+                statusBadge.className = 'transfer-status px-3 py-1 text-xs font-semibold rounded-full ' + statusColors[newStatus];
+            }
+        }
+    }
+
+    // Close modal
+    function closeTransferModal() {
+        document.getElementById('transfer-modal').classList.add('hidden');
+        document.getElementById('transfer-modal').classList.remove('flex');
+        currentTransferIndex = null;
+        selectedNewStatus = null;
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // View transfer buttons
+        document.querySelectorAll('.view-transfer-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                openTransferModal(index);
+            });
+        });
+
+        // Close modal buttons
+        document.getElementById('modal-close').addEventListener('click', closeTransferModal);
+        document.getElementById('modal-close-btn').addEventListener('click', closeTransferModal);
+
+        // Close on backdrop click
+        document.getElementById('transfer-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTransferModal();
+            }
         });
     });
 
-    // Close modal buttons
-    document.getElementById('modal-close').addEventListener('click', closeTransferModal);
-    document.getElementById('modal-close-btn').addEventListener('click', closeTransferModal);
-    
-    // Close on backdrop click
-    document.getElementById('transfer-modal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeTransferModal();
+    // Stock data for other RDCs provided by controller
+    const otherRDCStock = <?php echo json_encode($other_rdc_stocks ?? []); ?>;
+
+    // Check Stock Button
+    document.getElementById('check-stock-btn').addEventListener('click', function(e) {
+        const selectedRDC = document.getElementById('check-rdc-dropdown').value;
+
+        if (!selectedRDC) {
+            e.preventDefault();
+            // show UI alert
+            const alertEl = document.getElementById('form-alert-select-rdc');
+            const alertText = document.getElementById('form-alert-select-rdc-text');
+            alertText.textContent = 'Please select an RDC first!';
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            // auto hide after 4s
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
         }
-    });
-});
 
-// Stock data for other RDCs provided by controller
-const otherRDCStock = <?php echo json_encode($other_rdc_stocks ?? []); ?>;
+        const rdcName = document.getElementById('check-rdc-dropdown').selectedOptions[0].text;
+        document.getElementById('checked-rdc-badge').classList.remove('hidden');
+        document.getElementById('checked-rdc-name').textContent = rdcName;
 
-// Check Stock Button
-document.getElementById('check-stock-btn').addEventListener('click', function() {
-    const selectedRDC = document.getElementById('check-rdc-dropdown').value;
-    
-    if (!selectedRDC) {
-        alert('Please select an RDC first!');
-        return;
-    }
-    
-    const rdcName = document.getElementById('check-rdc-dropdown').selectedOptions[0].text;
-    document.getElementById('checked-rdc-badge').classList.remove('hidden');
-    document.getElementById('checked-rdc-name').textContent = rdcName;
-    
-    const productCards = document.querySelectorAll('.product-card');
-    const stockData = otherRDCStock[selectedRDC];
-    
-    productCards.forEach(card => {
-        const checkbox = card.querySelector('input[type="checkbox"]');
-        const productId = checkbox.value;
-        const stockDiv = card.querySelector('.other-rdc-stock');
-        const stockValue = stockDiv.querySelector('.stock-value');
-        
-        stockDiv.classList.remove('hidden');
-        
-        if (stockData[productId] !== undefined) {
-            if (stockData[productId] > 0) {
-                stockValue.textContent = stockData[productId] + ' units available';
-                stockValue.classList.remove('text-red-600');
-                stockValue.classList.add('text-green-600');
+        const productCards = document.querySelectorAll('.product-card');
+        const stockData = otherRDCStock[selectedRDC];
+
+        productCards.forEach(card => {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            const productId = checkbox.value;
+            const stockDiv = card.querySelector('.other-rdc-stock');
+            const stockValue = stockDiv.querySelector('.stock-value');
+
+            stockDiv.classList.remove('hidden');
+
+            if (stockData[productId] !== undefined) {
+                if (stockData[productId] > 0) {
+                    stockValue.textContent = stockData[productId] + ' units available';
+                    stockValue.classList.remove('text-red-600');
+                    stockValue.classList.add('text-green-600');
+                } else {
+                    stockValue.textContent = 'Out of Stock';
+                    stockValue.classList.remove('text-green-600');
+                    stockValue.classList.add('text-red-600');
+                }
             } else {
-                stockValue.textContent = 'Out of Stock';
+                stockValue.textContent = 'Product not found in this RDC';
                 stockValue.classList.remove('text-green-600');
                 stockValue.classList.add('text-red-600');
             }
-        } else {
-            stockValue.textContent = 'Product not found in this RDC';
-            stockValue.classList.remove('text-green-600');
-            stockValue.classList.add('text-red-600');
-        }
-    });
-});
-
-// Clear Check Button
-document.getElementById('clear-check-btn').addEventListener('click', function() {
-    document.getElementById('checked-rdc-badge').classList.add('hidden');
-    document.getElementById('check-rdc-dropdown').value = '';
-    document.querySelectorAll('.other-rdc-stock').forEach(div => div.classList.add('hidden'));
-});
-
-// Track selected products
-document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]').forEach(checkbox => {
-    checkbox.addEventListener('change', updateSelectedCount);
-});
-
-function updateSelectedCount() {
-    const checkedBoxes = document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]:checked');
-    const count = checkedBoxes.length;
-    
-    document.getElementById('selected-count').textContent = count;
-    
-    if (count > 0) {
-        let summary = [];
-        checkedBoxes.forEach(box => {
-            const card = box.closest('.product-card');
-            const productName = card.querySelector('h3').textContent;
-            summary.push(productName);
         });
-        document.getElementById('selected-summary').innerHTML = summary.join(', ');
-    } else {
-        document.getElementById('selected-summary').textContent = 'No products selected yet. Check the boxes on product cards above.';
-    }
-}
+    });
 
-// Form validation
-document.getElementById('transfer-request-form').addEventListener('submit', function(e) {
-    const checkedBoxes = document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]:checked');
-    
-    if (checkedBoxes.length === 0) {
-        e.preventDefault();
-        alert('Please select at least one product to request!');
-        return;
+    // Clear Check Button
+    document.getElementById('clear-check-btn').addEventListener('click', function() {
+        document.getElementById('checked-rdc-badge').classList.add('hidden');
+        document.getElementById('check-rdc-dropdown').value = '';
+        document.querySelectorAll('.other-rdc-stock').forEach(div => div.classList.add('hidden'));
+    });
+
+    // Track selected products
+    document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    function updateSelectedCount() {
+        const checkedBoxes = document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]:checked');
+        const count = checkedBoxes.length;
+
+        document.getElementById('selected-count').textContent = count;
+
+        if (count > 0) {
+            let summary = [];
+            checkedBoxes.forEach(box => {
+                const card = box.closest('.product-card');
+                const productName = card.querySelector('h3').textContent;
+                summary.push(productName);
+            });
+            document.getElementById('selected-summary').innerHTML = summary.join(', ');
+        } else {
+            document.getElementById('selected-summary').textContent = 'No products selected yet. Check the boxes on product cards above.';
+        }
     }
-    
-    let hasQuantity = true;
-    checkedBoxes.forEach(box => {
-        const productId = box.value;
-        const qtyInput = document.querySelector(`input[name="request_qty_${productId}"]`);
-        if (!qtyInput.value || qtyInput.value <= 0) {
-            hasQuantity = false;
+
+    // Form validation
+    document.getElementById('transfer-request-form').addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('input[type="checkbox"][name="selected_products[]"]:checked');
+
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            // show UI alert
+            const alertEl = document.getElementById('form-alert');
+            const alertText = document.getElementById('form-alert-text');
+            alertText.textContent = 'Please select at least one product to request!';
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            // auto hide after 4s
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
+        }
+
+        let hasQuantity = true;
+        checkedBoxes.forEach(box => {
+            const productId = box.value;
+            const qtyInput = document.querySelector(`input[name="request_qty_${productId}"]`);
+            if (!qtyInput.value || qtyInput.value <= 0) {
+                hasQuantity = false;
+            }
+        });
+
+        if (!hasQuantity) {
+            e.preventDefault();
+            const alertEl = document.getElementById('form-alert');
+            const alertText = document.getElementById('form-alert-text');
+            alertText.textContent = 'Please enter quantities for all selected products!';
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
         }
     });
-    
-    if (!hasQuantity) {
-        e.preventDefault();
-        alert('Please enter quantities for all selected products!');
-        return;
-    }
-});
 </script>
 
 <?php require_once __DIR__ . '/tracking_modal.php'; ?>

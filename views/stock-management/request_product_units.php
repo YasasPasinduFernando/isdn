@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../includes/header.php';
 // For: RDC_CLERK and RDC_MANAGER
 // ============================================
 
-// Use controller-provided data when available; otherwise fall back to safe defaults
+// Use controller-provided data when available; otherwise fall back to safe 
 if (!isset($current_user)) {
     $role = $_SESSION['role'] ?? 'rdc_clerk';
     $role_upper = strtoupper($role);
@@ -269,7 +269,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Critical Stock</p>
-                        <p class="text-2xl font-bold text-red-600">1</p>
+                        <p class="text-2xl font-bold text-red-600"><?php echo count(array_filter($low_stock_products, fn($p) => $p['status'] === 'critical')); ?></p>
                     </div>
                     <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
                         <i class="fas fa-times-circle text-red-600 text-xl"></i>
@@ -293,7 +293,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Your RDC</p>
-                        <p class="text-lg font-bold text-gray-900"><?php echo $current_user['rdc_name']; ?></p>
+                        <p class="text-lg font-bold text-gray-900"><?php echo $current_user['rdc_code']; ?></p>
                     </div>
                     <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
                         <i class="fas fa-warehouse text-purple-600 text-xl"></i>

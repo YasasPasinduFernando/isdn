@@ -62,6 +62,7 @@ class StockTransfer
         // Load items for these transfers
         $transferIds = array_column($transfers, 'transfer_id');
         $in = implode(',', array_fill(0, count($transferIds), '?'));
+       
         $sqlItems = "SELECT sti.transfer_id, sti.item_id, sti.product_id, sti.requested_quantity,
                             p.product_name, p.product_code, pc.name AS category,
                             COALESCE(ps_src.available_quantity, 0) AS source_stock,
@@ -72,16 +73,21 @@ class StockTransfer
                      LEFT JOIN product_stocks ps_src ON ps_src.product_id = p.product_id AND ps_src.rdc_id = (
                          SELECT source_rdc_id FROM stock_transfers WHERE transfer_id = sti.transfer_id
                      )
-                     LEFT JOIN product_stocks ps_dst ON ps_dst.product_id = p.product_id AND ps_dst.rdc_id = :dst_rdc
+                     LEFT JOIN product_stocks ps_dst ON ps_dst.product_id = p.product_id AND ps_dst.rdc_id = ?
                      WHERE sti.transfer_id IN ($in)";
 
         $stmt2 = $this->pdo->prepare($sqlItems);
         $i = 1;
-        foreach ($transferIds as $id) {
-            $stmt2->bindValue($i, $id, PDO::PARAM_INT);
+
+            // First bind rdc_id (because its ? appears first in SQL)
+            $stmt2->bindValue($i, $rdcId, PDO::PARAM_INT);
             $i++;
-        }
-        $stmt2->bindValue(':dst_rdc', $rdcId, PDO::PARAM_INT);
+
+            // Then bind transfer IDs
+            foreach ($transferIds as $id) {
+                $stmt2->bindValue($i, $id, PDO::PARAM_INT);
+                $i++;
+            }
         $stmt2->execute();
         $items = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 

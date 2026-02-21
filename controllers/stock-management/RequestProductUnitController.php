@@ -12,10 +12,27 @@ $current_user = [
     'user_id' => $_SESSION['user_id'] ?? null,
     'name' => $_SESSION['username'] ?? 'User',
     'role' => strtoupper($_SESSION['role'] ?? 'rdc_clerk'),
-    'rdc_id' => $_SESSION['rdc_id'] ?? null,
-    'rdc_name' => $_SESSION['rdc_name'] ?? null,
-    'rdc_code' => $_SESSION['rdc_code'] ?? null
+    'rdc_id' => $_SESSION['rdc_id'] ?? null
 ];
+
+try {
+    $stmt = $pdo->prepare('SELECT rdc_name, rdc_code FROM rdcs WHERE rdc_id = :id');
+    $stmt->execute(['id' => $current_user['rdc_id']]);
+    $r = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($r) {
+        $rdcName = $r['rdc_name'];
+        $rdcCode = $r['rdc_code'];
+    } else {
+        $rdcName = 'RDC';
+        $rdcCode = '';
+    }
+} catch (Exception $e) {
+    $rdcName = 'RDC';
+    $rdcCode = '';
+}
+
+$current_user['rdc_name'] = $rdcName;
+$current_user['rdc_code'] = $rdcCode;
 
 // Simple helpers
 function redirect_back($msg = null)
@@ -101,6 +118,9 @@ $other_rdcs = $other_rdcs->fetchAll(PDO::FETCH_ASSOC);
 
 // Low stock products at current RDC
 $allStocks = $productStock->getStocksByRdc($currentRdc);
+
+
+
 $low_stock_products = array_filter($allStocks, fn($p) => in_array($p['status'], ['LOW','CRITICAL']));
 
 // Map to view expected keys (status lowercased, unit default)

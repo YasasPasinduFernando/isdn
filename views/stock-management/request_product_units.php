@@ -227,6 +227,11 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             color: #991b1b;
             border: 1px solid #fecaca;
         }
+        .form-alert.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #bbf7d0;
+        }
     </style>
 </head>
 
@@ -568,10 +573,10 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             <div class="flex space-x-4">
                 <button type="submit" class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-lg">
                     <i class="fas fa-paper-plane"></i>
-                    <span>Submit Transfer Request</span>
+                    <span id="request-transfer-button"></span>
                 </button>
                 <!-- Need to change word of apply to submit when roles changed -->
-                <button type="button" class="px-6 py-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
+                <button id="cancel-request-btn" type="button" class="px-6 py-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
                     <i class="fas fa-times mr-2"></i>
                     Cancel
                 </button>
@@ -670,6 +675,8 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                     <div id="modal-products-list" class="space-y-3">
                         <!-- Products will be inserted here -->
                     </div>
+                    <!-- Modal alert (use for status update validation and messages) -->
+                 
                 </div>
 
                 <!-- Status Management Section (Only for RDC_MANAGER) -->
@@ -708,6 +715,9 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
                     </div>
 
+                       <div id="modal-alert" class="form-alert error hidden mt-4">
+                        <span id="modal-alert-text"></span>
+                    </div>
                     <!-- Submit Button -->
                     <div id="submit-status-section" class="hidden mt-4">
                         <button id="submit-status-btn" class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center justify-center space-x-2">
@@ -745,6 +755,8 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     let currentTransferIndex = null;
     let selectedNewStatus = null;
 
+    document.getElementById('request-transfer-button').textContent = currentUser.role === 'RDC_MANAGER' ? 'Submit Transfer Request' : 'Apply Transfer Request';
+    
     // Open Transfer Modal
     function openTransferModal(index) {
         currentTransferIndex = index;
@@ -972,10 +984,43 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
         document.getElementById('submit-status-section').classList.remove('hidden');
     }
 
-    // Submit status change
-    document.getElementById('submit-status-btn')?.addEventListener('click', function() {
+    // Helper to show modal-specific alerts (error/success)
+    function showModalAlert(type, text, autoHide = true, e) {
+        // console.log("is this workd");
+        // const el = document.getElementById('modal-alert');
+        // const textEl = document.getElementById('modal-alert-text');
+        // if (!el || !textEl) return;
+        // el.classList.remove('hidden');
+        // el.classList.remove('error', 'success');
+        // el.classList.add(type === 'error' ? 'error' : 'success');
+        // textEl.textContent = text;
+        // if (autoHide) {
+        //     setTimeout(() => { el.classList.add('hidden'); }, 3500);
+        // }
+
+        e.preventDefault();
+            // show UI alert
+            const alertEl = document.getElementById('modal-alert');
+            const alertText = document.getElementById('modal-alert-text');
+            alertEl.classList.add(type === 'error' ? 'error' : 'success');
+            alertText.textContent = text;
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            // auto hide after 4s
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
+    }
+
+    // Submit status change (calls controller via AJAX)
+    document.getElementById('submit-status-btn')?.addEventListener('click', async function(e) {
+        console.log("button clicked");
         if (!selectedNewStatus) {
-            alert('Please select a status first!');
+                    console.log("new status not selected");
+
+            showModalAlert('error', 'Please select a status first!', true, e);
             return;
         }
 
@@ -984,33 +1029,46 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
         // Validate remarks for certain statuses
         if ((selectedNewStatus === 'CANCELLED' || selectedNewStatus === 'PENDING') && !remarks) {
-            alert('Please add remarks before updating status!');
+            console.log("remarks not provided for status change");
+            showModalAlert('error', 'Please add remarks before updating status!', true, e);
             return;
         }
 
-        // In real app, this would be an AJAX call
-        console.log('Updating transfer status:', {
-            transfer_id: transfer.transfer_id,
-            old_status: transfer.status,
-            new_status: selectedNewStatus,
-            remarks: remarks,
-            updated_by: currentUser.user_id
-        });
+        // Build payload
+        const form = new FormData();
+        form.append('action', 'update_status');
+        form.append('transfer_id', transfer.transfer_id);
+        form.append('new_status', selectedNewStatus);
+        form.append('remarks', remarks);
 
-        // Update local data
-        transfer.status = selectedNewStatus;
-        if (remarks) {
-            transfer.approval_remarks = remarks;
+        try {
+            const resp = await fetch('/index.php?page=request-product-units', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin'
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || !data.success) {
+                showModalAlert('error', data.message || 'Failed to update status.', true, e);
+                return;
+            }
+
+            // Update local data and UI
+            transfer.status = selectedNewStatus;
+            if (remarks) transfer.approval_remarks = remarks;
+            updateTransferStatusInList(currentTransferIndex, selectedNewStatus);
+
+            showModalAlert('success', data.message || `Transfer status updated to ${selectedNewStatus}!`, true, e);
+
+            // Close modal after a short pause so user sees the message
+            setTimeout(() => { closeTransferModal(); }, 900);
+
+        } catch (err) {
+            console.log("inside catch");
+            
+            showModalAlert('error', 'Error updating status: ' + (err.message || err), true, e);
         }
-
-        // Show success message
-        alert(`Transfer status updated to ${selectedNewStatus}!`);
-
-        // Close modal and refresh list
-        closeTransferModal();
-
-        // Update status badge in list
-        updateTransferStatusInList(currentTransferIndex, selectedNewStatus);
     });
 
     // Update status in the list
@@ -1195,6 +1253,51 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             }, 4000);
             return;
         }
+    });
+
+    // Cancel / Clear form button - resets selection, quantities, RDC, reason and alerts
+    document.getElementById('cancel-request-btn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Uncheck all selected products
+        document.querySelectorAll('input[name="selected_products[]"]').forEach(cb => cb.checked = false);
+
+        // Clear all quantity inputs
+        document.querySelectorAll('input[type="number"][name^="request_qty_"]').forEach(inp => inp.value = '');
+
+        // Reset RDC dropdown (source)
+        const src = document.querySelector('select[name="source_rdc_id"]');
+        if (src) src.value = '';
+
+        // Reset priority radios to Normal (value 0)
+        document.querySelectorAll('input[name="is_urgent"]').forEach(r => r.checked = (r.value === '0'));
+
+        // Clear reason
+        const reason = document.querySelector('textarea[name="reason"]');
+        if (reason) reason.value = '';
+
+        // Hide and clear form alert banners
+        const formAlert = document.getElementById('form-alert');
+        if (formAlert) {
+            formAlert.classList.remove('show');
+            formAlert.classList.add('hidden');
+            const t = document.getElementById('form-alert-text'); if (t) t.textContent = '';
+        }
+
+        // Hide checked RDC badge and clear check dropdown and other-rdc-stock displays
+        const checkedBadge = document.getElementById('checked-rdc-badge'); if (checkedBadge) checkedBadge.classList.add('hidden');
+        const checkRdc = document.getElementById('check-rdc-dropdown'); if (checkRdc) checkRdc.value = '';
+        document.querySelectorAll('.other-rdc-stock').forEach(d => d.classList.add('hidden'));
+
+        // Reset selected summary and count
+        const selCount = document.getElementById('selected-count'); if (selCount) selCount.textContent = '0';
+        const selSummary = document.getElementById('selected-summary'); if (selSummary) selSummary.textContent = 'No products selected yet. Check the boxes on product cards above.';
+
+        // Hide modal alert if visible
+        const modalAlert = document.getElementById('modal-alert'); if (modalAlert) { modalAlert.classList.add('hidden'); modalAlert.classList.remove('show'); }
+
+        // Optionally scroll to top of the form
+        const formSection = document.getElementById('request-form-section'); if (formSection) formSection.scrollIntoView({behavior: 'smooth'});
     });
 </script>
 

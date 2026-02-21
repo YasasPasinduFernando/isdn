@@ -45,6 +45,81 @@ function redirect_back($msg = null)
 
 // Handle POST: create transfer
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // If this is an AJAX status update request, handle separately and return JSON
+    if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+        header('Content-Type: application/json');
+
+        $transfer_id = (int)($_POST['transfer_id'] ?? 0);
+        $new_status = strtoupper(trim($_POST['new_status'] ?? ''));
+        $remarks = trim($_POST['remarks'] ?? '');
+
+        // Basic validations
+        if (!$transfer_id || !$new_status) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing transfer id or new status.']);
+            exit;
+        }
+
+        // Only RDC_MANAGER can perform this change
+        if ($current_user['role'] !== 'RDC_MANAGER') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Permission denied.']);
+            exit;
+        }
+
+        // Only allow moving CLERK_REQUESTED -> PENDING or CANCELLED
+        $allowed = ['PENDING', 'CANCELLED'];
+        if (!in_array($new_status, $allowed)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid new status.']);
+            exit;
+        }
+
+        try {
+            // fetch current transfer status
+            $q = $pdo->prepare('SELECT approval_status FROM stock_transfers WHERE transfer_id = ?');
+            $q->execute([$transfer_id]);
+            $row = $q->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Transfer not found.']);
+                exit;
+            }
+
+            $prev_status = $row['approval_status'];
+            if ($prev_status !== 'CLERK_REQUESTED') {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Only transfers in CLERK_REQUESTED state can be changed by RDC manager.']);
+                exit;
+            }
+
+            // validate remarks for these transitions
+            if (in_array($new_status, ['PENDING', 'CANCELLED']) && $remarks === '') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Please add remarks before updating status.']);
+                exit;
+            }
+
+            // perform update and insert log
+            $pdo->beginTransaction();
+
+            $upd = $pdo->prepare('UPDATE stock_transfers SET approval_status = ? WHERE transfer_id = ?');
+            $upd->execute([$new_status, $transfer_id]);
+
+            $logStmt = $pdo->prepare("INSERT INTO transfer_status_logs (transfer_id, previous_status, new_status, changed_by, change_by_role, change_by_name) VALUES (?, ?, ?, ?, ?, ?)");
+            $logStmt->execute([$transfer_id, $prev_status, $new_status, $current_user['user_id'], $current_user['role'], $current_user['name']]);
+
+            $pdo->commit();
+
+            echo json_encode(['success' => true, 'message' => "Transfer status updated to $new_status."]);
+            exit;
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update status: ' . $e->getMessage()]);
+            exit;
+        }
+    }
     $sel = $_POST['selected_products'] ?? [];
     $source_rdc_id = (int)($_POST['source_rdc_id'] ?? 0);
     $is_urgent = isset($_POST['is_urgent']) ? (int)$_POST['is_urgent'] : 0;

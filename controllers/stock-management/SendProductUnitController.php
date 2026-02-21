@@ -100,11 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $stockTransfer = new StockTransfer($pdo);
 $currentRdc = (int)$current_user['rdc_id'];
 
-// Pending transfers destined to this RDC (detailed)
-$pending_transfers = $stockTransfer->getPendingTransfersDetailedForRdc($currentRdc, 50);
-echo '<pre>';
-print_r($pending_transfers);
-echo '</pre>';
+// Pending transfers where this RDC is the SOURCE (outgoing requests from this RDC)
+$pending_transfers = $stockTransfer->getPendingOutgoingTransfersForSourceRdc($currentRdc, 50);
 
 // Processed transfers (history) for this RDC
 $stmt = $pdo->prepare("SELECT st.transfer_id, st.transfer_number, r1.rdc_name AS source_rdc_name, st.requested_date, st.approval_status, u.username AS approved_by, st.approval_date, COALESCE((SELECT COUNT(*) FROM stock_transfer_items sti WHERE sti.transfer_id = st.transfer_id),0) AS product_count, COALESCE((SELECT SUM(requested_quantity) FROM stock_transfer_items sti WHERE sti.transfer_id = st.transfer_id),0) AS total_items

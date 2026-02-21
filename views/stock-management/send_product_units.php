@@ -8,23 +8,27 @@ require_once __DIR__ . '/tracking_modal.php';
 // For: RDC_MANAGER only
 // ============================================
 
-// Logged-in user data (from session)
-$role = $_SESSION['role'] ?? 'rdc_manager';
-$role_upper = strtoupper($role);
-$current_user = [
-    'user_id' => $_SESSION['user_id'] ?? null,
-    'name' => $_SESSION['username'] ?? 'User',
-    'role' => $role_upper,
-    'rdc_id' => $_SESSION['rdc_id'] ?? null,
-    'rdc_name' => $_SESSION['rdc_name'] ?? 'SOUTH RDC',
-    'rdc_code' => $_SESSION['rdc_code'] ?? ''
-];
+// Use controller-provided data when available; otherwise fall back to safe 
+if (!isset($current_user)) {
+    $role = $_SESSION['role'] ?? '';
+    $role_upper = strtoupper($role);
+    $current_user = [
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'name' => $_SESSION['username'] ?? 'User',
+        'role' => $role_upper,
+        'rdc_id' => $_SESSION['rdc_id'] ?? null,
+        'rdc_name' => $_SESSION['rdc_name'] ?? '',
+        'rdc_code' => $_SESSION['rdc_code'] ?? ''
+    ];
+}
 
 // Use controller-provided data when available; otherwise fall back to empty arrays
 if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     $pending_transfers = [];
 }
-
+echo '<pre>';
+print_r($pending_transfers);
+echo '</pre>';
 if (!isset($processed_transfers) || !is_array($processed_transfers)) {
     $processed_transfers = [];
 }
@@ -262,7 +266,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Your RDC</p>
-                            <p class="text-lg font-bold text-gray-900"><?php echo $current_user['rdc_name']; ?></p>
+                            <p class="text-lg font-bold text-gray-900"><?php echo $current_user['rdc_code']; ?></p>
                         </div>
                         <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <i class="fas fa-warehouse text-purple-600 text-xl"></i>
@@ -320,7 +324,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                                     <div class="flex items-center space-x-4 text-sm text-gray-600">
                                         <span class="flex items-center">
                                             <i class="fas fa-building mr-2 text-gray-400"></i>
-                                            From: <strong class="ml-1 text-gray-900"><?php echo $transfer['source_rdc']; ?></strong>
+                                            From: <strong class="ml-1 text-gray-900"><?php echo $transfer['destination_rdc']; ?></strong>
                                         </span>
                                         <span class="text-gray-400">•</span>
                                         <span class="flex items-center">
@@ -338,7 +342,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <div class="text-xs text-gray-500 mb-1">Requested By</div>
-                                    <div class="text-sm font-semibold text-gray-900"><?php echo $transfer['requested_by']; ?></div>
+                                    <div class="text-sm font-semibold text-gray-900"><?php echo $transfer['requested_by_name']; ?></div>
                                 </div>
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <div class="text-xs text-gray-500 mb-1">Products</div>

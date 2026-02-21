@@ -16,7 +16,7 @@ if (!isset($current_user)) {
         'name' => $_SESSION['username'] ?? 'User',
         'role' => $role_upper,
         'rdc_id' => $_SESSION['rdc_id'] ?? null,
-        'rdc_name' => $_SESSION['rdc_name'] ?? 'SOUTH RDC',
+        'rdc_name' => $_SESSION['rdc_name'] ?? '',
         'rdc_code' => $_SESSION['rdc_code'] ?? ''
     ];
 }

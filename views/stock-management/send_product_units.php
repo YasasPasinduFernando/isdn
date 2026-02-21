@@ -26,9 +26,6 @@ if (!isset($current_user)) {
 if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     $pending_transfers = [];
 }
-echo '<pre>';
-print_r($pending_transfers);
-echo '</pre>';
 if (!isset($processed_transfers) || !is_array($processed_transfers)) {
     $processed_transfers = [];
 }
@@ -305,8 +302,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
             <?php else: ?>
                 <div class="grid grid-cols-1 gap-6">
                     <?php foreach ($pending_transfers as $transfer): ?>
-                    <div class="transfer-card bg-white rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 overflow-hidden slide-in"
-                         onclick="openDetailView(<?php echo htmlspecialchars(json_encode($transfer), ENT_QUOTES, 'UTF-8'); ?>)">
+                <div class="transfer-card bg-white rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 overflow-hidden slide-in">
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex-1">
@@ -333,7 +329,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                                         </span>
                                     </div>
                                 </div>
-                                <button class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                                <button type="button" onclick="event.stopPropagation(); openDetailView(<?php echo htmlspecialchars(json_encode($transfer), ENT_QUOTES, 'UTF-8'); ?>)" class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
                                     View Details
                                     <i class="fas fa-chevron-right ml-2"></i>
                                 </button>
@@ -450,14 +446,16 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
         
         // Open detail view
         function openDetailView(transfer) {
+            console.log("transfer data", transfer);
+            
             const overlay = document.getElementById('detail-overlay');
             const panel = document.getElementById('detail-panel');
             
             // Generate products HTML
             let productsHtml = '';
             transfer.items.forEach((item, index) => {
-                const stockPercentage = (item.available_stock_here / (item.available_stock_here + item.requested_quantity)) * 100;
-                const canFulfill = item.available_stock_here >= item.requested_quantity;
+                const stockPercentage = (item.source_stock / (item.source_stock + item.requested_quantity)) * 100;
+                const canFulfill = item.source_stock >= item.requested_quantity;
                 
                 productsHtml += `
                     <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
@@ -478,7 +476,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                         <div class="grid grid-cols-3 gap-4 mb-3">
                             <div class="bg-red-50 rounded-lg p-3">
                                 <div class="text-xs text-red-600 font-medium mb-1">Their Current Stock</div>
-                                <div class="text-2xl font-bold text-red-600">${item.current_stock_source}</div>
+                                <div class="text-2xl font-bold text-red-600">${item.destination_stock}</div>
                             </div>
                             <div class="bg-blue-50 rounded-lg p-3">
                                 <div class="text-xs text-blue-600 font-medium mb-1">Requested Quantity</div>
@@ -486,7 +484,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                             </div>
                             <div class="bg-green-50 rounded-lg p-3">
                                 <div class="text-xs text-green-600 font-medium mb-1">Your Available Stock</div>
-                                <div class="text-2xl font-bold text-green-600">${item.available_stock_here}</div>
+                                <div class="text-2xl font-bold text-green-600">${item.source_stock}</div>
                             </div>
                         </div>
                         
@@ -533,11 +531,11 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                                 <div class="text-xs text-blue-600 font-medium mb-1">Source RDC</div>
-                                <div class="text-lg font-bold text-blue-900">${transfer.source_rdc_name}</div>
+                                <div class="text-lg font-bold text-blue-900">${transfer.source_rdc}</div>
                             </div>
                             <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
                                 <div class="text-xs text-purple-600 font-medium mb-1">Destination</div>
-                                <div class="text-lg font-bold text-purple-900">${transfer.destination_rdc_name}</div>
+                                <div class="text-lg font-bold text-purple-900">${transfer.destination_rdc}</div>
                             </div>
                             <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4">
                                 <div class="text-xs text-orange-600 font-medium mb-1">Requested Date</div>
@@ -583,7 +581,7 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
                                 </div>
                                 <div class="ml-3 flex-1">
                                     <div class="text-xs text-yellow-700 font-medium mb-1">Requested By</div>
-                                    <div class="text-sm font-semibold text-gray-900">${transfer.requested_by}</div>
+                                    <div class="text-sm font-semibold text-gray-900">${transfer.requested_by_name}</div>
                                 </div>
                                 ${transfer.is_urgent ? `
                                     <span class="badge-urgent px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full flex items-center">

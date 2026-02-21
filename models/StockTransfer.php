@@ -164,7 +164,7 @@ class StockTransfer
         $in = implode(',', array_fill(0, count($transferIds), '?'));
 
         $sqlItems = "SELECT sti.transfer_id, sti.item_id, sti.product_id, sti.requested_quantity,
-                            p.product_name, p.product_code, pc.name AS category,
+                            p.product_name, p.product_code, p.unit_price, pc.name AS category,
                             COALESCE(ps_src.available_quantity, 0) AS source_stock,
                             COALESCE(ps_dst.available_quantity, 0) AS destination_stock
                      FROM stock_transfer_items sti
@@ -216,7 +216,8 @@ class StockTransfer
                     'category' => $it['category'] ?? 'Uncategorized',
                     'requested_quantity' => (int)$it['requested_quantity'],
                     'source_stock' => (int)$it['source_stock'],
-                    'destination_stock' => (int)$it['destination_stock']
+                    'destination_stock' => (int)$it['destination_stock'],
+                    'unit_price' => (float)$it['unit_price']
                 ];
             }, $titems);
 

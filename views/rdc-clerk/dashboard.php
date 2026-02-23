@@ -155,61 +155,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- 3. Data Fetching ---
-// Fetch Pending Orders
-$stmt = $pdo->prepare("SELECT o.*, rc.name as customer_name 
-                       FROM orders o 
-                       JOIN retail_customers rc ON o.customer_id = rc.id 
-                       LEFT JOIN users u ON o.placed_by = u.id 
-                       LEFT JOIN users u2 ON rc.user_id = u2.id
-                       WHERE (u.rdc_id = ? OR u2.rdc_id = ?) AND o.status = 'pending' 
-                       ORDER BY o.created_at ASC");
-$stmt->execute([$rdc_id, $rdc_id]);
-$pendingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Fetch Completed/Approved Today
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM orders o 
-                       JOIN retail_customers rc ON o.customer_id = rc.id 
-                       LEFT JOIN users u ON o.placed_by = u.id 
-                       WHERE (u.rdc_id = ?) AND o.status != 'pending' AND DATE(o.updated_at) = CURDATE()");
-$stmt->execute([$rdc_id]);
-$processedToday = $stmt->fetchColumn();
-
-// Fetch Inventory (Updated with minimum_stock_level)
-$stmt = $pdo->prepare("SELECT p.product_id, p.product_name, p.product_code, p.unit_price, p.minimum_stock_level, ps.available_quantity 
-                       FROM product_stocks ps 
-                       JOIN products p ON ps.product_id = p.product_id 
-                       WHERE ps.rdc_id = ?");
-$stmt->execute([$rdc_id]);
-$inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Calculate Low Stock Count
-$lowStockCount = 0;
-foreach ($inventory as $i) {
-    if ($i['available_quantity'] <= $i['minimum_stock_level']) {
-        $lowStockCount++;
-    }
-}
-
-// Fetch Recent Orders (for Overview)
-$stmt = $pdo->prepare("SELECT o.*, rc.name as customer_name 
-                       FROM orders o 
-                       JOIN retail_customers rc ON o.customer_id = rc.id 
-                       LEFT JOIN users u ON o.placed_by = u.id 
-                       LEFT JOIN users u2 ON rc.user_id = u2.id
-                       WHERE (u.rdc_id = ? OR u2.rdc_id = ?) 
-                       ORDER BY o.created_at DESC LIMIT 5");
-$stmt->execute([$rdc_id, $rdc_id]);
-$recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-// Fetch Products (Global List for CRUD)
-$stmt = $pdo->query("SELECT * FROM products LIMIT 50");
-$allProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-// Get Active Tab
-$activeTab = $_GET['tab'] ?? 'dashboard';
+// --- 3. Data (provided by controller) ---
+// The controller prepares RDC-scoped variables. Provide safe defaults if not set.
+$pendingOrders = $pendingOrders ?? [];
+$processedToday = $processedToday ?? 0;
+$inventory = $inventory ?? [];
+$lowStockCount = $lowStockCount ?? 0;
+$recentOrders = $recentOrders ?? [];
+$allProducts = $allProducts ?? [];
+$activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 ?>
 
 <style>
@@ -336,9 +290,9 @@ $activeTab = $_GET['tab'] ?? 'dashboard';
                                     <div>
                                         <h3 class="font-bold text-gray-800 font-['Outfit']"><?= $order['order_number'] ?></h3>
                                         <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                            <span><?= htmlspecialchars($order['customer_name']) ?></span>
+                                            <span><?= htmlspecialchars($order['customer']) ?></span>
                                             <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                            <span>Rs. <?= number_format($order['total_amount']) ?></span>
+                                            <span>Rs. <?= number_format($order['total']) ?></span>
                                         </div>
                                     </div>
                                 </div>

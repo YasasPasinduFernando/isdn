@@ -91,7 +91,7 @@ switch ($page) {
         require_once __DIR__ . '/controllers/rdc-manager/DashboardController.php';
         break;
     case 'rdc-clerk-dashboard':
-        require __DIR__ . '/views/rdc-clerk/dashboard.php';
+        require __DIR__ . '/controllers/rdc-clerk/DashboardController.php';
         break;
     case 'rdc-clerk-promotions':
         require __DIR__ . '/views/rdc-clerk/promotions.php';
@@ -151,7 +151,7 @@ switch ($page) {
         require_once __DIR__ . '/controllers/stock-management/SendProductUnitController.php';
         break;
     case 'stock-reports':
-        require __DIR__ . '/views/stock-management/stock_reports.php';
+        require_once __DIR__ . '/controllers/stock-management/StockReportController.php';
         break;
     case 'customer-sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';
@@ -179,8 +179,9 @@ switch ($page) {
         break;
     case 'rdc-sales-ref-checkout':
         require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';
+        break;
     case 'stock-movement-management':
-        require __DIR__ . '/views/stock-management/stock_movement_management.php';
+        require __DIR__ . '/controllers/stock-management/StockMovementController.php';
         break;
     default:
         require __DIR__ . '/views/shared/404.php';

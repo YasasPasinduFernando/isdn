@@ -14,8 +14,10 @@ class StockMovementLog
      */
     public function getRecentMovementsByRdc(int $rdcId, int $limit = 6): array
     {
-        $sql = "SELECT p.product_name AS product, sml.movement_type AS type,
-                       sml.quantity, sml.created_at AS date, sml.created_by_name AS user
+        $sql = "SELECT sml.movement_id, sml.product_id, p.product_code, p.product_name,
+                       sml.movement_type AS movement_type, sml.quantity, sml.previous_quantity,
+                       sml.new_quantity, sml.created_at AS date, sml.created_by_name AS created_by_name,
+                       sml.created_by_role AS created_by_role, sml.note
                 FROM stock_movement_logs sml
                 LEFT JOIN products p ON sml.product_id = p.product_id
                 WHERE sml.rdc_id = :rdc_id

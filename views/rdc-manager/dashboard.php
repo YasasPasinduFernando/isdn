@@ -40,6 +40,7 @@ if (!isset($recent_movements) || !is_array($recent_movements)) {
     $recent_movements = [];
 }
 
+
 // Count pending approvals and urgent transfers
 $pending_approvals = count(array_filter($pending_transfers, fn($t) => $t['status'] === 'PENDING'));
 $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urgent']));
@@ -416,7 +417,7 @@ $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urge
                             </span>
                         </div>
                         <div class="flex items-center justify-between ml-10">
-                            <span class="text-xs text-gray-500">By: <?php echo $movement['user']; ?></span>
+                            <span class="text-xs text-gray-500">By: <?php echo $movement['user'] . ' (' . $movement['user_role'] . ')'; ?></span>
                             <span class="text-xs text-gray-500"><?php echo date('M d, h:i A', strtotime($movement['date'])); ?></span>
                         </div>
                     </div>
@@ -428,3 +429,5 @@ $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urge
 
     </div>
 </div>
+
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

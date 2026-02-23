@@ -229,6 +229,58 @@ class StockTransfer
 
         return $out;
     }
+
+    /**
+     * Get transfers where the provided RDC is either the source or the destination.
+     * Returns summary rows suitable for the transfer summary report:
+     * transfer_id, transfer_number, requested_date, source_rdc, destination_rdc,
+     * product_count, total_items, status, is_urgent
+     */
+    public function getTransfersForRdc(int $rdcId, int $limit = 50): array
+    {
+        
+    $sql = "SELECT st.transfer_id, st.transfer_number, st.is_urgent, st.approval_status AS status, st.requested_date,
+               r1.rdc_id AS source_rdc_id, r1.rdc_name AS source_rdc, r2.rdc_id AS destination_rdc_id, r2.rdc_name AS destination_rdc,
+                       COALESCE(COUNT(sti.item_id), 0) AS product_count,
+                       COALESCE(SUM(sti.requested_quantity), 0) AS total_items
+                FROM stock_transfers st
+                JOIN rdcs r1 ON st.source_rdc_id = r1.rdc_id
+                JOIN rdcs r2 ON st.destination_rdc_id = r2.rdc_id
+                LEFT JOIN stock_transfer_items sti ON st.transfer_id = sti.transfer_id
+                WHERE st.source_rdc_id = :rdc_id_src OR st.destination_rdc_id = :rdc_id_dst
+                GROUP BY st.transfer_id
+                ORDER BY st.is_urgent DESC, st.requested_date DESC
+                LIMIT :lim";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':rdc_id_src', $rdcId, PDO::PARAM_INT);
+        $stmt->bindValue(':rdc_id_dst', $rdcId, PDO::PARAM_INT);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+     
+        // Normalize keys to match view expectations
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'transfer_id' => (int)$r['transfer_id'],
+                'transfer_number' => $r['transfer_number'],
+                'requested_date' => $r['requested_date'],
+                'source_rdc_id' => isset($r['source_rdc_id']) ? (int)$r['source_rdc_id'] : null,
+                'destination_rdc_id' => isset($r['destination_rdc_id']) ? (int)$r['destination_rdc_id'] : null,
+                'source_rdc' => $r['source_rdc'],
+                'destination_rdc' => $r['destination_rdc'],
+                'product_count' => (int)$r['product_count'],
+                'total_items' => (int)$r['total_items'],
+                'status' => $r['status'],
+                'is_urgent' => (bool)$r['is_urgent']
+            ];
+        }
+
+        
+        return $out;
+    }
 }
 
 ?>

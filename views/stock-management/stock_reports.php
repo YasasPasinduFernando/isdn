@@ -1,111 +1,67 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 
-// Logged-in user data (from session)
-$current_user = [
-    'user_id' => $_SESSION['user_id'] ?? null,
-    'name' => $_SESSION['username'] ?? 'User',
-    'role' => 'rdc_manager', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
-    'rdc_id' => $_SESSION['rdc_id'] ?? null,
-    'rdc_name' => $_SESSION['rdc_name'] ?? 'NORTH RDC',
-    'rdc_code' => $_SESSION['rdc_code'] ?? null
-];
+// If controller provided variables, use them. Otherwise fall back to safe defaults / dummy data
+if (!isset($current_user)) {
+    // Logged-in user data (from session)
+    $current_user = [
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'name' => $_SESSION['username'] ?? 'User',
+        'role' => 'rdc_manager', // Options: rdc_manager, head_office_manager, rdc_clerk, logistics_officer, system_admin
+        'rdc_id' => $_SESSION['rdc_id'] ?? null,
+        'rdc_name' => $_SESSION['rdc_name'] ?? 'NORTH RDC',
+        'rdc_code' => $_SESSION['rdc_code'] ?? null
+    ];
+}
 
-// Role-based access control
-$role_permissions = [
-    'rdc_manager' => [
-        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
-        'view_scope' => 'own_rdc',
-        'can_export' => true
-    ],
-    'head_office_manager' => [
-        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary', 'stock_valuation'],
-        'view_scope' => 'all_rdcs',
-        'can_export' => true
-    ],
-    'rdc_clerk' => [
-        'reports' => ['current_stock', 'low_stock_alerts'],
-        'view_scope' => 'own_rdc',
-        'can_export' => false
-    ],
-    'logistics_officer' => [
-        'reports' => ['current_stock'],
-        'view_scope' => 'own_rdc',
-        'can_export' => false
-    ],
-    'system_admin' => [
-        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
-        'view_scope' => 'all_rdcs',
-        'can_export' => true
-    ]
-];
+if (!isset($user_permissions)) {
+    $role_permissions = [
+        'rdc_manager' => [
+            'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
+            'view_scope' => 'own_rdc',
+            'can_export' => true
+        ],
+        'head_office_manager' => [
+            'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary', 'stock_valuation'],
+            'view_scope' => 'all_rdcs',
+            'can_export' => true
+        ],
+        'rdc_clerk' => [
+            'reports' => ['current_stock', 'low_stock_alerts'],
+            'view_scope' => 'own_rdc',
+            'can_export' => false
+        ],
+        'logistics_officer' => [
+            'reports' => ['current_stock'],
+            'view_scope' => 'own_rdc',
+            'can_export' => false
+        ],
+        'system_admin' => [
+            'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
+            'view_scope' => 'all_rdcs',
+            'can_export' => true
+        ]
+    ];
+    $user_permissions = $role_permissions[$current_user['role']] ?? $role_permissions['rdc_clerk'];
+}
 
-$user_permissions = $role_permissions[$current_user['role']] ?? $role_permissions['rdc_clerk'];
+if (!isset($all_rdcs)) {
+    // Default to empty list; controller should provide RDCs when used via routing
+    $all_rdcs = [];
+}
 
-// All RDCs
-$all_rdcs = [
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'rdc_code' => 'NORTH'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'rdc_code' => 'SOUTH'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'rdc_code' => 'EAST'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'rdc_code' => 'WEST'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'rdc_code' => 'CENTRAL']
-];
+if (!isset($current_stock_data)) {
+    // Controller will provide actual stock data; default to empty to avoid showing hard-coded samples
+    $current_stock_data = [];
+}
 
-// Dummy Data: Current Stock Levels
-$current_stock_data = [
-    // North RDC
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 10, 'minimum_level' => 20, 'unit_price' => 150.00, 'status' => 'LOW'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 2, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 200, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OUT_OF_STOCK'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 300, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'LOW'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 280, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 350, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'OK'],
-    
-    // South RDC (Low stock)
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 20, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 15, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'CRITICAL'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 5, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'CRITICAL'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 30, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'CRITICAL'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 150, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 80, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'LOW'],
-    
-    // East RDC
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 250, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 180, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 0, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OUT_OF_STOCK'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 220, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'OK'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 180, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 190, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'OK'],
-    
-    // West RDC
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 320, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 290, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 150, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OK'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 0, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'OUT_OF_STOCK'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 240, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 280, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'OK'],
-    
-    // Central RDC
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 410, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 350, 'minimum_level' => 100, 'unit_price' => 150.00, 'status' => 'OK'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 180, 'minimum_level' => 50, 'unit_price' => 850.00, 'status' => 'OK'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 260, 'minimum_level' => 200, 'unit_price' => 120.00, 'status' => 'OK'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 300, 'minimum_level' => 80, 'unit_price' => 280.00, 'status' => 'OK'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 310, 'minimum_level' => 150, 'unit_price' => 180.00, 'status' => 'OK']
-];
+if (!isset($transfer_summary_data)) {
+    $transfer_summary_data = [];
+}
 
-// Dummy Data: Transfer Summary
-$transfer_summary_data = [
-    ['transfer_number' => 'TRF-NORTH-SOUTH-001', 'requested_date' => '2026-02-02', 'source_rdc' => 'North RDC', 'destination_rdc' => 'South RDC', 'product_count' => 3, 'total_items' => 350, 'status' => 'APPROVED', 'is_urgent' => true],
-    ['transfer_number' => 'TRF-EAST-SOUTH-002', 'requested_date' => '2026-02-01', 'source_rdc' => 'East RDC', 'destination_rdc' => 'South RDC', 'product_count' => 2, 'total_items' => 150, 'status' => 'PENDING', 'is_urgent' => false],
-    ['transfer_number' => 'TRF-WEST-SOUTH-003', 'requested_date' => '2026-02-03', 'source_rdc' => 'West RDC', 'destination_rdc' => 'South RDC', 'product_count' => 1, 'total_items' => 80, 'status' => 'RECEIVED', 'is_urgent' => true],
-    ['transfer_number' => 'TRF-CENTRAL-NORTH-004', 'requested_date' => '2026-01-31', 'source_rdc' => 'Central RDC', 'destination_rdc' => 'North RDC', 'product_count' => 2, 'total_items' => 150, 'status' => 'RECEIVED', 'is_urgent' => false],
-    ['transfer_number' => 'TRF-NORTH-EAST-005', 'requested_date' => '2026-01-30', 'source_rdc' => 'North RDC', 'destination_rdc' => 'East RDC', 'product_count' => 1, 'total_items' => 100, 'status' => 'REJECTED', 'is_urgent' => false],
-    ['transfer_number' => 'TRF-SOUTH-CENTRAL-006', 'requested_date' => '2026-01-29', 'source_rdc' => 'South RDC', 'destination_rdc' => 'Central RDC', 'product_count' => 2, 'total_items' => 120, 'status' => 'CANCELLED', 'is_urgent' => false],
-];
-
-// Categories
-$categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
+if (!isset($categories)) {
+    $categories = [];
+}
 ?>
 
 <head>
@@ -422,7 +378,9 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
                         }
                         
                         foreach ($filtered_data as $item): 
-                            $stock_percent = ($item['current_stock'] / $item['minimum_level']) * 100;
+                            $stock_percent = (isset($item['minimum_level']) && (int)$item['minimum_level'] > 0)
+                                ? (($item['current_stock'] / $item['minimum_level']) * 100)
+                                : 100;
                         ?>
                         <tr data-rdc="<?php echo $item['rdc_id']; ?>" data-category="<?php echo $item['category']; ?>" data-status="<?php echo $item['status']; ?>">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo $item['rdc_name']; ?></td>
@@ -635,7 +593,7 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
                                 'RECEIVED' => 'bg-purple-100 text-purple-700'
                             ];
                         ?>
-                        <tr>
+                        <tr data-src-rdc-id="<?php echo $transfer['source_rdc_id'] ?? ''; ?>" data-dst-rdc-id="<?php echo $transfer['destination_rdc_id'] ?? ''; ?>" data-requested-date="<?php echo $transfer['requested_date'] ?? ''; ?>">
                             <td class="px-6 py-4 whitespace-nowrap text-sm mono font-semibold text-gray-900"><?php echo $transfer['transfer_number']; ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo date('M d, Y', strtotime($transfer['requested_date'])); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -694,7 +652,7 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white rounded-xl p-6 shadow-sm border-2 border-purple-200">
                         <div class="text-sm text-purple-600 font-medium mb-2">Total Stock Value</div>
-                        <div class="text-3xl font-bold text-purple-900">
+                        <div id="valuation-total-value" class="text-3xl font-bold text-purple-900">
                             LKR <?php 
                                 $total_value = 0;
                                 foreach ($current_stock_data as $item) {
@@ -706,13 +664,13 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
                     </div>
                     <div class="bg-white rounded-xl p-6 shadow-sm border-2 border-blue-200">
                         <div class="text-sm text-blue-600 font-medium mb-2">Total Units</div>
-                        <div class="text-3xl font-bold text-blue-900">
+                        <div id="valuation-total-units" class="text-3xl font-bold text-blue-900">
                             <?php echo number_format(array_sum(array_column($current_stock_data, 'current_stock'))); ?>
                         </div>
                     </div>
                     <div class="bg-white rounded-xl p-6 shadow-sm border-2 border-green-200">
                         <div class="text-sm text-green-600 font-medium mb-2">Average Value/Unit</div>
-                        <div class="text-3xl font-bold text-green-900">
+                        <div id="valuation-avg-unit" class="text-3xl font-bold text-green-900">
                             LKR <?php echo number_format($total_value / max(array_sum(array_column($current_stock_data, 'current_stock')), 1), 2); ?>
                         </div>
                     </div>
@@ -750,7 +708,7 @@ $categories = ['Beverages', 'Packaged Foods', 'Home Cleaning', 'Personal Care'];
                     <tfoot class="bg-gray-100">
                         <tr>
                             <td colspan="5" class="px-6 py-4 text-right text-sm font-bold text-gray-900">Grand Total:</td>
-                            <td class="px-6 py-4 text-right text-lg font-bold text-purple-900">LKR <?php echo number_format($total_value, 2); ?></td>
+                            <td id="valuation-grand-total" class="px-6 py-4 text-right text-lg font-bold text-purple-900">LKR <?php echo number_format($total_value, 2); ?></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -793,6 +751,8 @@ function showReport(reportType) {
     if (reportType === 'transfer_summary') {
         document.getElementById('filter-date-wrapper').classList.remove('hidden');
         document.getElementById('filter-status-wrapper').classList.add('hidden');
+        // Category filter not relevant for transfer summary
+        document.getElementById('filter-category-wrapper').classList.add('hidden');
     } else {
         document.getElementById('filter-date-wrapper').classList.add('hidden');
         document.getElementById('filter-status-wrapper').classList.remove('hidden');
@@ -809,9 +769,10 @@ function applyFilters() {
     const rdcFilter = document.getElementById('filter-rdc') ? document.getElementById('filter-rdc').value : 'own';
     const categoryFilter = document.getElementById('filter-category').value;
     const statusFilter = document.getElementById('filter-status').value;
+    const dateFilter = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '30';
     
     // Filter tables
-    const tables = ['current-stock-tbody', 'low-stock-tbody', 'valuation-tbody'];
+    const tables = ['current-stock-tbody', 'low-stock-tbody', 'valuation-tbody', 'transfer-summary-tbody'];
     
     tables.forEach(tableId => {
         const tbody = document.getElementById(tableId);
@@ -824,18 +785,49 @@ function applyFilters() {
             let show = true;
             
             // RDC filter
-            if (rdcFilter !== 'all' && rdcFilter !== 'own') {
-                if (row.dataset.rdc !== rdcFilter) show = false;
+            if (tableId === 'transfer-summary-tbody') {
+                // For transfers, check either source or destination RDC match
+                if (rdcFilter !== 'all' && rdcFilter !== 'own') {
+                    const src = row.getAttribute('data-src-rdc-id');
+                    const dst = row.getAttribute('data-dst-rdc-id');
+                    if (src !== rdcFilter && dst !== rdcFilter) show = false;
+                }
+            } else {
+                if (rdcFilter !== 'all' && rdcFilter !== 'own') {
+                    if (row.dataset.rdc !== rdcFilter) show = false;
+                }
             }
             
             // Category filter
-            if (categoryFilter !== 'all') {
-                if (row.dataset.category !== categoryFilter) show = false;
+            // Category filter not applied to transfer summary
+            if (tableId !== 'transfer-summary-tbody') {
+                if (categoryFilter !== 'all') {
+                    if (row.dataset.category !== categoryFilter) show = false;
+                }
             }
             
             // Status filter
-            if (statusFilter !== 'all') {
-                if (row.dataset.status !== statusFilter) show = false;
+            if (tableId !== 'transfer-summary-tbody') {
+                if (statusFilter !== 'all') {
+                    if (row.dataset.status !== statusFilter) show = false;
+                }
+            }
+
+            // Date filter (only for transfers)
+            if (tableId === 'transfer-summary-tbody') {
+                if (dateFilter !== 'all') {
+                    const days = parseInt(dateFilter, 10);
+                    if (!isNaN(days)) {
+                        const requested = row.getAttribute('data-requested-date');
+                        if (requested) {
+                            const requestedMs = Date.parse(requested);
+                            if (!isNaN(requestedMs)) {
+                                const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+                                if (requestedMs < cutoff) show = false;
+                            }
+                        }
+                    }
+                }
             }
             
             if (show) {
@@ -895,16 +887,170 @@ function updateStats() {
         document.getElementById('alert-critical').textContent = criticalCount;
         document.getElementById('alert-low').textContent = lowCount;
     }
+
+    // Transfer stats (reflect currently visible transfer rows)
+    const transferRows = document.querySelectorAll('#transfer-summary-tbody tr:not(.hidden)');
+    let totalTransfers = transferRows.length;
+    let pending = 0, approved = 0, received = 0, rejected = 0;
+
+    transferRows.forEach(row => {
+        // status is rendered inside the 6th column span
+        const statusSpan = row.querySelector('td:nth-child(6) span');
+        if (!statusSpan) return;
+        let s = statusSpan.textContent.trim().toUpperCase();
+        // Normalize spaces to underscores to match model statuses
+        s = s.replace(/\s+/g, '_');
+        if (s === 'CLERK_REQUESTED' || s === 'PENDING') pending++;
+        else if (s === 'APPROVED') approved++;
+        else if (s === 'RECEIVED') received++;
+        else if (s === 'REJECTED') rejected++;
+    });
+
+    if (document.getElementById('transfer-total')) {
+        document.getElementById('transfer-total').textContent = totalTransfers;
+        document.getElementById('transfer-pending').textContent = pending;
+        document.getElementById('transfer-approved').textContent = approved;
+        document.getElementById('transfer-received').textContent = received;
+        document.getElementById('transfer-rejected').textContent = rejected;
+    }
+
+    // Valuation stats - recompute from visible valuation rows
+    const valuationRows = document.querySelectorAll('#valuation-tbody tr:not(.hidden)');
+    let sumUnits = 0;
+    let sumValue = 0.0;
+
+    valuationRows.forEach(row => {
+        const qtyCell = row.querySelector('td:nth-child(4)');
+        const priceCell = row.querySelector('td:nth-child(5)');
+        if (!qtyCell || !priceCell) return;
+        const qtyText = qtyCell.textContent.trim().replace(/,/g, '');
+        const priceText = priceCell.textContent.trim().replace(/,/g, '');
+        const qty = parseInt(qtyText, 10) || 0;
+        const price = parseFloat(priceText.replace(/[^0-9.-]/g, '')) || 0;
+        sumUnits += qty;
+        sumValue += qty * price;
+    });
+
+    const avg = sumUnits > 0 ? (sumValue / sumUnits) : 0;
+
+    // Formatting helper
+    function fmtNumber(n) {
+        return n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    if (document.getElementById('valuation-total-units')) {
+        document.getElementById('valuation-total-units').textContent = sumUnits.toLocaleString();
+    }
+    if (document.getElementById('valuation-total-value')) {
+        document.getElementById('valuation-total-value').textContent = 'LKR ' + fmtNumber(sumValue);
+    }
+    if (document.getElementById('valuation-avg-unit')) {
+        document.getElementById('valuation-avg-unit').textContent = 'LKR ' + fmtNumber(avg);
+    }
+    if (document.getElementById('valuation-grand-total')) {
+        document.getElementById('valuation-grand-total').textContent = 'LKR ' + fmtNumber(sumValue);
+    }
 }
 
 // Export to PDF (placeholder - would use a library like jsPDF)
 function exportToPDF(reportType) {
-    alert('PDF export functionality would be implemented using a library like jsPDF or server-side generation.\n\nFor now, please use the Print button as an alternative.');
+    // Build query params from filters
+    const params = new URLSearchParams();
+    params.set('report', reportType);
+    const rdcEl = document.getElementById('filter-rdc');
+    if (rdcEl && rdcEl.value && rdcEl.value !== 'all') params.set('rdc_id', rdcEl.value);
+    const dateEl = document.getElementById('filter-date');
+    if (dateEl && dateEl.value) params.set('date', dateEl.value);
+    // Include category and status filters if present so server export matches client filters
+    const catEl = document.getElementById('filter-category');
+    if (catEl && catEl.value && catEl.value !== 'all') params.set('category', catEl.value);
+    const statusEl = document.getElementById('filter-status');
+    if (statusEl && statusEl.value && statusEl.value !== 'all') params.set('status', statusEl.value);
+    // server-side endpoint
+    const url = '/exports/export_report_pdf.php?' + params.toString();
+    window.location.href = url;
 }
 
-// Export to Excel (placeholder - would use a library like SheetJS)
+// Export to Excel (CSV server-side)
 function exportToExcel(reportType) {
-    alert('Excel export functionality would be implemented using SheetJS (xlsx) library.\n\nReport: ' + reportType.replace('_', ' ').toUpperCase());
+    // New client-side XLS export that only includes currently visible rows
+    try {
+        const tableMap = {
+            'current_stock': 'current-stock-tbody',
+            'low_stock_alerts': 'low-stock-tbody',
+            'transfer_summary': 'transfer-summary-tbody',
+            'stock_valuation': 'valuation-tbody'
+        };
+
+        const tbodyId = tableMap[reportType];
+        if (!tbodyId) {
+            // Fallback to server-side exporter if unknown report type
+            const params = new URLSearchParams();
+            params.set('report', reportType);
+            const rdcEl = document.getElementById('filter-rdc');
+            if (rdcEl && rdcEl.value && rdcEl.value !== 'all') params.set('rdc_id', rdcEl.value);
+            const dateEl = document.getElementById('filter-date');
+            if (dateEl && dateEl.value) params.set('date', dateEl.value);
+            window.location.href = '/exports/export_report_excel.php?' + params.toString();
+            return;
+        }
+
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) {
+            alert('No data available to export.');
+            return;
+        }
+
+        const table = tbody.closest('table');
+        if (!table) {
+            alert('Unable to locate table for export.');
+            return;
+        }
+
+        // Clone the table so we can remove hidden rows and actions safely
+        const clone = table.cloneNode(true);
+
+        // Remove any rows that are hidden (filtered out)
+        clone.querySelectorAll('tbody tr.hidden').forEach(r => r.remove());
+
+        // Remove action columns (buttons) if present - simple heuristic: remove any TH/TD with class 'no-export' or with button elements
+        // Remove THs marked no-export
+        clone.querySelectorAll('th.no-export, td.no-export').forEach(el => el.remove());
+        // Remove any remaining button cells
+        clone.querySelectorAll('td').forEach(td => {
+            if (td.querySelector('button') || td.querySelector('a')) {
+                // clear content
+                td.textContent = td.textContent || '';
+            }
+        });
+
+        // Prepare a minimal HTML document for Excel (older Excel versions will open .xls with HTML content)
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${clone.outerHTML}</body></html>`;
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const filename = reportType + '-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.xls';
+
+        // Create download link
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(link.href);
+            link.remove();
+        }, 1000);
+    } catch (err) {
+        console.error('Export failed, falling back to server-side CSV export', err);
+        // Fallback to server-side exporter
+        const params = new URLSearchParams();
+        params.set('report', reportType);
+        const rdcEl = document.getElementById('filter-rdc');
+        if (rdcEl && rdcEl.value && rdcEl.value !== 'all') params.set('rdc_id', rdcEl.value);
+        const dateEl = document.getElementById('filter-date');
+        if (dateEl && dateEl.value) params.set('date', dateEl.value);
+        window.location.href = '/exports/export_report_excel.php?' + params.toString();
+    }
 }
 
 // Initialize

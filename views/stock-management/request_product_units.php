@@ -546,12 +546,12 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                         </div>
                         <div>
                             <div class="text-sm font-medium text-gray-700">Estimated Delivery Time</div>
-                            <div class="text-xl font-bold text-blue-600">2-3 Business Days</div>
+                            <div class="text-xl font-bold text-blue-600" id="estimated-days"><?php echo htmlspecialchars($estimated_business_label ?: '—'); ?></div>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-xs text-gray-500">Expected Arrival</div>
-                        <div class="text-sm font-semibold text-gray-900" id="estimated-date">Feb 05-06, 2026</div>
+                        <div class="text-sm font-semibold text-gray-900" id="estimated-date"><?php echo htmlspecialchars($estimated_arrival ?: 'TBD'); ?></div>
                     </div>
                 </div>
             </div>
@@ -753,11 +753,86 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     // PHP data passed to JavaScript
     const transfers = <?php echo json_encode($pending_transfers); ?>;
     const currentUser = <?php echo json_encode($current_user); ?>;
+    // delivery-days map and rdc id->code mapping from the server
+    const rdcDeliveryDays = <?php echo json_encode($rdc_delivery_days ?? []); ?>;
+    const rdcIdToCode = <?php echo json_encode($rdc_id_to_code ?? []); ?>;
+    const estimatedDefault = <?php echo json_encode($estimated_arrival ?? ''); ?>;
+    const estimatedDaysLabel = <?php echo json_encode($estimated_business_label ?? ''); ?>;
     let currentTransferIndex = null;
     let selectedNewStatus = null;
 
     document.getElementById('request-transfer-button').textContent = currentUser.role === 'RDC_MANAGER' ? 'Submit Transfer Request' : 'Apply Transfer Request';
     
+    // Utility: add business days to a JS Date (skip Saturday=6 and Sunday=0)
+    function addBusinessDaysJS(startDate, days) {
+        const d = new Date(startDate.getTime());
+        while (days > 0) {
+            d.setDate(d.getDate() + 1);
+            const dow = d.getDay(); // 0 Sun, 6 Sat
+            if (dow !== 0 && dow !== 6) {
+                days--;
+            }
+        }
+        return d;
+    }
+
+    // Format the range string (e.g. "2-3") into human-friendly dates using business days
+    function formatEstimatedRange(rangeStr) {
+        if (!rangeStr) return '';
+        const parts = rangeStr.split('-').map(s => parseInt(s, 10));
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return '';
+        const today = new Date();
+        const start = addBusinessDaysJS(today, parts[0]);
+        const end = addBusinessDaysJS(today, parts[1]);
+
+        const opts = { month: 'short' };
+        const startMonth = start.toLocaleString(undefined, opts);
+        const endMonth = end.toLocaleString(undefined, opts);
+        const startYear = start.getFullYear();
+        const endYear = end.getFullYear();
+
+        const pad = (n) => (n < 10 ? '0' + n : n);
+
+        if (startYear === endYear && startMonth === endMonth) {
+            // e.g. Feb 05-06, 2026
+            return `${startMonth} ${pad(start.getDate())}-${pad(end.getDate())}, ${startYear}`;
+        }
+
+        // e.g. Feb 28, 2026 - Mar 02, 2026
+        return `${startMonth} ${pad(start.getDate())}, ${startYear} - ${endMonth} ${pad(end.getDate())}, ${endYear}`;
+    }
+
+    // When user changes the source RDC select, update the estimated date
+    const sourceSelect = document.querySelector('select[name="source_rdc_id"]');
+    if (sourceSelect) {
+        sourceSelect.addEventListener('change', function (e) {
+            const rid = e.target.value;
+            const el = document.getElementById('estimated-date');
+            if (!rid) {
+                el.textContent = estimatedDefault || 'TBD';
+                const daysEl = document.getElementById('estimated-days');
+                if (daysEl) daysEl.textContent = estimatedDaysLabel || '—';
+                return;
+            }
+            const srcCode = (rdcIdToCode[rid] || '').toString().toUpperCase();
+            const destCode = (currentUser.rdc_code || '').toString().toUpperCase();
+            let range = null;
+            if (srcCode && destCode && rdcDeliveryDays[srcCode] && rdcDeliveryDays[srcCode][destCode]) {
+                range = rdcDeliveryDays[srcCode][destCode];
+            }
+            // fallback to server default or show TBD
+            if (!range) {
+                el.textContent = estimatedDefault || 'TBD';
+                const daysEl = document.getElementById('estimated-days');
+                if (daysEl) daysEl.textContent = estimatedDaysLabel || '—';
+                return;
+            }
+            el.textContent = formatEstimatedRange(range);
+            const daysEl = document.getElementById('estimated-days');
+            if (daysEl) daysEl.textContent = range + ' Business Days';
+        });
+    }
+
     // Open Transfer Modal
     function openTransferModal(index) {
         currentTransferIndex = index;

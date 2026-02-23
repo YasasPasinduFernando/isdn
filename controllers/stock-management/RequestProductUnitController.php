@@ -282,6 +282,97 @@ $other_rdcs = $pdo->prepare('SELECT rdc_id, rdc_name, rdc_code FROM rdcs WHERE r
 $other_rdcs->execute([$currentRdc]);
 $other_rdcs = $other_rdcs->fetchAll(PDO::FETCH_ASSOC);
 
+// Map of delivery days between RDCs (business days ranges)
+$rdc_delivery_days = [
+    "NORTH" => [
+        "SOUTH" => "5-6",
+        "EAST" => "3-4",
+        "WEST" => "3-4",
+        "CENTRAL" => "2-3"
+    ],
+    "SOUTH" => [
+        "NORTH" => "5-6",
+        "EAST" => "4-5",
+        "WEST" => "2-3",
+        "CENTRAL" => "3-4"
+    ],
+    "EAST" => [
+        "NORTH" => "3-4",
+        "SOUTH" => "4-5",
+        "WEST" => "3-4",
+        "CENTRAL" => "2-3"
+    ],
+    "WEST" => [
+        "NORTH" => "3-4",
+        "SOUTH" => "2-3",
+        "EAST" => "3-4",
+        "CENTRAL" => "1-2"
+    ],
+    "CENTRAL" => [
+        "NORTH" => "2-3",
+        "SOUTH" => "3-4",
+        "EAST" => "2-3",
+        "WEST" => "1-2"
+    ]
+];
+
+// Helper: add business days to a DateTime (skip Sat/Sun)
+function add_business_days(DateTime $date, int $days): DateTime
+{
+    while ($days > 0) {
+        $date->modify('+1 day');
+        // ISO-8601 numeric representation of the day of the week (1 for Monday, 7 for Sunday)
+        $n = (int)$date->format('N');
+        if ($n < 6) { // Mon-Fri
+            $days--;
+        }
+    }
+    return $date;
+}
+
+// Build rdc id => code map for the front-end
+$rdc_id_to_code = [];
+foreach ($other_rdcs as $r) {
+    $rdc_id_to_code[(int)$r['rdc_id']] = strtoupper($r['rdc_code'] ?? $r['rdc_name']);
+}
+
+// Also ensure current RDC id->code is present (in case selecting self should show something)
+if ($currentRdc) {
+    $rdc_id_to_code[(int)$currentRdc] = strtoupper($current_user['rdc_code'] ?? $current_user['rdc_name']);
+}
+
+// Compute a default estimated arrival string (no source selected yet) using a sensible fallback
+$estimated_arrival = '';
+// Default business-days label (e.g. "2-3 Business Days")
+$estimated_business_label = '';
+try {
+    // If there is at least one other RDC, use the first as a sample source to compute default display
+    if (!empty($other_rdcs)) {
+        $first = $other_rdcs[0];
+        $srcCode = strtoupper($first['rdc_code'] ?? $first['rdc_name']);
+        $destCode = strtoupper($current_user['rdc_code'] ?? $current_user['rdc_name']);
+        $rangeStr = $rdc_delivery_days[$srcCode][$destCode] ?? null;
+        if ($rangeStr) {
+            // store business days label for view
+            $estimated_business_label = $rangeStr . ' Business Days';
+            [$min, $max] = array_map('intval', explode('-', $rangeStr));
+            $today = new DateTime('today');
+            $start = add_business_days(clone $today, $min);
+            $end = add_business_days(clone $today, $max);
+
+            if ($start->format('Y') === $end->format('Y') && $start->format('M') === $end->format('M')) {
+                // e.g. Feb 05-06, 2026
+                $estimated_arrival = $start->format('M d') . '-' . $end->format('d, Y');
+            } else {
+                // e.g. Feb 28 - Mar 02, 2026
+                $estimated_arrival = $start->format('M d, Y') . ' - ' . $end->format('M d, Y');
+            }
+        }
+    }
+} catch (Exception $e) {
+    $estimated_arrival = '';
+}
+
 // Low stock products at current RDC
 $allStocks = $productStock->getStocksByRdc($currentRdc);
 

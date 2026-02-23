@@ -1,122 +1,31 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 
-// Simulated logged-in user data
-$current_user = [
-    'user_id' => 5,
-    'name' => 'Kasun Silva',
-    'role' => 'rdc_manager', // Options: rdc_manager, head_office_manager
-    'rdc_id' => 2,
-    'rdc_name' => 'South RDC',
-    'rdc_code' => 'SOUTH'
-];
+// Controller should have provided $current_user, $products, $recent_movements and optionally $all_rdcs
+// If this view is loaded directly, try to fall back to session values (graceful degradation)
+if (!isset($current_user) || empty($current_user)) {
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    $current_user = [
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'name' => $_SESSION['username'] ?? ($_SESSION['name'] ?? 'User'),
+        'role' => strtolower($_SESSION['role'] ?? null),
+        'rdc_id' => $_SESSION['rdc_id'] ?? null,
+        'rdc_name' => $_SESSION['rdc_name'] ?? 'RDC',
+        'rdc_code' => $_SESSION['rdc_code'] ?? ''
+    ];
+}
 
-// Check permission - Only RDC_MANAGER and HEAD_OFFICE_MANAGER allowed
-$allowed_roles = ['rdc_manager', 'head_office_manager'];
-if (!in_array($current_user['role'], $allowed_roles)) {
+// Normalize role for view checks
+$view_role = strtolower($current_user['role']);
+// Allow only RDC_MANAGER and HEAD_OFFICE_MANAGER
+if (!in_array($view_role, ['rdc_manager', 'head_office_manager'])) {
     die('Access Denied: You do not have permission to manage stock movements.');
 }
 
-// All RDCs (for head office manager)
-$all_rdcs = [
-    ['rdc_id' => 1, 'rdc_name' => 'North RDC', 'rdc_code' => 'NORTH'],
-    ['rdc_id' => 2, 'rdc_name' => 'South RDC', 'rdc_code' => 'SOUTH'],
-    ['rdc_id' => 3, 'rdc_name' => 'East RDC', 'rdc_code' => 'EAST'],
-    ['rdc_id' => 4, 'rdc_name' => 'West RDC', 'rdc_code' => 'WEST'],
-    ['rdc_id' => 5, 'rdc_name' => 'Central RDC', 'rdc_code' => 'CENTRAL']
-];
-
-// Dummy Products with current stock
-$products = [
-    ['product_id' => 1, 'product_code' => 'BEV001', 'product_name' => 'Coca Cola 1L', 'category' => 'Beverages', 'current_stock' => 20, 'unit' => 'Bottles'],
-    ['product_id' => 2, 'product_code' => 'BEV002', 'product_name' => 'Sprite 1L', 'category' => 'Beverages', 'current_stock' => 15, 'unit' => 'Bottles'],
-    ['product_id' => 3, 'product_code' => 'FOOD001', 'product_name' => 'Rice 5kg', 'category' => 'Packaged Foods', 'current_stock' => 5, 'unit' => 'Bags'],
-    ['product_id' => 4, 'product_code' => 'FOOD002', 'product_name' => 'Bread Loaf', 'category' => 'Packaged Foods', 'current_stock' => 30, 'unit' => 'Pieces'],
-    ['product_id' => 5, 'product_code' => 'CLEAN001', 'product_name' => 'Detergent 500g', 'category' => 'Home Cleaning', 'current_stock' => 150, 'unit' => 'Packets'],
-    ['product_id' => 6, 'product_code' => 'CARE001', 'product_name' => 'Toothpaste 100ml', 'category' => 'Personal Care', 'current_stock' => 80, 'unit' => 'Tubes']
-];
-
-// Dummy Recent Stock Movements (for history display)
-$recent_movements = [
-    [
-        'movement_id' => 1,
-        'date' => '2026-02-10 10:30:00',
-        'product_code' => 'BEV001',
-        'product_name' => 'Coca Cola 1L',
-        'movement_type' => 'STOCK_IN',
-        'quantity' => 100,
-        'previous_stock' => 20,
-        'new_stock' => 120,
-        'created_by_name' => 'Kasun Silva',
-        'created_by_role' => 'RDC_MANAGER',
-        'note' => 'New delivery'
-    ],
-    [
-        'movement_id' => 2,
-        'date' => '2026-02-09 14:15:00',
-        'product_code' => 'FOOD001',
-        'product_name' => 'Rice 5kg',
-        'movement_type' => 'DAMAGED',
-        'quantity' => -10,
-        'previous_stock' => 15,
-        'new_stock' => 5,
-        'created_by_name' => 'Kasun Silva',
-        'created_by_role' => 'RDC_MANAGER',
-        'note' => 'Water damage during storage'
-    ],
-    [
-        'movement_id' => 3,
-        'date' => '2026-02-09 09:00:00',
-        'product_code' => 'BEV002',
-        'product_name' => 'Sprite 1L',
-        'movement_type' => 'EXPIRED',
-        'quantity' => -5,
-        'previous_stock' => 20,
-        'new_stock' => 15,
-        'created_by_name' => 'Kasun Silva',
-        'created_by_role' => 'RDC_MANAGER',
-        'note' => 'Expired batch removed'
-    ],
-    [
-        'movement_id' => 4,
-        'date' => '2026-02-08 16:45:00',
-        'product_code' => 'CARE001',
-        'product_name' => 'Toothpaste 100ml',
-        'movement_type' => 'RETURNED',
-        'quantity' => 5,
-        'previous_stock' => 75,
-        'new_stock' => 80,
-        'created_by_name' => 'Priya Fernando',
-        'created_by_role' => 'RDC_CLERK',
-        'note' => 'Customer return - unused items'
-    ],
-    [
-        'movement_id' => 5,
-        'date' => '2026-02-08 11:20:00',
-        'product_code' => 'CLEAN001',
-        'product_name' => 'Detergent 500g',
-        'movement_type' => 'ADJUSTMENT',
-        'quantity' => -10,
-        'previous_stock' => 160,
-        'new_stock' => 150,
-        'created_by_name' => 'Kasun Silva',
-        'created_by_role' => 'RDC_MANAGER',
-        'note' => 'Inventory count correction'
-    ],
-    [
-        'movement_id' => 6,
-        'date' => '2026-02-07 13:30:00',
-        'product_code' => 'FOOD002',
-        'product_name' => 'Bread Loaf',
-        'movement_type' => 'STOCK_OUT',
-        'quantity' => -50,
-        'previous_stock' => 80,
-        'new_stock' => 30,
-        'created_by_name' => 'System',
-        'created_by_role' => 'SYSTEM',
-        'note' => 'Order #ORD-2026-001 fulfilled'
-    ]
-];
+// Ensure variables exist
+$all_rdcs = $all_rdcs ?? [];
+$products = $products ?? [];
+$recent_movements = $recent_movements ?? [];
 
 // Movement type configurations
 $movement_types = [
@@ -566,8 +475,8 @@ $movement_types = [
                                     <?php echo $is_positive ? '+' : ''; ?><?php echo $movement['quantity']; ?>
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500"><?php echo $movement['previous_stock']; ?></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900"><?php echo $movement['new_stock']; ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500"><?php echo $movement['previous_quantity']; ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900"><?php echo $movement['new_quantity']; ?></td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900"><?php echo $movement['created_by_name']; ?></div>
                                 <div class="text-xs text-gray-500"><?php echo $movement['created_by_role']; ?></div>
@@ -771,24 +680,44 @@ document.getElementById('movement-form')?.addEventListener('submit', function(e)
         return;
     }
     
-    // In real app, this would be an AJAX call
-    console.log('Recording stock movement:', {
-        ...data,
-        rdc_id: <?php echo $current_user['rdc_id']; ?>,
-        created_by: <?php echo $current_user['user_id']; ?>,
-        created_by_name: '<?php echo $current_user['name']; ?>',
-        created_by_role: '<?php echo $current_user['role']; ?>',
-        previous_quantity: currentStock,
-        new_quantity: newStock
+    // Build payload and send to controller via AJAX
+    const payload = {
+        movement_type: selectedType,
+        product_id: parseInt(data.product_id || 0),
+        quantity: parseInt(data.quantity || 0),
+        note: data.note || '',
+        // rdc selection only present for head office manager; otherwise server will use current user's rdc
+        rdc_id: (document.getElementById('rdc-selector') ? parseInt(document.getElementById('rdc-selector').value) : <?php echo (int)($current_user['rdc_id'] ?? 0); ?>)
+    };
+
+    fetch('/controllers/stock-management/StockMovementController.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            // show success and update UI values
+            document.getElementById('success-modal').classList.remove('hidden');
+            // update currentStock and UI preview
+            const pid = payload.product_id;
+            if (!isNaN(pid) && document.getElementById('product-select')) {
+                // update the current stock displays to the returned new value
+                document.getElementById('current-stock-value').textContent = resp.new;
+                document.getElementById('summary-current').textContent = resp.new + ' ' + document.getElementById('current-stock-unit').textContent;
+                document.getElementById('summary-new').textContent = resp.new + ' ' + document.getElementById('current-stock-unit').textContent;
+            }
+
+            setTimeout(() => { resetForm(); location.reload(); }, 900);
+        } else {
+            alert('Failed: ' + (resp.message || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        console.error('Movement save error', err);
+        alert('Failed to record movement: ' + err.message);
     });
-    
-    // Show success modal
-    document.getElementById('success-modal').classList.remove('hidden');
-    
-    // Reset form
-    setTimeout(() => {
-        resetForm();
-    }, 2000);
 });
 
 // Reset form

@@ -9,6 +9,7 @@ class PdfWriter
     private $objects = [];
     private $pages = [];
     private $currentPage = null;
+    // cursor measured from top of page (in points)
     private $y = 0;
     private $x = 0;
     private $margin = 40;
@@ -16,10 +17,14 @@ class PdfWriter
     private $pageHeight = 841.89;
     private $fontSize = 10;
     private $titleSize = 14;
+    // header/footer text (simple left/center/right strings)
+    private $header = ['left' => '', 'center' => '', 'right' => ''];
+    private $footer = ['left' => '', 'center' => '', 'right' => ''];
 
     public function __construct()
     {
-        $this->y = $this->pageHeight - $this->margin;
+        // Start cursor at top margin
+        $this->y = $this->margin;
         $this->x = $this->margin;
     }
 
@@ -39,8 +44,29 @@ class PdfWriter
         $content = "q\nBT\n/F1 " . $this->fontSize . " Tf\n";
         $this->currentPage = $this->addObject($content);
         $this->pages[] = $this->currentPage;
-        $this->y = $this->pageHeight - $this->margin;
+        $this->y = $this->margin;
         $this->x = $this->margin;
+        // Render header immediately on new page if present
+        if (!empty($this->header['center']) || !empty($this->header['left']) || !empty($this->header['right'])) {
+            // Save current y and x
+            $prevY = $this->y;
+            $prevX = $this->x;
+            // Use title size for header center and smaller for left/right
+            if (!empty($this->header['center'])) {
+                $this->writeLine($this->header['center'], $this->titleSize);
+            }
+            if (!empty($this->header['left'])) {
+                $this->writeText($this->header['left'], $this->fontSize);
+            }
+            if (!empty($this->header['right'])) {
+                // right aligned header: attempt by moving x near right margin
+                $this->x = $this->pageWidth - $this->margin - 150;
+                $this->writeText($this->header['right'], $this->fontSize);
+            }
+            // restore x and y for body content (push a bit below header)
+            $this->x = $prevX;
+            $this->y = $prevY + ($this->titleSize * 1.5) + 6;
+        }
     }
 
     public function setFontSize($size)
@@ -60,9 +86,12 @@ class PdfWriter
         $idx = $this->currentPage ?: $this->addObject('');
         $obj = &$this->objects[$idx - 1];
         $obj .= "/F1 " . $size . " Tf\n";
-        $obj .= $this->x . " " . ($this->pageHeight - $this->y) . " Td\n";
+        // PDF coordinate = pageHeight - y (y measured from top)
+        $pdfY = $this->pageHeight - $this->y;
+        $obj .= $this->x . " " . $pdfY . " Td\n";
         $obj .= "(" . $text . ") Tj\nET\n";
-        $this->y += $size * 1.5;
+        // advance cursor down by approximate line height
+        $this->y += $size * 1.6;
     }
 
     public function writeLine($text, $size = null)
@@ -85,11 +114,16 @@ class PdfWriter
         $obj .= "q\n";
         if ($border) {
             $obj .= "0.7 w\n";
-            $obj .= sprintf("%.2f %.2f %.2f %.2f re S\n", $this->x, $this->pageHeight - $this->y, $w, $h);
+            // rectangle top-left should be at pdfY = pageHeight - y, but PDF rect expects lower-left, so compute lower-left y
+            $pdfY = $this->pageHeight - $this->y;
+            $lowerLeftY = $pdfY - $h;
+            $obj .= sprintf("%.2f %.2f %.2f %.2f re S\n", $this->x, $lowerLeftY, $w, $h);
         }
         $obj .= "BT\n/F1 " . $this->fontSize . " Tf\n";
-        $obj .= sprintf("%.2f %.2f Td\n", $this->x + 2, $this->pageHeight - $this->y - $h + 2);
-        $obj .= "(" . substr($text, 0, 50) . ") Tj\nET\nq\n";
+        // position text about 2pt right and vertically centered within cell
+        $pdfTextY = $this->pageHeight - $this->y - ($h / 2) + ($this->fontSize / 2);
+        $obj .= sprintf("%.2f %.2f Td\n", $this->x + 2, $pdfTextY);
+        $obj .= "(" . substr($text, 0, 200) . ") Tj\nET\nq\n";
         $this->x += $w;
     }
 
@@ -101,7 +135,8 @@ class PdfWriter
 
     public function checkPageBreak($need = 50)
     {
-        if ($this->y + $need > $this->pageHeight - $this->margin) {
+        // If cursor plus needed space goes beyond printable area, add a new page
+        if ($this->y + $need > ($this->pageHeight - $this->margin)) {
             $this->finalizePage();
             $this->addPage();
         }
@@ -111,7 +146,45 @@ class PdfWriter
     {
         if (!$this->currentPage) return;
         $idx = $this->currentPage - 1;
+        // Render footer if provided
+        if (!empty($this->footer['left']) || !empty($this->footer['center']) || !empty($this->footer['right'])) {
+            // Temporarily set positions to bottom margin
+            $prevY = $this->y;
+            $prevX = $this->x;
+            // place footer about margin from bottom
+            $this->y = $this->pageHeight - $this->margin - 20;
+            $this->x = $this->margin;
+            if (!empty($this->footer['left'])) $this->writeText($this->footer['left'], $this->fontSize);
+            if (!empty($this->footer['center'])) {
+                // center footer roughly
+                $this->x = ($this->pageWidth / 2) - 100;
+                $this->writeText($this->footer['center'], $this->fontSize);
+            }
+            if (!empty($this->footer['right'])) {
+                $this->x = $this->pageWidth - $this->margin - 150;
+                $this->writeText($this->footer['right'], $this->fontSize);
+            }
+            // restore
+            $this->x = $prevX;
+            $this->y = $prevY;
+        }
         $this->objects[$idx] .= "Q\n";
+    }
+
+    /**
+     * Set header text. Each arg can be empty string.
+     */
+    public function setHeader($left = '', $center = '', $right = '')
+    {
+        $this->header = ['left' => $left, 'center' => $center, 'right' => $right];
+    }
+
+    /**
+     * Set footer text. Each arg can be empty string.
+     */
+    public function setFooter($left = '', $center = '', $right = '')
+    {
+        $this->footer = ['left' => $left, 'center' => $center, 'right' => $right];
     }
 
     public function output($filename = 'report.pdf')

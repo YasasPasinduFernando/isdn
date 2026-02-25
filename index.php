@@ -180,6 +180,7 @@ switch ($page) {
         break;
     case 'rdc-sales-ref-checkout':
         require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';
+         break;
     case 'stock-movement-management':
         require __DIR__ . '/views/stock-management/stock_movement_management.php';
         break;

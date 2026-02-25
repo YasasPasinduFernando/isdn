@@ -29,21 +29,29 @@ require_once __DIR__ . '/../../includes/header.php';
                 </p>
 
                 <!-- Invoice Details -->
-                <div class="bg-white/60 rounded-2xl p-6 border border-white/50 mb-8 text-left space-y-3">
-                    <div class="flex justify-between">
+                <div class="bg-white/60 rounded-2xl p-6 border border-white/50 mb-8 text-left space-y-4">
+
+                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Invoice No</span>
-                        <span class="font-semibold text-gray-800">INV-ORD-RDCS-260213-1025</span>
+                        <span class="font-semibold text-gray-800 break-all sm:text-right">
+                            INV-ORD-RDCS-260213-1025
+                        </span>
                     </div>
 
-                    <div class="flex justify-between">
+                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Payment Amount</span>
-                        <span class="font-semibold text-gray-800">Rs. 18,751.46</span>
+                        <span class="font-semibold text-gray-800 sm:text-right">
+                            Rs. 18,751.46
+                        </span>
                     </div>
 
-                    <div class="flex justify-between">
+                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Payment Date</span>
-                        <span class="font-semibold text-gray-800">15 Feb 2026</span>
+                        <span class="font-semibold text-gray-800 sm:text-right">
+                            15 Feb 2026
+                        </span>
                     </div>
+
                 </div>
 
                 <!-- Action Buttons -->

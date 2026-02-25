@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+
+// Prevent stale HTML/flash UI after redirects on hosted environments.
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,7 +26,11 @@ require_once __DIR__ . '/../includes/functions.php';
     <meta name="theme-color" content="#0d9488">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.svg">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ISDN">
+    <link rel="icon" type="image/png" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
+    <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="<?php echo BASE_PATH; ?>/assets/images/icons/icon-192.png">
     <style>
         /* Gradient animations */
         @keyframes gradient {

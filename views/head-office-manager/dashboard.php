@@ -17,7 +17,10 @@ if (!empty($_GET['rdc_id']) && is_numeric($_GET['rdc_id'])) {
     $filters['rdc_id'] = (int) $_GET['rdc_id'];
 }
 if (!empty($_GET['category'])) {
-    $filters['category'] = trim($_GET['category']);
+    $cat = trim($_GET['category']);
+    if ($cat !== '' && strcasecmp($cat, 'All Categories') !== 0) {
+        $filters['category'] = $cat;
+    }
 }
 
 // Handle POST: stock transfer approve/reject

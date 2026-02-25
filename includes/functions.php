@@ -38,10 +38,10 @@ function get_profile_page_for_role($role) {
 function get_allowed_pages_for_role($role) {
     $map = [
         'customer' => [
-            'dashboard', 'products', 'cart', 'orders', 'tracking', 'payment', 'profile'
+            'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'rdc-manager-dashboard', 'request-product-units', 'send-product-units', 'stock-reports', 'profile'
+            'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
             'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
@@ -59,8 +59,7 @@ function get_allowed_pages_for_role($role) {
             'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
-            'system-admin-dashboard', 'system-admin-users', 'system-admin-products',
-            'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
             'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];
@@ -81,7 +80,7 @@ function get_nav_page_labels() {
     return [
         'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'products' => ['icon' => 'shopping_bag', 'label' => 'Products'],
-        'orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
+        'customer-sales-orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
         'cart' => ['icon' => 'shopping_cart', 'label' => 'Cart'],
         'tracking' => ['icon' => 'location_on', 'label' => 'Tracking'],
         'payment' => ['icon' => 'payment', 'label' => 'Payment'],
@@ -102,6 +101,7 @@ function get_nav_page_labels() {
         'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Manage Products'],
         'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
         'system-admin-audit' => ['icon' => 'history', 'label' => 'Audit Log'],
+        'stock-movement-management' => ['icon' => 'swap_horiz', 'label' => 'Stock Movement']
     ];
 }
 
@@ -138,8 +138,25 @@ function get_nav_items_for_role($role) {
 }
 
 function redirect($url) {
-    header("Location: " . BASE_PATH . $url);
+    $target = BASE_PATH . $url;
+    if (!headers_sent()) {
+        header("Location: " . $target);
+    } else {
+        $safe = htmlspecialchars($target, ENT_QUOTES, 'UTF-8');
+        echo "<script>window.location.href='{$safe}';</script>";
+        echo "<noscript><meta http-equiv='refresh' content='0;url={$safe}'></noscript>";
+    }
     exit();
+}
+
+/**
+ * Build an absolute in-app URL path safely.
+ * Example: BASE_PATH='/isdn' and input '/assets/a.png' => '/isdn/assets/a.png'
+ */
+function app_url_path(string $path): string {
+    $base = rtrim((string) BASE_PATH, '/');
+    $cleanPath = '/' . ltrim($path, '/');
+    return $base . $cleanPath;
 }
 
 /**
@@ -169,8 +186,28 @@ function get_flash_message() {
 function display_flash() {
     $flash = get_flash_message();
     if ($flash) {
-        $bgColor = $flash['type'] === 'success' ? 'bg-green-500' : 'bg-red-500';
-        echo "<div class='$bgColor text-white px-6 py-4 rounded-lg mb-4'>{$flash['message']}</div>";
+        $isSuccess = $flash['type'] === 'success';
+        $bgColor = $isSuccess ? 'bg-emerald-600' : 'bg-red-600';
+        $icon = $isSuccess ? 'check_circle' : 'error';
+        $message = htmlspecialchars($flash['message'], ENT_QUOTES, 'UTF-8');
+
+        echo "
+        <div id='flash-toast' class='fixed top-20 right-4 z-[9999] {$bgColor} text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 max-w-md'>
+            <span class='material-symbols-rounded text-[20px]'>{$icon}</span>
+            <span class='text-sm font-semibold'>{$message}</span>
+        </div>
+        <script>
+        (function () {
+            var toast = document.getElementById('flash-toast');
+            if (!toast) return;
+            setTimeout(function () {
+                toast.style.transition = 'opacity .35s ease, transform .35s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(function () { toast.remove(); }, 380);
+            }, 3200);
+        })();
+        </script>";
     }
 }
 ?>

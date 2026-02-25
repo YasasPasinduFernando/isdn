@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/SystemAdmin.php';
 
@@ -64,6 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── FORM VIEW (add / edit) ───────────────────────────────────
+require_once __DIR__ . '/../../includes/header.php';
+
 if ($action === 'add' || $action === 'edit') {
     $editUser = null;
     if ($action === 'edit' && !empty($_GET['id'])) {

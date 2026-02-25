@@ -17,23 +17,76 @@ class Dashboard
         $this->pdo = $pdo;
     }
 
+    private function tableHasColumn(string $table, string $column): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = :table AND column_name = :column"
+        );
+        $stmt->execute(['table' => $table, 'column' => $column]);
+        return ((int) $stmt->fetchColumn()) > 0;
+    }
+
+    private function getCategoryTableName(): ?string
+    {
+        foreach (['product_categories', 'categories'] as $table) {
+            if ($this->tableHasColumn($table, 'category_id') && $this->tableHasColumn($table, 'name')) {
+                return $table;
+            }
+        }
+        return null;
+    }
+
+    private function getCategoryContext(string $productAlias, string $categoryAlias): array
+    {
+        $hasCategoryId = $this->tableHasColumn('products', 'category_id');
+        $hasCategory = $this->tableHasColumn('products', 'category');
+        $categoryTable = $hasCategoryId ? $this->getCategoryTableName() : null;
+
+        if ($hasCategoryId && $categoryTable !== null) {
+            return [
+                'has_category' => true,
+                'expr' => "{$categoryAlias}.name",
+                'join' => " LEFT JOIN {$categoryTable} {$categoryAlias} ON {$productAlias}.category_id = {$categoryAlias}.category_id ",
+            ];
+        }
+
+        if ($hasCategory) {
+            return [
+                'has_category' => true,
+                'expr' => "{$productAlias}.category",
+                'join' => '',
+            ];
+        }
+
+        return [
+            'has_category' => false,
+            'expr' => "''",
+            'join' => '',
+        ];
+    }
+
     /* ── helper: build dynamic WHERE for orders (alias o) ── */
     private function buildConditions(array $filters = []): array
     {
         $conditions = [];
         $params     = [];
+        $catCtx     = $this->getCategoryContext('p_x', 'ct_x');
 
         if (!empty($filters['rdc_id'])) {
             $conditions[]       = 'o.rdc_id = :f_rdc_id';
             $params['f_rdc_id'] = (int) $filters['rdc_id'];
         }
         if (!empty($filters['category'])) {
-            $conditions[] = "EXISTS (
-                SELECT 1 FROM order_items oi_x
-                JOIN products p_x ON oi_x.product_id = p_x.product_id
-                WHERE oi_x.order_id = o.id AND p_x.category = :f_cat
-            )";
-            $params['f_cat'] = $filters['category'];
+            if ($catCtx['has_category']) {
+                $conditions[] = "EXISTS (
+                    SELECT 1 FROM order_items oi_x
+                    JOIN products p_x ON oi_x.product_id = p_x.product_id
+                    {$catCtx['join']}
+                    WHERE oi_x.order_id = o.id AND {$catCtx['expr']} = :f_cat
+                )";
+                $params['f_cat'] = $filters['category'];
+            }
         }
         if (!empty($filters['start_date'])) {
             $conditions[]      = 'o.created_at >= :f_start';
@@ -148,6 +201,7 @@ class Dashboard
     {
         $conditions = ["o.status != 'cancelled'"];
         $params     = [];
+        $catCtx     = $this->getCategoryContext('p_x', 'ct_x');
 
         if (!empty($filters['start_date'])) {
             $conditions[]      = 'o.created_at >= :f_start';
@@ -162,12 +216,15 @@ class Dashboard
             $params['f_rdc_id'] = (int) $filters['rdc_id'];
         }
         if (!empty($filters['category'])) {
-            $conditions[] = "EXISTS (
-                SELECT 1 FROM order_items oi_x
-                JOIN products p_x ON oi_x.product_id = p_x.product_id
-                WHERE oi_x.order_id = o.id AND p_x.category = :f_cat
-            )";
-            $params['f_cat'] = $filters['category'];
+            if ($catCtx['has_category']) {
+                $conditions[] = "EXISTS (
+                    SELECT 1 FROM order_items oi_x
+                    JOIN products p_x ON oi_x.product_id = p_x.product_id
+                    {$catCtx['join']}
+                    WHERE oi_x.order_id = o.id AND {$catCtx['expr']} = :f_cat
+                )";
+                $params['f_cat'] = $filters['category'];
+            }
         }
 
         $where = implode(' AND ', $conditions);
@@ -190,14 +247,17 @@ class Dashboard
     {
         $conditions = ["o.status != 'cancelled'"];
         $params     = [];
+        $catCtx     = $this->getCategoryContext('p', 'ct');
 
         if (!empty($filters['rdc_id'])) {
             $conditions[]       = 'o.rdc_id = :f_rdc_id';
             $params['f_rdc_id'] = (int) $filters['rdc_id'];
         }
         if (!empty($filters['category'])) {
-            $conditions[]    = 'p.category = :f_cat';
-            $params['f_cat'] = $filters['category'];
+            if ($catCtx['has_category']) {
+                $conditions[]    = "{$catCtx['expr']} = :f_cat";
+                $params['f_cat'] = $filters['category'];
+            }
         }
         if (!empty($filters['start_date'])) {
             $conditions[]      = 'o.created_at >= :f_start';
@@ -216,6 +276,7 @@ class Dashboard
                 FROM orders o
                 JOIN order_items oi ON o.id = oi.order_id
                 JOIN products p    ON oi.product_id = p.product_id
+                {$catCtx['join']}
                 WHERE {$where}
                 GROUP BY p.product_id, p.product_name, p.product_code
                 ORDER BY total_sales DESC
@@ -267,18 +328,22 @@ class Dashboard
     {
         $conditions = ['1=1'];
         $params     = [];
+        $catCtx     = $this->getCategoryContext('p_x', 'ct_x');
 
         if (!empty($filters['rdc_id'])) {
             $conditions[]       = 'o.rdc_id = :f_rdc_id';
             $params['f_rdc_id'] = (int) $filters['rdc_id'];
         }
         if (!empty($filters['category'])) {
-            $conditions[] = "EXISTS (
-                SELECT 1 FROM order_items oi_x
-                JOIN products p_x ON oi_x.product_id = p_x.product_id
-                WHERE oi_x.order_id = o.id AND p_x.category = :f_cat
-            )";
-            $params['f_cat'] = $filters['category'];
+            if ($catCtx['has_category']) {
+                $conditions[] = "EXISTS (
+                    SELECT 1 FROM order_items oi_x
+                    JOIN products p_x ON oi_x.product_id = p_x.product_id
+                    {$catCtx['join']}
+                    WHERE oi_x.order_id = o.id AND {$catCtx['expr']} = :f_cat
+                )";
+                $params['f_cat'] = $filters['category'];
+            }
         }
         if (!empty($filters['start_date'])) {
             $conditions[]      = 'o.created_at >= :f_start';
@@ -329,8 +394,27 @@ class Dashboard
 
     public function getAllCategories(): array
     {
+        $catCtx = $this->getCategoryContext('p', 'ct');
+
+        if (!$catCtx['has_category']) {
+            return [];
+        }
+
+        if ($catCtx['join'] !== '') {
+            return $this->pdo->query(
+                "SELECT DISTINCT ct.name AS category
+                 FROM products p
+                 {$catCtx['join']}
+                 WHERE ct.name IS NOT NULL AND ct.name != ''
+                 ORDER BY ct.name"
+            )->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         return $this->pdo->query(
-            "SELECT DISTINCT category FROM products WHERE category IS NOT NULL ORDER BY category"
+            "SELECT DISTINCT p.category AS category
+             FROM products p
+             WHERE p.category IS NOT NULL AND p.category != ''
+             ORDER BY p.category"
         )->fetchAll(PDO::FETCH_ASSOC);
     }
 

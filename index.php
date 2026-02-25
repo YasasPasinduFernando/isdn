@@ -12,7 +12,7 @@ $protected_pages = [
     'profile',
     'products',
     'cart',
-    'orders',
+    'customer-sales-orders',
     'tracking',
     'payment',
     'rdc-manager-dashboard',
@@ -32,7 +32,8 @@ $protected_pages = [
     'sales-report',
     'request-product-units',
     'send-product-units',
-    'stock-reports'
+    'stock-reports',
+    'stock-movement-management'
 ];
 if (in_array($page, $protected_pages) && !is_logged_in()) {
     redirect('/index.php?page=login');
@@ -87,12 +88,10 @@ switch ($page) {
         require __DIR__ . '/views/shared/profile_edit.php';
         break;
     case 'rdc-manager-dashboard':
-        require __DIR__ . '/views/rdc-manager/dashboard.php';
+        require_once __DIR__ . '/controllers/rdc-manager/DashboardController.php';
         break;
     case 'rdc-clerk-dashboard':
-        break;
-    case 'clerk':
-        require __DIR__ . '/views/rdc/clerk_dashboard.php';
+        require __DIR__ . '/views/rdc-clerk/dashboard.php';
         break;
     case 'rdc-clerk-promotions':
         require __DIR__ . '/views/rdc-clerk/promotions.php';
@@ -146,10 +145,10 @@ switch ($page) {
         require __DIR__ . '/views/reports/sales_report.php';
         break;
     case 'request-product-units':
-        require __DIR__ . '/views/stock-management/request_product_units.php';
+        require_once __DIR__ . '/controllers/stock-management/RequestProductUnitController.php';
         break;
     case 'send-product-units':
-        require __DIR__ . '/views/stock-management/send_product_units.php';
+        require_once __DIR__ . '/controllers/stock-management/SendProductUnitController.php';
         break;
     case 'stock-reports':
         require __DIR__ . '/views/stock-management/stock_reports.php';

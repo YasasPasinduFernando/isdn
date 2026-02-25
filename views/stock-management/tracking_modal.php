@@ -188,97 +188,15 @@
 
 <!-- Tracking Modal JavaScript -->
 <script>
-// Dummy status history data for different transfer statuses
-const statusHistoryData = {
-    'CLERK_REQUESTED': [
-        {
-            log_id: 1,
-            previous_status: null,
-            new_status: 'CLERK_REQUESTED',
-            changed_by_name: 'Kasun Silva',
-            change_by_role: 'RDC_CLERK',
-            changed_date: '2026-02-02 10:30:00'
-        }
-    ],
-    'PENDING': [
-        {
-            log_id: 1,
-            previous_status: null,
-            new_status: 'CLERK_REQUESTED',
-            changed_by_name: 'Kasun Silva',
-            change_by_role: 'RDC_CLERK',
-            changed_date: '2026-02-01 14:15:00'
-        },
-        {
-            log_id: 2,
-            previous_status: 'CLERK_REQUESTED',
-            new_status: 'PENDING',
-            changed_by_name: 'Priya Fernando',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-02-01 15:30:00'
-        }
-    ],
-    'APPROVED': [
-        {
-            log_id: 1,
-            previous_status: null,
-            new_status: 'CLERK_REQUESTED',
-            changed_by_name: 'Saman Kumar',
-            change_by_role: 'RDC_CLERK',
-            changed_date: '2026-02-03 09:00:00'
-        },
-        {
-            log_id: 2,
-            previous_status: 'CLERK_REQUESTED',
-            new_status: 'PENDING',
-            changed_by_name: 'Nuwan Perera',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-02-03 10:15:00'
-        },
-        {
-            log_id: 3,
-            previous_status: 'PENDING',
-            new_status: 'APPROVED',
-            changed_by_name: 'Anil Jayawardena',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-02-03 11:45:00'
-        }
-    ],
-    'RECEIVED': [
-        {
-            log_id: 1,
-            previous_status: null,
-            new_status: 'CLERK_REQUESTED',
-            changed_by_name: 'Chaminda Silva',
-            change_by_role: 'RDC_CLERK',
-            changed_date: '2026-01-31 09:00:00'
-        },
-        {
-            log_id: 2,
-            previous_status: 'CLERK_REQUESTED',
-            new_status: 'PENDING',
-            changed_by_name: 'Kasun Perera',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-01-31 10:30:00'
-        },
-        {
-            log_id: 3,
-            previous_status: 'PENDING',
-            new_status: 'APPROVED',
-            changed_by_name: 'Nimal Fernando',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-01-31 14:20:00'
-        },
-        {
-            log_id: 4,
-            previous_status: 'APPROVED',
-            new_status: 'RECEIVED',
-            changed_by_name: 'Sunil Bandara',
-            change_by_role: 'RDC_MANAGER',
-            changed_date: '2026-02-01 11:00:00'
-        }
-    ]
-};
+// Real data will be fetched from the server. The large dummy `statusHistoryData` was removed.
+
+// Helper: fetch transfer tracking from server
+function fetchTransferTracking(transfer) {
+    const params = transfer.transfer_id ? `transfer_id=${transfer.transfer_id}` : `transfer_number=${encodeURIComponent(transfer.transfer_number)}`;
+    // Adjust the base path if your app is hosted under a different root
+    const url = '/controllers/stock-management/TrackingTransferProductsController.php?action=get_tracking&' + params;
+    return fetch(url, { credentials: 'same-origin' }).then(res => res.json());
+}
 
 // Status configuration
 const statusConfig = {
@@ -323,40 +241,58 @@ const statusConfig = {
 // Open tracking modal
 function openTrackingModal(transfer) {
     const modal = document.getElementById('tracking-modal');
-    
-    // Fill transfer info
-    document.getElementById('tracking-transfer-number').textContent = transfer.transfer_number;
-    document.getElementById('tracking-source-rdc').textContent = transfer.source_rdc;
-    document.getElementById('tracking-destination-rdc').textContent = transfer.destination_rdc;
-    document.getElementById('tracking-total-items').textContent = transfer.product_count + ' products (' + transfer.total_items + ' units)';
-    document.getElementById('tracking-current-status').textContent = transfer.status.replace(/_/g, ' ');
-    
-    // Calculate progress percentage
-    const statusOrder = ['CLERK_REQUESTED', 'PENDING', 'APPROVED', 'RECEIVED'];
-    const currentIndex = statusOrder.indexOf(transfer.status);
-    const progressPercent = currentIndex >= 0 ? ((currentIndex + 1) / statusOrder.length) * 100 : 0;
-    
-    document.getElementById('progress-percentage').textContent = Math.round(progressPercent) + '%';
-    document.getElementById('progress-bar').style.width = progressPercent + '%';
-    
-    // Get status history (use dummy data based on current status)
-    const statusHistory = statusHistoryData[transfer.status] || statusHistoryData['CLERK_REQUESTED'];
-    
-    // Build timeline
-    buildTimeline(transfer.status, statusHistory);
-    
-    // Build status history table
-    buildStatusHistoryTable(statusHistory);
-    
-    // Update last updated time
-    if (statusHistory.length > 0) {
-        const lastLog = statusHistory[statusHistory.length - 1];
-        document.getElementById('last-updated-time').textContent = formatDateTime(lastLog.changed_date);
-    }
-    
-    // Show modal
+
+    // Show modal immediately with basic info while we load full details
+    document.getElementById('tracking-transfer-number').textContent = transfer.transfer_number || '...';
+    document.getElementById('tracking-source-rdc').textContent = transfer.source_rdc || '...';
+    document.getElementById('tracking-destination-rdc').textContent = transfer.destination_rdc || '...';
+    document.getElementById('tracking-total-items').textContent = (transfer.product_count ? (transfer.product_count + ' products (' + transfer.total_items + ' units)') : 'Loading...');
+    document.getElementById('tracking-current-status').textContent = (transfer.status || '').replace(/_/g, ' ');
+
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Fetch authoritative data from server
+    fetchTransferTracking(transfer).then(resp => {
+        if (!resp || resp.success === false) {
+            console.error('Tracking load error', resp && resp.message);
+            document.getElementById('tracking-current-status').textContent = 'Error loading';
+            return;
+        }
+
+        const t = resp.transfer;
+        const statusHistory = resp.status_history || [];        
+
+        // Fill transfer info from server
+        document.getElementById('tracking-transfer-number').textContent = t.transfer_number;
+        document.getElementById('tracking-source-rdc').textContent = t.source_rdc;
+        document.getElementById('tracking-destination-rdc').textContent = t.destination_rdc;
+        document.getElementById('tracking-total-items').textContent = t.product_count + ' products (' + t.total_items + ' units)';
+        document.getElementById('tracking-current-status').textContent = t.status.replace(/_/g, ' ');
+
+        // Calculate and set progress
+        const statusOrder = ['CLERK_REQUESTED', 'PENDING', 'APPROVED', 'RECEIVED'];
+        const currentIndex = statusOrder.indexOf(t.status);
+        const progressPercent = currentIndex >= 0 ? ((currentIndex + 1) / statusOrder.length) * 100 : 0;
+        document.getElementById('progress-percentage').textContent = Math.round(progressPercent) + '%';
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        // Build timeline & history
+        buildTimeline(t.status, statusHistory);
+        buildStatusHistoryTable(statusHistory);
+
+        // Update last updated time
+        if (statusHistory.length > 0) {
+            const lastLog = statusHistory[statusHistory.length - 1];
+            document.getElementById('last-updated-time').textContent = formatDateTime(lastLog.changed_date);
+        } else {
+            document.getElementById('last-updated-time').textContent = 'Just now';
+        }
+
+    }).catch(err => {
+        console.error('Failed to fetch tracking data', err);
+        document.getElementById('tracking-current-status').textContent = 'Failed to load';
+    });
 }
 
 // Close tracking modal
@@ -370,33 +306,47 @@ function closeTrackingModal() {
 function buildTimeline(currentStatus, statusHistory) {
     const container = document.getElementById('timeline-container');
     container.innerHTML = '';
-    
-    const allStatuses = ['CLERK_REQUESTED', 'PENDING', 'APPROVED', 'RECEIVED'];
-    const currentIndex = allStatuses.indexOf(currentStatus);
-    
-    allStatuses.forEach((status, index) => {
-        const config = statusConfig[status];
-        const isCompleted = index <= currentIndex;
+
+    const baseStatuses = ['CLERK_REQUESTED', 'PENDING', 'APPROVED', 'RECEIVED'];
+    const terminalStatuses = ['REJECTED', 'CANCELLED'];
+
+    // Derive statuses present in history (ordered, unique)
+    const historyStatuses = [...new Set(statusHistory.map(s => s.new_status))];
+
+    // If a terminal status exists in the history, build the timeline up to that terminal status
+    const terminalInHistory = historyStatuses.find(s => terminalStatuses.includes(s));
+    let timelineSteps = [];
+    if (terminalInHistory) {
+        const idx = historyStatuses.indexOf(terminalInHistory);
+        timelineSteps = historyStatuses.slice(0, idx + 1);
+        // Ensure the first step is at least CLERK_REQUESTED for clarity
+        if (timelineSteps[0] !== 'CLERK_REQUESTED') timelineSteps.unshift('CLERK_REQUESTED');
+    } else {
+        // No terminal — show full expected flow with placeholders for future steps
+        timelineSteps = baseStatuses;
+    }
+
+    const currentIndex = timelineSteps.indexOf(currentStatus);
+
+    timelineSteps.forEach((status, index) => {
+        const config = statusConfig[status] || { label: status.replace(/_/g,' '), icon: 'fa-circle', color: 'gray', description: '' };
+        const isCompleted = index < currentIndex || (index === currentIndex && terminalStatuses.includes(status) === false && statusHistory.some(h=>h.new_status===status));
         const isCurrent = index === currentIndex;
-        const isPending = index > currentIndex;
-        
-        // Find matching log entry
+
+        // Find matching log entry (history ordered asc)
         const logEntry = statusHistory.find(log => log.new_status === status);
-        
+
         let statusClass = 'pending';
-        let iconBg = 'bg-gray-300';
         if (isCompleted && !isCurrent) {
             statusClass = 'completed';
-            iconBg = 'bg-gradient-to-br from-green-500 to-green-600';
         } else if (isCurrent) {
-            statusClass = 'current';
-            iconBg = 'bg-gradient-to-br from-blue-500 to-blue-600';
+            statusClass = terminalStatuses.includes(status) ? 'completed' : 'current';
         }
-        
+
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
         timelineItem.style.animationDelay = (index * 0.1) + 's';
-        
+
         timelineItem.innerHTML = `
             <div class="timeline-icon ${statusClass}">
                 <i class="fas ${config.icon} text-white text-xs"></i>
@@ -408,7 +358,7 @@ function buildTimeline(currentStatus, statusHistory) {
                     <div>
                         <div class="font-bold text-gray-900 flex items-center">
                             <span class="text-sm">${config.label}</span>
-                            ${isCurrent ? '<span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Current</span>' : ''}
+                            ${isCurrent && !terminalStatuses.includes(status) ? '<span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Current</span>' : ''}
                             ${isCompleted && !isCurrent ? '<span class="ml-2 text-green-600 text-xs"><i class="fas fa-check"></i></span>' : ''}
                         </div>
                         <div class="text-xs text-gray-500 mt-1">${config.description}</div>
@@ -435,9 +385,19 @@ function buildTimeline(currentStatus, statusHistory) {
                 `}
             </div>
         `;
-        
+
         container.appendChild(timelineItem);
     });
+
+    // Update visual progress bar based on timelineSteps and currentIndex
+    const progressEl = document.getElementById('progress-bar');
+    const percentEl = document.getElementById('progress-percentage');
+    if (progressEl && percentEl) {
+        const idx = Math.max(0, Math.min(currentIndex, timelineSteps.length - 1));
+        const progressPercent = timelineSteps.length > 0 && currentIndex >= 0 ? Math.round(((idx + 1) / timelineSteps.length) * 100) : 0;
+        progressEl.style.width = progressPercent + '%';
+        percentEl.textContent = progressPercent + '%';
+    }
 }
 
 // Build status history table

@@ -3,6 +3,7 @@ class SalesOrder
 {
     private PDO $pdo;
 
+
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
@@ -11,17 +12,48 @@ class SalesOrder
 
     public function placeOrder(int $customerId, int $placedBy, array $items)
     {
+        $taxPercentage = 15.0;
+        $deliveryCharges = 1450.0;
 
         try {
             $this->pdo->beginTransaction();
 
-            // Calculate order total
-            $total = 0;
+            $subTotal = 0.0;        // sum of lineAmount
+            $discountTotal = 0.0;   // sum of discount amounts
+
             foreach ($items as $item) {
-                $total += $item['unit_price'] * $item['quantity'];
+                $unitPrice = (float) ($item['unit_price'] ?? 0);
+                $qty = (int) ($item['quantity'] ?? 0);
+
+                if ($qty <= 0 || $unitPrice <= 0) {
+                    continue; // skip invalid rows (or throw exception if you prefer)
+                }
+
+                $lineAmount = $unitPrice * $qty;
+                $subTotal += $lineAmount;
+
+                $isPromo = !empty($item['is_promotional']); // accepts 1/0, true/false, "1"
+                $discountP = (float) ($item['discount_percentage'] ?? 0);
+
+                if ($isPromo && $discountP > 0) {
+                    $discountTotal += $lineAmount * ($discountP / 100);
+                }
             }
 
-            // Insert order
+            // Amount after discount
+            $netTotal = $subTotal - $discountTotal;
+
+            // Tax only on net (common approach). If you want tax on subtotal, change $netTotal -> $subTotal
+            $taxAmount = $netTotal * ($taxPercentage / 100);
+
+            $grandTotal = $netTotal + $taxAmount + $deliveryCharges;
+
+            // round currency values to 2 decimals
+            $subTotal = round($subTotal, 2);
+            $discountTotal = round($discountTotal, 2);
+            $netTotal = round($netTotal, 2);
+            $taxAmount = round($taxAmount, 2);
+            $grandTotal = round($grandTotal, 2);
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders 
                 (order_date, customer_id, placed_by, total_amount, status, order_number, estimated_date, rdc_id)
@@ -35,7 +67,7 @@ class SalesOrder
             $orderStmt->execute([
                 'customer_id' => $customerId,
                 'placed_by' => $placedBy,
-                'amount' => $total,
+                'amount' => $grandTotal,
                 'status' => $status,
                 'order_number' => $orderNumber,
                 'rdc_id' => $_SESSION['rdc_id'],

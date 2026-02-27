@@ -1,4 +1,5 @@
 vendor/
+/libs/vendor/
 node_modules/
 config/database.php
 .env

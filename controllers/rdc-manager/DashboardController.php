@@ -68,11 +68,12 @@ $recent_orders = array_map(function ($o) {
 
 $recent_movements = array_map(function ($m) {
     return [
-        'product' => $m['product'] ?? 'Unknown',
-        'type' => $m['type'],
+        'product' => $m['product_name'] ?? 'Unknown',
+        'type' => $m['movement_type'] ?? 'Unknown',
         'quantity' => (int)$m['quantity'],
         'date' => $m['date'],
-        'user' => $m['user'] ?? 'System'
+        'user' => $m['created_by_name'] ?? '',
+        'user_role' => $m['created_by_role'] ?? '',
     ];
 }, $recent_movements_raw);
 

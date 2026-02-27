@@ -230,6 +230,14 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
             color: #065f46;
             border: 1px solid #bbf7d0;
         }
+
+          #tracking-modal-overlay {
+            z-index: 60 !important;
+        }
+        
+        #tracking-modal {
+            z-index: 70 !important;
+        }
     </style>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -468,7 +476,6 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
         
         // Open detail view
         function openDetailView(transfer) {
-            console.log("transfer data", transfer);
             
             transferDataCache[transfer.transfer_id] = transfer;
             const overlay = document.getElementById('detail-overlay');
@@ -906,3 +913,4 @@ if (!isset($processed_transfers) || !is_array($processed_transfers)) {
         }
     </script>
 
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

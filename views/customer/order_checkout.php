@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
-require_once __DIR__ . '/../../dummydata/OrderCheckout.php';
-
+$sub_total = 0;
+$discount_total = 0;
+$discounted_line_total = 0;
+$delivery_fee = 1450;
+$tax_amount = 0;
 ?>
 
 <div class="min-h-screen py-8">
@@ -30,7 +33,7 @@ require_once __DIR__ . '/../../dummydata/OrderCheckout.php';
                 <div class="col-span-2">Category</div>
                 <div class="col-span-2">Selling Price</div>
                 <div class="col-span-1">Qty</div>
-                <div class="col-span-2">Discount</div>
+                <div class="col-span-2 text-align:right">Discount</div>
                 <div class="col-span-1">Line Total</div>
             </div>
 
@@ -43,127 +46,146 @@ require_once __DIR__ . '/../../dummydata/OrderCheckout.php';
 
                     <div class="font-semibold text-gray-800 col-span-2"><?php echo $order_item['product_name']; ?></div>
 
-                    <div class="text-gray-600 col-span-2"><?php echo $order_item['category']; ?></div>
+                    <div class="text-gray-600 col-span-2"><?php echo $order_item['category_name']; ?></div>
 
-                    <div class="font-semibold text-gray-800 col-span-2"><?php echo $order_item['unit_price']; ?></div>
+                    <div class="font-semibold text-gray-800 col-span-2">
+                        <?php echo number_format($order_item['unit_price'], decimals: 2); ?>
+                    </div>
                     <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['quantity']; ?></div>
 
-                    <div class="text-red-500 font-semibold col-span-2"><?php echo $order_item['discount_amount']; ?></div>
-                    <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['line_total']; ?></div>
+                    <div class="text-red-500 font-semibold col-span-2  pr-8"><?php
+                    $discount = $order_item['line_amount'] - $order_item['discounted_line_amount'];
+                    echo number_format($discount, 2);
+                    ?></div>
+                    <div class="font-semibold text-gray-800 col-span-1">
+                        <?php echo number_format($order_item['discounted_line_amount'], 2); ?>
+                    </div>
+                    <?php
+                    $sub_total += $order_item['line_amount'];
+                    $discount_total += $discount;
+                    $discounted_line_total += $order_item['discounted_line_amount'];
+
+                    ?>
                 <?php endforeach; ?>
+                <?php
+                $tax_amount = $discounted_line_total * 15 / 100;
+                $grand_total = $discounted_line_total + $tax_amount + $delivery_fee;
+                ?>
             </div>
         </div>
 
+            <!-- ================= Shipping & Payment ================= -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 flex flex-wrap justify-between items-center mt-5 gap-4">
 
+                <!-- Shipping Info -->
+                <div
+                    class="glass-panel bg-white/70 backdrop-blur rounded-3xl shadow-xl border border-white/50 p-6 lg:col-span-2">
+                    <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
+                        <span class="material-symbols-rounded text-teal-600">local_shipping</span>
+                        Delivery Information
+                    </h2>
 
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Delivery Address</label>
+                            <p class="mt-1 font-medium text-gray-800">
+                                <?php echo $customer_info['address']; ?>
+                            </p>
+                        </div>
 
-        <!-- ================= Shipping & Payment ================= -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 flex flex-wrap justify-between items-center mt-5 gap-4">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Estimated Delivery Date</label>
+                            <p class="mt-1 font-medium text-gray-800">
+                                <?php
+                                $date = new DateTime();
+                                $date->modify('+2 days');
 
-            <!-- Shipping Info -->
-            <div
-                class="glass-panel bg-white/70 backdrop-blur rounded-3xl shadow-xl border border-white/50 p-6 lg:col-span-2">
-                <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
-                    <span class="material-symbols-rounded text-teal-600">local_shipping</span>
-                    Delivery Information
-                </h2>
+                                echo $date->format('d M, Y');
+                                ?>
+                            </p>
+                        </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Delivery Address</label>
-                        <p class="mt-1 font-medium text-gray-800">
-                            <?php echo $delivery_info['delivery_address']; ?>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Delivery Notes (Optional)</label>
+                            <textarea name="delivery_notes" id="deliveryNotes" rows="3"
+                                class="w-full border rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-teal-500"
+                                placeholder="Any special delivery instructions..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="glass-panel bg-white/70 backdrop-blur rounded-3xl shadow-xl border border-white/50 p-4">
+                    <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
+                        <span class="material-symbols-rounded text-teal-600">receipt_long</span>
+                        Payment Summary
+                    </h2>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span><?php echo 'Rs. ' . number_format($sub_total, 2); ?></span>
+                        </div>
+                        <div class="flex justify-between text-red-500">
+                            <span>Discount</span>
+                            <span><?php echo '- Rs. ' . number_format($discount_total, 2) ?></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>VAT (15%)</span>
+                            <span><?= number_format($tax_amount, 2); ?></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Delivery Fee</span>
+                            <span><?php echo 'Rs. ' . number_format($delivery_fee, 2) ?></span>
+                        </div>
+
+                        <hr>
+
+                        <div class="flex justify-between font-bold text-lg text-teal-700">
+                            <span>Grand Total</span>
+                            <span><?php echo 'Rs. ' . number_format($grand_total, 2); ?></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mt-6">
+                        <label class="text-sm font-semibold text-gray-600">Payment Method</label>
+
+                        <div class="space-y-3 mt-3">
+                            <label class="flex items-center gap-3">
+                                <input type="radio" name="payment" value="cash" class="payment-method">
+                                Cash on Delivery
+                            </label>
+
+                            <label class="flex items-center gap-3">
+                                <input type="radio" name="payment" value="card" class="payment-method">
+                                Card Payment
+                            </label>
+                        </div>
+
+                        <p id="paymentError" class="text-red-500 text-xs mt-2 hidden">
+                            Please select a payment method
                         </p>
                     </div>
-
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Estimated Delivery Date</label>
-                        <p class="mt-1 font-medium text-gray-800">
-                            <?php echo $delivery_info['estimated_delivery_date']; ?>
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Delivery Notes (Optional)</label>
-                        <textarea rows="3"
-                            class="w-full border rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-teal-500"
-                            placeholder="Any special delivery instructions..."></textarea>
-                    </div>
                 </div>
             </div>
+            <!-- ================= Actions ================= -->
+            <div class="flex flex-wrap justify-between items-center mt-10 gap-4">
+                <a href="cart.php" class="px-6 py-3 bg-white border rounded-xl shadow hover:bg-gray-50 font-semibold">
+                    Back to Cart
+                </a>
 
-            <!-- Order Summary -->
-            <div class="glass-panel bg-white/70 backdrop-blur rounded-3xl shadow-xl border border-white/50 p-4">
-                <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
-                    <span class="material-symbols-rounded text-teal-600">receipt_long</span>
-                    Payment Summary
-                </h2>
+                <div class="flex gap-3">
+                    <button class="px-6 py-3 bg-gray-200 rounded-xl font-semibold hover:bg-gray-300">
+                        Cancel
+                    </button>
 
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span>Subtotal</span>
-                        <span><?php echo $delivery_info['sub_total']; ?></span>
-                    </div>
-                    <div class="flex justify-between text-red-500">
-                        <span>Discount</span>
-                        <span><?php echo $delivery_info['discount']; ?></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>VAT (15%)</span>
-                        <span><?php echo $delivery_info['vat']; ?></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Delivery Fee</span>
-                        <span><?php echo $delivery_info['delivery_fee']; ?></span>
-                    </div>
-
-                    <hr>
-
-                    <div class="flex justify-between font-bold text-lg text-teal-700">
-                        <span>Grand Total</span>
-                        <span><?php echo $delivery_info['grand_total']; ?></span>
-                    </div>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="mt-6">
-                    <label class="text-sm font-semibold text-gray-600">Payment Method</label>
-
-                    <div class="space-y-3 mt-3">
-                        <label class="flex items-center gap-3">
-                            <input type="radio" name="payment" class="payment-method">
-                            Cash on Delivery
-                        </label>
-
-                        <label class="flex items-center gap-3">
-                            <input type="radio" name="payment" class="payment-method">
-                            Card Payment
-                        </label>
-                    </div>
-
-                    <p id="paymentError" class="text-red-500 text-xs mt-2 hidden">
-                        Please select a payment method
-                    </p>
+                    <button id="placeOrderBtn"
+                        class="px-8 py-3 bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-500/30 opacity-50 cursor-not-allowed">
+                        Place Order
+                    </button>
                 </div>
             </div>
-        </div>
-        <!-- ================= Actions ================= -->
-        <div class="flex flex-wrap justify-between items-center mt-10 gap-4">
-            <a href="cart.php" class="px-6 py-3 bg-white border rounded-xl shadow hover:bg-gray-50 font-semibold">
-                Back to Cart
-            </a>
-
-            <div class="flex gap-3">
-                <button class="px-6 py-3 bg-gray-200 rounded-xl font-semibold hover:bg-gray-300">
-                    Cancel
-                </button>
-
-                <button id="placeOrderBtn"
-                    class="px-8 py-3 bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-500/30 opacity-50 cursor-not-allowed">
-                    Place Order
-                </button>
-            </div>
-        </div>
     </div>
 </div>
 

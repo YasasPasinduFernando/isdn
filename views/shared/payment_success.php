@@ -66,7 +66,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </a>
 
                     <!-- Go to Dashboard -->
-                    <a href="dashboard.php"
+                    <a href="index.php?page=dashboard"
                         class="bg-white border border-gray-200 px-6 py-3 rounded-xl shadow text-gray-700 font-semibold hover:bg-gray-50 transition flex items-center justify-center">
                         <span class="material-symbols-rounded mr-2 text-lg">dashboard</span>
                         Go to Dashboard

@@ -26,7 +26,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </div>
                     <div>
                         <p class="text-xs text-teal-600 font-semibold uppercase tracking-wider">Your Cart</p>
-                        <span class="font-bold text-teal-800">5 items - Rs. 1,250</span>
+                        <span id="cartSummary" class="font-bold text-teal-800">5 items - Rs. 1,250</span>
                     </div>
                 </div>
             </div>
@@ -170,7 +170,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             class="h-56 relative overflow-hidden flex items-center justify-center bg-gray-50 group-hover:scale-105 transition duration-700">
 
                             <!-- Product Image -->
-                            <img src="<?php echo BASE_PATH . $product['image_url'] ?>"
+                            <img src="<?php echo APP_URL . $product['image_url'] ?>"
                                 alt="<?php echo $product['product_name']; ?>"
                                 class="max-h-48 w-auto object-contain transition duration-500">
 

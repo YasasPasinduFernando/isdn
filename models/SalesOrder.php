@@ -1,18 +1,21 @@
 <?php
-class SalesOrder {
+class SalesOrder
+{
     private PDO $pdo;
 
-    public function __construct(PDO $pdo) {
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
-    
 
-    public function placeOrder(int $customerId, int $placedBy, array $items) {
+
+    public function placeOrder(int $customerId, int $placedBy, array $items)
+    {
 
         try {
             $this->pdo->beginTransaction();
 
-                        // Calculate order total
+            // Calculate order total
             $total = 0;
             foreach ($items as $item) {
                 $total += $item['unit_price'] * $item['quantity'];
@@ -21,20 +24,21 @@ class SalesOrder {
             // Insert order
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders 
-                (order_date, customer_id, placed_by, total_amount, status, order_number, estimated_date)
+                (order_date, customer_id, placed_by, total_amount, status, order_number, estimated_date, rdc_id)
                 VALUES 
-                (NOW(), :customer_id, :placed_by, :amount, :status, :order_number , DATE_ADD(NOW(), INTERVAL 2 DAY))
+                (NOW(), :customer_id, :placed_by, :amount, :status, :order_number , DATE_ADD(NOW(), INTERVAL 2 DAY), :rdc_id)
             ");
 
             $status = 'Pending';
-            $orderNumber = 'ORD' .'-'. 'RDC-'.date('ymd') .'-'. rand(100, 99999);
+            $orderNumber = 'ORD' . '-' . 'RDC-' . date('ymd') . '-' . rand(100, 99999);
 
             $orderStmt->execute([
-                'customer_id' => 1,//$customerId,
-                'placed_by'   => $placedBy,
-                'amount'      => $total,
-                'status'      => $status,
-                'order_number'=> $orderNumber,
+                'customer_id' => $customerId,
+                'placed_by' => $placedBy,
+                'amount' => $total,
+                'status' => $status,
+                'order_number' => $orderNumber,
+                'rdc_id' => $_SESSION['rdc_id'],
             ]);
 
             $orderId = $this->pdo->lastInsertId();
@@ -46,12 +50,17 @@ class SalesOrder {
             ");
 
             foreach ($items as $item) {
+                $isPromo = $item['is_promotional'];
+                $discount = 0;
+                if ($isPromo)
+                    $discount = $item['discount_percentage'] ?? 0;
+                $item["discount_percentage"];
                 $itemStmt->execute([
-                    'order_id'   => $orderId,
-                    'product_id'=> $item['product_id'],
-                    'quantity'  => $item['quantity'],
-                    'selling_price'=> $item['unit_price'],
-                    'discount'=> 0
+                    'order_id' => $orderId,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'selling_price' => $item['unit_price'],
+                    'discount' => $discount
                 ]);
             }
 
@@ -69,7 +78,8 @@ class SalesOrder {
             throw $e;
         }
     }
-    public function getUserOrders($userId) {
+    public function getUserOrders($userId)
+    {
         $stmt = $this->pdo->prepare("
             SELECT 
                 *
@@ -77,6 +87,22 @@ class SalesOrder {
             WHERE customer_id = :customer_id
         ");
         $stmt->execute(['customer_id' => 1]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getOrderbyId($orderId)
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                *
+            FROM
+                `orders` o
+                    INNER JOIN
+                retail_customers rc ON o.customer_id = rc.id
+            WHERE
+                o.id = :order_id
+        ");
+        $stmt->execute(['order_id' => $orderId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

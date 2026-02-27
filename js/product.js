@@ -38,11 +38,17 @@ document.querySelectorAll('.add-to-cart-btn').forEach(button => {
             if (response.success) {
                 alert('Item added to cart 🛒');
 
-                if (document.getElementById('cartCount')) {
-                    document.getElementById('cartCount').innerText = response.cartCount;
+                if (document.getElementById('cartSummary')) {
+                    //document.getElementById('cartCount').innerText = response.cartCount;
+                    updateCartSummary(response.cart_count, 1000);
                 }
             }
         })
         .catch(err => console.error(err));
     });
 });
+
+function updateCartSummary(count, total) {
+    document.getElementById("cartSummary").textContent =
+        count + " Products - Rs. " + total.toLocaleString();
+}

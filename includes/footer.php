@@ -291,7 +291,7 @@
                 hasPromptEvent = true;
                 event.preventDefault(); // prevent browser mini-infobar
                 deferredPrompt = event;
-                //openModal('install');
+                openModal('install');
             });
 
             window.addEventListener('appinstalled', function () {

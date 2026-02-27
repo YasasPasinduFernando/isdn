@@ -82,7 +82,7 @@ switch ($page) {
         require __DIR__ . '/views/shared/payment_info.php';
         break;
     case 'payment-success':
-        require __DIR__ . '/views/shared/payment_success.php';
+        require __DIR__ . '/controllers/PaymentController.php';
         break;
     case 'profile':
         require __DIR__ . '/views/shared/profile_edit.php';
@@ -153,6 +153,9 @@ switch ($page) {
     case 'stock-reports':
         require_once __DIR__ . '/controllers/stock-management/StockReportController.php';
         break;
+    case 'sales-orders':
+        require __DIR__ . '/controllers/SalesOrderController.php';
+        break;
     case 'customer-sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';
         break;
@@ -175,7 +178,7 @@ switch ($page) {
         require_once __DIR__ . '/controllers/ProductController.php';
         break;
     case 'checkout':
-        require __DIR__ . '/views/customer/order_checkout.php';
+        require __DIR__ . '/controllers/CheckoutController.php';
         break;
     case 'rdc-sales-ref-checkout':
         require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';

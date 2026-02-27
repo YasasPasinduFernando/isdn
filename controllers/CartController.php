@@ -16,7 +16,11 @@ switch ($action) {
 
     case 'add':
         $cart->addToCart($userId, (int)$data['product_id'], (int)$data['qty']);
-        echo json_encode(['success' => true]);
+        $cart_count = $cart->getUserCartCount($userId);
+        echo json_encode([
+            'success' => true,
+            'cart_count' => $cart_count[0]['product_count']
+        ]);
         break;
 
     case 'update':
@@ -35,7 +39,10 @@ switch ($action) {
         break;
 
     default:
-        $cartItems = $shopping_cart;//$cart->getUserCart($userId);
+        //$cartItems = $shopping_cart;//$cart->getUserCart($userId);
+        $cartItems = $cart->getUserCart($userId);
+        $products_count = $cart->getUserCartCount($userId);
+        $cart_count = $products_count[0]['product_count'];
         require __DIR__ . '/../views/customer/cart.php';
 }
 

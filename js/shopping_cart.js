@@ -49,48 +49,62 @@ function updateCart(productId, qty) {
 
 /* ---------------- TOTAL CALCULATION ---------------- */
 function calculateTotal() {
-  let total = 0;
+  let subTotal = 0;
+  let discountedTotal = 0;
+  let totalDiscount = 0;
 
   document.querySelectorAll(".cart-item").forEach((item) => {
     const price = parseFloat(item.dataset.price) || 0;
     const discount = parseFloat(item.dataset.discount) || 0;
+    const discountQty = parseFloat(item.dataset.discountQty) || 0;
     const qty = parseInt(item.querySelector(".item-qty").innerText) || 0;
 
-    // Subtotal before discount
-    const subtotal = price * qty;
+    const badge = item.querySelector(".promotion-badge");
 
-    // Discount amount
-    const discountAmount = subtotal * (discount / 100);
+    const lineAmount = price * qty;
+    const isPromo = discountQty > 0 && qty >= discountQty && discount > 0;
 
-    // Final item total after discount
-    const itemTotal = subtotal - discountAmount;
+    const discountAmount = isPromo ? lineAmount * (discount / 100) : 0;
+    const itemTotal = lineAmount - discountAmount;
 
-    total += itemTotal;
+    // Accumulate totals
+    subTotal += lineAmount;
+    discountedTotal += itemTotal;
+    totalDiscount += discountAmount;
 
-    // Update per-item total UI
+    // Update badge UI safely
+    if (badge) {
+      badge.classList.toggle("bg-yellow-500/90", isPromo);
+      badge.classList.toggle("bg-gray-400", !isPromo);
+      badge.innerText = isPromo ? discount + "% OFF" : "";
+    }
+
+    // Update per-item total
     item.querySelector(".item-total").innerText =
-      "Rs. " +
-      itemTotal.toLocaleString("en-LK", {
+      "Rs. " + itemTotal.toLocaleString("en-LK", {
         minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
   });
-  const tax_amount = (total * 15) / 100;
-  const deliveryFee = 1450;
-  const final_total = total + tax_amount + deliveryFee;
 
-  // Update order summary
+  const taxRate = 15;
+  const taxAmount = (discountedTotal * taxRate) / 100;
+
+  const deliveryFee = 1450;
+
+  const finalTotal = discountedTotal + taxAmount + deliveryFee;
+
+  // Update summary
   document.querySelector(".order-total").innerText =
-    "Rs. " +
-    total.toLocaleString("en-LK", {
+    "Rs. " + subTotal.toLocaleString("en-LK", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
 
   document.querySelector(".order-final-total").innerText =
-    "Rs. " +
-    final_total.toLocaleString("en-LK", {
+    "Rs. " + finalTotal.toLocaleString("en-LK", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
 }
 

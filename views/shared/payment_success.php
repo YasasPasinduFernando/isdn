@@ -21,7 +21,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <!-- Greeting -->
                 <h1 class="text-3xl font-bold text-gray-800 font-['Outfit'] mb-2">
-                    Thank You, Vijaya Stores! 🎉
+                    Thank You, <?php echo $cash_payment_info['customer_name'] ?>! 🎉
                 </h1>
 
                 <p class="text-gray-600 mb-6">
@@ -34,21 +34,22 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Invoice No</span>
                         <span class="font-semibold text-gray-800 break-all sm:text-right">
-                            INV-ORD-RDCS-260213-1025
+                            <?php echo $cash_payment_info['invoice_no'] ?>
                         </span>
                     </div>
 
                     <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Payment Amount</span>
                         <span class="font-semibold text-gray-800 sm:text-right">
-                            Rs. 18,751.46
+                            <?php echo $cash_payment_info['payment_amount'] ?>
                         </span>
                     </div>
 
                     <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
-                        <span class="text-gray-500 font-medium">Payment Date</span>
+                        <span
+                            class="text-gray-500 font-medium"><?php echo $cash_payment_info['payment_date_label'] ?></span>
                         <span class="font-semibold text-gray-800 sm:text-right">
-                            15 Feb 2026
+                            <?php echo $cash_payment_info['payment_date'] ?>
                         </span>
                     </div>
 

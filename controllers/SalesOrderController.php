@@ -5,6 +5,8 @@ require_once __DIR__ . '/../models/SalesOrder.php';
 require_once __DIR__ . '/../models/ShoppingCart.php';
 require_once __DIR__ . '/../models/RetailCustomer.php';
 require_once __DIR__ . '/../dummydata/Orders.php';
+require_once __DIR__ . '/../includes/InvoiceGenerator.php';
+require_once __DIR__ . '/../includes/MailSender.php';
 
 $page = $_GET['page'] ?? '';
 if (
@@ -45,6 +47,19 @@ if (
     }
 }
 
+  $orderData = [
+    'order_no' => 'ORD-RDCS-260213-1025',
+    'order_date' => '13 Feb 2026',
+    'customer' => 'Vijaya Stores - Galle',
+    'payment_method' => 'Card Payment',
+    'status' => 'Pending',
+    'grand_total' => 'Rs. 18,751.46',
+    'subtotal' => 'Rs. 15,044.75',
+    'discount' => 'Rs. 310.25',
+    'vat' => '15%',
+    'delivery_fee' => 'Rs. 1,450.00',
+    'address' => 'No. 62, Matara Road, Galle, Sri Lanka'
+  ];
 
 if (
     $_SERVER['REQUEST_METHOD'] === 'POST'
@@ -81,6 +96,8 @@ if (
             "payment_date_label" => "Payment Due Date",
             "payment_date" => $payment_date,
         ];
+        $invoicePath = InvoiceGenerator::generate($orderData);
+        Mailsender::sendMail();
 
         // Store in session to use in success page
         $_SESSION['cash_payment_info'] = $cash_payment_info;

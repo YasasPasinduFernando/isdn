@@ -40,7 +40,6 @@ if (!isset($recent_movements) || !is_array($recent_movements)) {
     $recent_movements = [];
 }
 
-
 // Count pending approvals and urgent transfers
 $pending_approvals = count(array_filter($pending_transfers, fn($t) => $t['status'] === 'PENDING'));
 $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urgent']));
@@ -313,7 +312,7 @@ $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urge
                                         <p class="text-sm text-gray-600">From: <span class="font-semibold text-gray-900"><?php echo $transfer['source_rdc']; ?></span></p>
                                     </div>
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full <?php 
-                                        echo $transfer['status'] === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'; 
+                                        echo $transfer['status'] === 'PENDING' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'; 
                                     ?>">
                                         <?php echo $transfer['status']; ?>
                                     </span>
@@ -328,9 +327,9 @@ $urgent_transfers = count(array_filter($pending_transfers, fn($t) => $t['is_urge
                                         <div class="font-semibold text-gray-900"><?php echo date('M d, h:i A', strtotime($transfer['date'])); ?></div>
                                     </div>
                                 </div>
-                                <a href="<?php echo BASE_PATH; ?>/index.php?page=send-product-units" 
+                                <a href="<?php echo BASE_PATH; ?>/index.php?page=request-product-units" 
                                    class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center">
-                                    <i class="fas fa-arrow-right mr-1"></i>Review & Approve
+                                    <i class="fas fa-arrow-right mr-1"></i> <?php echo $transfer['status'] === 'CLERK_REQUESTED' ? 'Review & Approve' : 'View Details'; ?>
                                 </a>
                             </div>
                             <?php endforeach; ?>

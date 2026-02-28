@@ -54,9 +54,9 @@ try {
                            JOIN retail_customers rc ON o.customer_id = rc.id
                            LEFT JOIN users u ON o.placed_by = u.id
                            LEFT JOIN users u2 ON rc.user_id = u2.id
-                           WHERE (u.rdc_id = :rdc OR u2.rdc_id = :rdc) AND o.status = 'pending'
+                           WHERE (u.rdc_id = :rdc_1 OR u2.rdc_id = :rdc_2) AND o.status = 'pending'
                            ORDER BY o.created_at ASC");
-    $stmt->execute(['rdc' => $rdcId]);
+    $stmt->execute(['rdc_1' => $rdcId, 'rdc_2' => $rdcId]);
     $pendingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $pendingOrders = [];
@@ -64,12 +64,17 @@ try {
 
 // Count processed/approved today (non-pending)
 try {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM orders o
-                           LEFT JOIN users u ON o.placed_by = u.id
-                           WHERE u.rdc_id = :rdc AND o.status != 'pending' AND DATE(o.updated_at) = CURDATE()");
+    $stmt = $pdo->prepare("SELECT COUNT(*) 
+FROM orders o
+WHERE o.rdc_id = :rdc
+  AND o.status = 'confirmed'
+  AND o.created_at >= CURDATE()
+  AND o.created_at < CURDATE() + INTERVAL 1 DAY;");
+
     $stmt->execute(['rdc' => $rdcId]);
     $processedToday = (int)$stmt->fetchColumn();
 } catch (Exception $e) {
+
     $processedToday = 0;
 }
 
@@ -112,5 +117,3 @@ $viewRequested = $_GET['view'] ?? '';
 
 // Default: render dashboard view
 require __DIR__ . '/../../views/rdc-clerk/dashboard.php';
-
-?>

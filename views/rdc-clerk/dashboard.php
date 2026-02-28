@@ -166,6 +166,7 @@ $allProducts = $allProducts ?? [];
 $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 ?>
 
+
 <style>
     .font-outfit { font-family: 'Outfit', sans-serif; }
     .glass-card { 

@@ -302,13 +302,14 @@ foreach ($statusChartData['labels'] as $label) {
                                     </div>
                                 </div>
                             </div>
-                            <form method="POST" action="<?php echo BASE_PATH; ?>/index.php?page=head-office-manager-dashboard" class="flex items-center gap-2 flex-shrink-0">
+                            <!-- <form method="POST" action="<?php echo BASE_PATH; ?>/index.php?page=head-office-manager-dashboard" class="flex items-center gap-2 flex-shrink-0">
                                 <input type="hidden" name="transfer_id" value="<?php echo $st['transfer_id']; ?>">
                                 <input type="hidden" name="update_transfer_status" value="1">
                                 <input type="text" name="remarks" placeholder="Remarks..." class="border border-white/40 bg-white/30 backdrop-blur-sm rounded-xl px-3 py-2 text-sm w-28 focus:ring-2 focus:ring-teal-500 outline-none shadow-sm">
                                 <button type="submit" name="status" value="REJECTED" class="px-4 py-2 rounded-xl border border-red-200 bg-red-50/50 text-red-600 text-sm font-bold hover:bg-red-100 transition">Reject</button>
                                 <button type="submit" name="status" value="APPROVED" class="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-bold shadow-lg shadow-green-200/50 hover:scale-[1.02] transition">Approve</button>
-                            </form>
+                            </form> -->
+
                         </div>
                     </div>
                 <?php endforeach; ?>

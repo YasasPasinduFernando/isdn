@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $id = $_GET['id'] ?? '';
     if ($id === '1') {
-        require_once __DIR__ . '/../views/customer/order_info.php';
+        require_once __DIR__ . '/../views/rdc-sales-ref/order_info.php';
     } else if ($id === 2) {
         require_once __DIR__ . '/../views/customer/order_info.php';
 

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+
+$allRdcs = isset($pdo) ? $pdo->query("SELECT rdc_id, rdc_name, rdc_code FROM rdcs ORDER BY rdc_name")->fetchAll(PDO::FETCH_ASSOC) : [];
 ?>
 
 <div class="hidden lg:block">
@@ -82,6 +84,18 @@ require_once __DIR__ . '/../../includes/header.php';
                     <button type="button" onclick="toggleConfirmPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-teal-600 transition select-none">
                         <span class="material-symbols-rounded" id="toggleConfirmIcon">visibility</span>
                     </button>
+                </div>
+
+                <!-- Preferred RDC -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Preferred RDC <span class="text-red-500">*</span></label>
+                    <select name="rdc_id" required
+                            class="w-full border border-gray-200 bg-white/90 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all text-gray-700">
+                        <option value="">Select nearest RDC</option>
+                        <?php foreach ($allRdcs as $r): ?>
+                            <option value="<?php echo $r['rdc_id']; ?>"><?php echo htmlspecialchars($r['rdc_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <!-- Terms & Conditions -->

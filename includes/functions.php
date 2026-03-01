@@ -38,33 +38,33 @@ function get_profile_page_for_role($role) {
 function get_allowed_pages_for_role($role) {
     $map = [
         'customer' => [
-            'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
+            'select-rdc', 'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
+            'select-rdc', 'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
-            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
+            'select-rdc', 'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
         ],
         'rdc_sales_ref' => [
-            'rdc-sales-ref-dashboard', 'products', 'orders', 'profile'
+            'select-rdc', 'rdc-sales-ref-dashboard', 'products', 'orders', 'profile'
         ],
         'logistics_officer' => [
-            'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
+            'select-rdc', 'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
         ],
         'rdc_driver' => [
-            'rdc-driver-dashboard', 'tracking', 'profile'
+            'select-rdc', 'rdc-driver-dashboard', 'tracking', 'profile'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
+            'select-rdc', 'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
-            'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'select-rdc', 'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
             'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];
 
-    return $map[$role] ?? ['dashboard'];
+    return $map[$role] ?? ['select-rdc', 'dashboard'];
 }
 
 function is_page_allowed_for_role($role, $page) {

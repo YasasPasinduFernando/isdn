@@ -530,6 +530,15 @@ $swapFlash = get_flash_message();
                                 <span class="material-symbols-rounded" id="swap_confirm_eye">visibility</span>
                             </button>
                         </div>
+                        <div class="auth-field">
+                            <span class="material-symbols-rounded auth-left-icon">location_on</span>
+                            <select name="rdc_id" required class="auth-input" style="padding-left: 2.55rem; appearance: auto; cursor: pointer;">
+                                <option value="">Select nearest RDC</option>
+                                <?php foreach (($allRdcs ?? []) as $r): ?>
+                                    <option value="<?php echo $r['rdc_id']; ?>"><?php echo htmlspecialchars($r['rdc_name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <button type="submit" class="auth-main-btn">
                             <span class="material-symbols-rounded align-middle mr-1">rocket_launch</span>
                             Create Customer Account

@@ -34,6 +34,8 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 }
 ?>
 
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -262,7 +264,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                                 <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
                                     <div class="flex items-center space-x-3">
                                         <span class="mono text-xs font-semibold text-gray-700"><?php echo $transfer['transfer_number']; ?></span>
-                                        <span class="text-xs text-gray-500">From: <?php echo $transfer['source_rdc']; ?></span>
+                                        <span class="text-xs text-gray-500">To: <?php echo $transfer['source_rdc']; ?></span>
                                         <span class="text-xs text-gray-500">•</span>
                                         <span class="text-xs text-gray-500"><?php echo $transfer['product_count']; ?> products (<?php echo $transfer['total_items']; ?> units)</span>
                                         <?php if (!empty($transfer['is_urgent'])): ?>
@@ -1074,7 +1076,6 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
     // Helper to show modal-specific alerts (error/success)
     function showModalAlert(type, text, autoHide = true, e) {
-        // console.log("is this workd");
         // const el = document.getElementById('modal-alert');
         // const textEl = document.getElementById('modal-alert-text');
         // if (!el || !textEl) return;
@@ -1104,10 +1105,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
     // Submit status change (calls controller via AJAX)
     document.getElementById('submit-status-btn')?.addEventListener('click', async function(e) {
-        console.log("button clicked");
         if (!selectedNewStatus) {
-                    console.log("new status not selected");
-
             showModalAlert('error', 'Please select a status first!', true, e);
             return;
         }
@@ -1117,7 +1115,6 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
 
         // Validate remarks for certain statuses
         if ((selectedNewStatus === 'CANCELLED' || selectedNewStatus === 'PENDING') && !remarks) {
-            console.log("remarks not provided for status change");
             showModalAlert('error', 'Please add remarks before updating status!', true, e);
             return;
         }
@@ -1163,9 +1160,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             // Close modal after a short pause so user sees the message
             setTimeout(() => { closeTransferModal(); }, 900);
 
-        } catch (err) {
-            console.log("inside catch", err);
-            
+        } catch (err) {            
             showModalAlert('error', 'Error updating status: ' + (err.message || err), true, e);
         }
     });
@@ -1344,6 +1339,48 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
             const alertEl = document.getElementById('form-alert');
             const alertText = document.getElementById('form-alert-text');
             alertText.textContent = 'Please enter quantities for all selected products!';
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
+        }
+
+        // Validate availability in the selected source RDC.
+        // If any selected product is not available (missing or zero stock) in that RDC,
+        // block the request and show the existing form alert UI.
+        const sourceRdc = document.querySelector('select[name="source_rdc_id"]')?.value;
+        if (!sourceRdc) {
+            e.preventDefault();
+            const alertEl = document.getElementById('form-alert');
+            const alertText = document.getElementById('form-alert-text');
+            alertText.textContent = 'Please select a source RDC to request from!';
+            alertEl.classList.add('show');
+            alertEl.classList.remove('hidden');
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+                alertEl.classList.add('hidden');
+            }, 4000);
+            return;
+        }
+
+        const stockMap = otherRDCStock[sourceRdc] || {};
+        let unavailableFound = false;
+        checkedBoxes.forEach(box => {
+            const pid = box.value;
+            const availableQty = stockMap[pid];
+            if (availableQty === undefined || Number(availableQty) <= 0) {
+                unavailableFound = true;
+            }
+        });
+
+        if (unavailableFound) {
+            e.preventDefault();
+            const alertEl = document.getElementById('form-alert');
+            const alertText = document.getElementById('form-alert-text');
+            alertText.textContent = 'One or more selected products are not available in the selected RDC. Please remove them or choose another RDC.';
             alertEl.classList.add('show');
             alertEl.classList.remove('hidden');
             setTimeout(() => {

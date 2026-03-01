@@ -237,6 +237,8 @@ if (!isset($categories)) {
 
     <!-- Filters Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 no-print">
+        <!-- expose current user's rdc id for clients without the RDC selector -->
+        <input type="hidden" id="current-rdc-id" value="<?php echo htmlspecialchars($current_user['rdc_id'] ?? ''); ?>">
         <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <i class="fas fa-filter mr-2 text-blue-600"></i>
             Filters
@@ -508,7 +510,7 @@ if (!isset($categories)) {
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500"><?php echo number_format($item['minimum_level']); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-700"><?php echo number_format($shortage); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <a href="request_product_units.php" class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition">
+                                <a href="<?php echo BASE_PATH; ?>/index.php?page=request-product-units" class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition">
                                     <i class="fas fa-plus mr-1"></i>Request
                                 </a>
                             </td>
@@ -755,7 +757,12 @@ function showReport(reportType) {
         document.getElementById('filter-category-wrapper').classList.add('hidden');
     } else {
         document.getElementById('filter-date-wrapper').classList.add('hidden');
-        document.getElementById('filter-status-wrapper').classList.remove('hidden');
+        // Hide status filter for stock valuation report (status isn't applicable there)
+        if (reportType === 'stock_valuation') {
+            document.getElementById('filter-status-wrapper').classList.add('hidden');
+        } else {
+            document.getElementById('filter-status-wrapper').classList.remove('hidden');
+        }
     }
     
     // Hide category filter for valuation report
@@ -958,7 +965,13 @@ function exportToPDF(reportType) {
     const params = new URLSearchParams();
     params.set('report', reportType);
     const rdcEl = document.getElementById('filter-rdc');
-    if (rdcEl && rdcEl.value && rdcEl.value !== 'all') params.set('rdc_id', rdcEl.value);
+    if (rdcEl && rdcEl.value && rdcEl.value !== 'all') {
+        params.set('rdc_id', rdcEl.value);
+    } else {
+        // If the RDC selector isn't present (user limited to own RDC), include current user's RDC id
+        const currentRdc = document.getElementById('current-rdc-id');
+        if (currentRdc && currentRdc.value) params.set('rdc_id', currentRdc.value);
+    }
     const dateEl = document.getElementById('filter-date');
     if (dateEl && dateEl.value) params.set('date', dateEl.value);
     // Include category and status filters if present so server export matches client filters

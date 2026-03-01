@@ -6,28 +6,22 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 //required files
-require __DIR__ .'/../libs/vendor/phpmailer/phpmailer/src/Exception.php';
-require __DIR__ .'/../libs/vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require __DIR__ .'/../libs/vendor/phpmailer/phpmailer/src/SMTP.php';
+require __DIR__ . '/../libs/vendor/phpmailer/phpmailer/src/Exception.php';
+require __DIR__ . '/../libs/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require __DIR__ . '/../libs/vendor/phpmailer/phpmailer/src/SMTP.php';
+require __DIR__ . '/../includes/InvoiceGenerator.php';
+
 
 //Create an instance; passing `true` enables exceptions
 class Mailsender
 {
-  public static function sendMail()
+  public static function sendMailAndGenerateInvoice($invoiceData)
   {
-    $orderData = [
-      'order_no' => 'ORD-RDCS-260213-1025',
-      'order_date' => '13 Feb 2026',
-      'customer' => 'Vijaya Stores - Galle',
-      'payment_method' => 'Card Payment',
-      'status' => 'Pending',
-      'grand_total' => 'Rs. 18,751.46',
-      'subtotal' => 'Rs. 15,044.75',
-      'discount' => 'Rs. 310.25',
-      'vat' => '15%',
-      'delivery_fee' => 'Rs. 1,450.00',
-      'address' => 'No. 62, Matara Road, Galle, Sri Lanka'
-    ];
+    $deliveryNotes = $invoiceData['delivery_notes'];
+    $order_info = $invoiceData['order_info'];
+    $order_items = $invoiceData['order_items'];
+    $order_totals = $invoiceData['order_totals'];
+
 
     $mail = new PHPMailer(true);
 
@@ -48,13 +42,39 @@ class Mailsender
 
     //Content
     $mail->isHTML(true);               //Set email format to HTML
-    $mail->Subject = "Your ISDN Order ORD-RDCS-260213-1025 is confirmed!";
-    /*$invoicePath = InvoiceGenerator::generate($orderData);
+    $mail->Subject = "Your ISDN Order " . $order_info['order_number'] . " is confirmed!";
+    $invoicePath = InvoiceGenerator::generate($invoiceData);
 
     $mail->addAttachment(
       $invoicePath,
-      "ISDN-Invoice-{$orderData['order_no']}.pdf"
-    );*/
+      "ISDN-Invoice-{$order_info['order_number']}.pdf"
+    );
+
+    $items_content = '';
+    foreach ($order_items as $item) {
+
+      $items_content .= '
+      <tr style="border-bottom:1px solid #e5e7eb;">
+        <td>' . htmlspecialchars($item['product_code']) . '</td>
+        <td>' . htmlspecialchars($item['product_name']) . '</td>
+        <td>' . htmlspecialchars($item['product_category']) . '</td>
+        <td>Rs. ' . number_format($item['unit_price'], 2) . '</td>
+        <td align="center">' . (int) $item['quantity'] . '</td>
+        <td align="right">Rs. ' . number_format($item['discount_amount'], 2) . '</td>
+        <td align="right">Rs. ' . number_format($item['discounted_line_amount'], 2) . '</td>
+      </tr>';
+    }
+
+    $orderDate = '';
+    $estimatedDate = '';
+
+    if (!empty($order_info['order_date'])) {
+      $orderDate = (new DateTime($order_info['order_date']))->format('d M, Y');
+    }
+    if (!empty($order_info['estimated_date'])) {
+      $estimatedDate = (new DateTime($order_info['estimated_date']))->format('d M, Y');
+    }
+
     $emailContent = '
 <!DOCTYPE html>
 <html>
@@ -107,11 +127,11 @@ class Mailsender
       <td style="padding:0 28px 20px;">
         <table width="100%" cellpadding="8" cellspacing="0" style="background:#f9fafb;border-radius:10px;font-size:13px;">
           <tr>
-            <td><strong>Order Number:</strong></td><td>#ORD-RDCS-260213-1025</td>
-            <td><strong>Order Date:</strong></td><td>13 Feb 2026</td>
+            <td><strong>Order Number:</strong></td><td>#' . $order_info['order_number'] . '</td>
+            <td><strong>Order Date:</strong></td><td>' . htmlspecialchars($orderDate) . '</td>
           </tr>
           <tr>
-            <td><strong>Customer:</strong></td><td>Vijaya Stores - Galle</td>
+            <td><strong>Customer:</strong></td><td>' . $order_info['name'] . '</td>
             <td><strong>Sales Ref:</strong></td><td>N/A</td>
           </tr>
           <tr>
@@ -119,8 +139,8 @@ class Mailsender
             <td><strong>Order Status:</strong></td><td>Pending</td>
           </tr>
           <tr>
-            <td><strong>Estimated Delivery:</strong></td><td>15 Feb 2026</td>
-            <td><strong>Total Amount:</strong></td><td><strong>Rs. 18,751.46</strong></td>
+            <td><strong>Estimated Delivery:</strong></td><td>' . htmlspecialchars($estimatedDate) . '</td>
+            <td><strong>Total Amount:</strong></td><td><strong>' . number_format($order_info['total_amount'], 2) . '</td>
           </tr>
         </table>
       </td>
@@ -135,79 +155,35 @@ class Mailsender
             <th align="left">Code</th>
             <th align="left">Product</th>
             <th align="left">Category</th>
-            <th align="right">Price</th>
+            <th align="left">Price</th>
             <th align="center">Qty</th>
             <th align="right">Discount</th>
             <th align="right">Line Total</th>
           </tr>
-          <tr style="border-bottom:1px solid #e5e7eb;">
-            <td>PRD-BEV-000001</td>
-            <td>Coca-Cola 1L</td>
-            <td>Beverages</td>
-            <td align="center">Rs. 300.00</td>
-            <td align="right">10</td>
-            <td align="right">Rs. 150.00</td>
-            <td align="right">Rs. 2,850.00</td>
-          </tr>
-          <tr style="border-bottom:1px solid #e5e7eb;">
-            <td>PRD-GNF-000001</td>
-            <td>Nestomalt 400G</td>
-            <td>Grocery & Food Items</td>
-            <td align="center">Rs. 750.00</td>
-            <td align="right">7</td>
-            <td align="right">Rs. 0.00</td>
-            <td align="right">Rs. 5,250.00</td>
-          </tr>
-          <tr style="border-bottom:1px solid #e5e7eb;">
-            <td>PRD-HCP-000001</td>
-            <td>Harpic Fresh 500ml</td>
-            <td>Home Cleaning Products</td>
-            <td align="center">Rs. 380.50</td>
-            <td align="right">5</td>
-            <td align="right">Rs. 0.00</td>
-            <td align="right">Rs. 1,902.50</td>
-          </tr>
-          <tr style="border-bottom:1px solid #e5e7eb;">
-            <td>PRD-HHE-000001</td>
-            <td>Sunlight Detergent Powder - 1kg</td>
-            <td>Household Essentials</td>
-            <td align="center">Rs. 320.50</td>
-            <td align="right">5</td>
-            <td align="right">Rs. 160.25</td>
-            <td align="right">Rs. 1,442.25</td>
-          </tr>
-          <tr style="border-bottom:1px solid #e5e7eb;">
-            <td>PRD-PSC-000001</td>
-            <td>Clogard Toothpaste 200g</td>
-            <td>Household Essentials</td>
-            <td align="center">Rs. 360.00</td>
-            <td align="right">10</td>
-            <td align="right">Rs. 0.00</td>
-            <td align="right">Rs. 3,600.00</td>
-          </tr>
+' . $items_content . '
         </table>
       </td>
     </tr>
 
     <!-- Price Breakdown -->
     <tr>
-      <td style="padding:0 28px 20px;">
-        <table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;">
+      <td style="padding:0 32px 20px;">
+        <table width="100%" cellpadding="5" cellspacing="0" style="font-size:13px;">
           <tr>
-            <td align="right">Subtotal:</td><td align="right">Rs. 15,044.75</td>
+            <td align="right">Subtotal:</td><td align="right">' . number_format($order_totals['subtotal'], 2) . '</td>
           </tr>
           <tr>
-            <td align="right">Discount:</td><td align="right">- Rs. 310.25</td>
+            <td align="right">Discount:</td><td align="right">- ' . number_format($order_totals['discount_total'], 2) . '</td>
           </tr>
           <tr>
-            <td align="right">VAT (15%):</td><td align="right">15%</td>
+            <td align="right">VAT (15%):</td><td align="right">' . number_format($order_totals['tax_amount'], 2) . '</td>
           </tr>
           <tr>
-            <td align="right">Delivery Fee:</td><td align="right">Rs. 1,450.00</td>
+            <td align="right">Delivery Fee:</td><td align="right">' . number_format($order_totals['delivery_fee'], 2) . '</td>
           </tr>
           <tr>
             <td align="right"><strong>Grand Total:</strong></td>
-            <td align="right"><strong>Rs. 18,751.46</strong></td>
+            <td align="right"><strong>' . number_format($order_totals['grand_total'], 2) . '</strong></td>
           </tr>
         </table>
       </td>
@@ -217,9 +193,9 @@ class Mailsender
     <tr>
       <td style="padding:0 28px 24px;font-size:13px;color:#374151;">
         <strong>Delivery Address:</strong><br>
-        No. 62, Matara Road, Galle<br><br>
+        ' . $order_info['address'] . '
         <strong>Delivery Notes:</strong><br>
-        Please deliver between 9 AM – 5 PM.
+        ' . $deliveryNotes . '
       </td>
     </tr>
 
@@ -268,7 +244,7 @@ class Mailsender
     // Success sent message alert
     $mail->send();
 
-
+    return $invoicePath;
   }
 
 }

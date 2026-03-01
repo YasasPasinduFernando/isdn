@@ -79,7 +79,10 @@ switch ($page) {
         require __DIR__ . '/views/customer/tracking.php';
         break;
     case 'payment':
-        require __DIR__ . '/views/shared/payment_info.php';
+        require __DIR__ . '/controllers/PaymentController.php';
+        break;
+    case 'payment-gateway':
+        require __DIR__ . '/controllers/PaymentController.php';
         break;
     case 'payment-success':
         require __DIR__ . '/controllers/PaymentController.php';

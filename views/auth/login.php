@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
+
+$allRdcs = isset($pdo) ? $pdo->query("SELECT rdc_id, rdc_name, rdc_code FROM rdcs ORDER BY rdc_name")->fetchAll(PDO::FETCH_ASSOC) : [];
 ?>
 
 <div class="hidden lg:block">

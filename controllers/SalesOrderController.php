@@ -126,52 +126,101 @@ if (
 if (
     $_SERVER['REQUEST_METHOD'] === 'POST'
     && $page === 'sales-orders'
-    && isset($_GET['method'])
+    && isset($_GET['action'])
+    && $_GET['action'] === 'place'
 ) {
 
     $method = $_GET['method'] ?? '';
-    $userId = $_SESSION['user_id'] ?? 1; // demo user
-
+    $deliveryNotes = '';
+    $payment_date_label = '';
+    $payment_date = '';
+    $orderModel = new SalesOrder($pdo);
+    $retail_customer = new RetailCustomer(pdo: $pdo);
+    $shopping_cart = new ShoppingCart($pdo);
+    $orderItem = new OrderItem($pdo);
     if ($method === 'cash') {
-
         // Read JSON body (since fetch sends JSON)
         $input = json_decode(file_get_contents("php://input"), true);
         $deliveryNotes = $input['delivery_notes'] ?? '';
-
-        // TODO: Save order here using $deliveryNotes
-
-        // Example response data
-        $orderModel = new SalesOrder($pdo);
-        $retail_customer = new RetailCustomer(pdo: $pdo);
-        $userCartItems = new ShoppingCart($pdo);
-        $userCartItems = $userCartItems->getUserCart($userId);
-        $customer_info = $retail_customer->findByUserId($userId);
-
-        $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
-        $order_info = $orderModel->getOrderbyId($orderId)[0];
-        $date = new DateTime($order_info['estimated_date']);
+        $payment_date_label = "Payment Due Date";
+        $date = new DateTime();
+        $date->modify('+2 days');
         $payment_date = $date->format('d M, Y');
-        $cash_payment_info = [
-            "invoice_no" => "INV-" . $order_info['order_number'],
-            "customer_name" => $order_info['name'],
-            "payment_amount" => number_format($order_info['total_amount'], 2),
-            "payment_date_label" => "Payment Due Date",
-            "payment_date" => $payment_date,
-        ];
-        $invoicePath = InvoiceGenerator::generate($orderData);
-        Mailsender::sendMail();
 
-        // Store in session to use in success page
-        $_SESSION['cash_payment_info'] = $cash_payment_info;
-
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'redirect' => 'index.php?page=payment-success'
-        ]);
-        exit;
+    } else if ($method === 'card') {
+        $deliveryNotes = $_SESSION['delivery_notes'] ?? '';
+        $payment_date_label = "Payment Date";
+        $date = new DateTime();
+        $payment_date = $date->format('d M, Y');
     }
+
+    $userCartItems = $shopping_cart->getUserCart($userId);
+    $customer_info = $retail_customer->findByUserId($userId);
+    $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
+    $order_info = $orderModel->getOrderbyId($orderId);
+    $order_items = $orderItem->getOrderItems($orderId);
+    $order_totals = $orderItem->calculateOrderTotals($orderId);
+    $invoice_location = "/invoices/ISDN-Invoice-" . $order_info['order_number'] . ".pdf";
+    Mailsender::sendMailAndGenerateInvoice([
+        'delivery_notes' => $deliveryNotes,
+        'order_info' => $order_info,
+        'order_items' => $order_items,
+        'order_totals' => $order_totals
+    ]);
+
+    $cash_payment_info = [
+        "invoice_no" => "INV-" . $order_info['order_number'],
+        "customer_name" => $order_info['name'],
+        "payment_amount" => number_format($order_info['total_amount'], 2),
+        "payment_date_label" => $payment_date_label,
+        "payment_date" => $payment_date,
+        "invoice_path" => $invoice_location,
+    ];
+    // Store in session to use in success page
+    $_SESSION['cash_payment_info'] = $cash_payment_info;
+    $shopping_cart->clearCart($userId);
+
+    // Return JSON response
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'redirect' => 'index.php?page=payment-success'
+    ]);
+    exit;
+
+} else if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && $page === 'sales-orders'
+    && isset($_GET['action'])
+    && $_GET['action'] === 'pay'
+) {
+    $input = json_decode(file_get_contents("php://input"), true);
+    $deliveryNotes = $input['delivery_notes'] ?? '';
+    $shopping_cart = new ShoppingCart($pdo);
+    $cartAmount = $shopping_cart->getUserCartAmount($userId);
+    $tax_percentage = 15;
+    $delivery_fee = 1450;
+
+    // Safely extract total (default 0)
+    $cartTotal = (float) ($cartAmount['cart_total'] ?? 0);
+
+    $taxPercentage = (float) $tax_percentage;
+    $deliveryFee = (float) $delivery_fee;
+
+    $cartTax = round($cartTotal * $taxPercentage / 100, 2);
+    $cartGrandTotal = round($cartTotal + $cartTax + $deliveryFee, 2);
+    $_SESSION['checkout'] = [
+        'delivery_notes' => $deliveryNotes,
+        'cart_grand_total' => $cartGrandTotal
+    ];
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'redirect' => 'index.php?page=payment'
+    ]);
+    exit;
+
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {

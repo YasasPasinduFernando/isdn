@@ -70,7 +70,7 @@ class ShoppingCart
             SELECT 
                 COUNT(id) AS product_count
             FROM
-                isdn_db3.shopping_carts
+                shopping_carts
             WHERE
                 user_id = :user_id
             GROUP BY user_id; 

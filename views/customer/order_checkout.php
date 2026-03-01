@@ -48,16 +48,16 @@ $tax_amount = 0;
 
                     <div class="text-gray-600 col-span-2"><?php echo $order_item['category_name']; ?></div>
 
-                    <div class="font-semibold text-gray-800 col-span-2">
+                    <div class="font-semibold text-gray-800 col-span-2">Rs. 
                         <?php echo number_format($order_item['unit_price'], decimals: 2); ?>
                     </div>
                     <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['quantity']; ?></div>
 
-                    <div class="text-red-500 font-semibold col-span-2  pr-8"><?php
+                    <div class="text-red-500 font-semibold col-span-2  pr-8">Rs. <?php
                     $discount = $order_item['line_amount'] - $order_item['discounted_line_amount'];
                     echo number_format($discount, 2);
                     ?></div>
-                    <div class="font-semibold text-gray-800 col-span-1">
+                    <div class="font-semibold text-gray-800 col-span-1">Rs.
                         <?php echo number_format($order_item['discounted_line_amount'], 2); ?>
                     </div>
                     <?php

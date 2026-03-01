@@ -156,15 +156,8 @@ if ($action === 'add' || $action === 'edit') {
 </div>
 
 <script>
-// Show/hide RDC field based on role
-const rdcRoles = ['rdc_manager','rdc_clerk','rdc_sales_ref','logistics_officer','rdc_driver'];
-const roleSelect = document.getElementById('roleSelect');
-const rdcField = document.getElementById('rdcField');
-function toggleRdc() {
-    rdcField.style.display = rdcRoles.includes(roleSelect.value) ? '' : 'none';
-}
-roleSelect.addEventListener('change', toggleRdc);
-toggleRdc();
+// RDC field is always visible for both add and edit forms.
+// Optional for non-RDC roles; recommended for RDC roles.
 </script>
 
 <?php

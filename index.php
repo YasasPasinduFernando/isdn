@@ -8,6 +8,7 @@ $page = $_GET['page'] ?? 'home';
 
 // Check if user is logged in for protected pages
 $protected_pages = [
+    'select-rdc',
     'dashboard',
     'profile',
     'products',
@@ -46,10 +47,28 @@ if (in_array($page, $protected_pages) && is_logged_in()) {
     }
 }
 
+// RDC gate: if user has no rdc_id, redirect to select-rdc before accessing protected pages
+$rdc_exempt_pages = ['select-rdc'];
+$needs_rdc = in_array($page, $protected_pages) && !in_array($page, $rdc_exempt_pages);
+if ($needs_rdc && is_logged_in()) {
+    $rdcId = $_SESSION['rdc_id'] ?? null;
+    $role = current_user_role();
+    $can_skip_rdc = in_array($role, ['system_admin', 'head_office_manager']);
+    if (empty($rdcId) && !$can_skip_rdc) {
+        redirect('/index.php?page=select-rdc');
+    }
+}
+
 switch ($page) {
     case 'home':
         if (is_logged_in()) {
-            $dashboard = dashboard_page_for_role(current_user_role());
+            $rdcId = $_SESSION['rdc_id'] ?? null;
+            $role = current_user_role();
+            $can_skip_rdc = in_array($role, ['system_admin', 'head_office_manager']);
+            if (empty($rdcId) && !$can_skip_rdc) {
+                redirect('/index.php?page=select-rdc');
+            }
+            $dashboard = dashboard_page_for_role($role);
             redirect('/index.php?page=' . $dashboard);
         }
         require __DIR__ . '/views/auth/login.php';
@@ -65,6 +84,12 @@ switch ($page) {
         break;
     case 'reset-password':
         require __DIR__ . '/views/auth/reset_password.php';
+        break;
+    case 'select-rdc':
+        if (!is_logged_in()) {
+            redirect('/index.php?page=login');
+        }
+        require __DIR__ . '/views/auth/select_rdc.php';
         break;
     case 'dashboard':
         require __DIR__ . '/views/customer/dashboard.php';

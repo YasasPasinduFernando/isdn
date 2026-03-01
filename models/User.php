@@ -27,13 +27,14 @@ class User {
     public function create($data) {
         try {
             $stmt = $this->pdo->prepare(
-                "INSERT INTO users (username, email, password, role, google_id) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO users (username, email, password, role, rdc_id, google_id) VALUES (?, ?, ?, ?, ?, ?)"
             );
             return $stmt->execute([
                 $data['username'],
                 $data['email'],
                 password_hash($data['password'], PASSWORD_DEFAULT),
                 $data['role'],
+                !empty($data['rdc_id']) ? (int) $data['rdc_id'] : null,
                 $data['google_id'] ?? null
             ]);
         } catch (PDOException $e) {
@@ -97,6 +98,14 @@ class User {
         );
         $stmt->execute([$token]);
         return $stmt->fetch();
+    }
+
+    /**
+     * Update user's RDC assignment
+     */
+    public function updateRdc(int $userId, ?int $rdcId): bool {
+        $stmt = $this->pdo->prepare("UPDATE users SET rdc_id = ? WHERE id = ?");
+        return $stmt->execute([$rdcId, $userId]);
     }
 
     /**

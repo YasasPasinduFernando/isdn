@@ -41,6 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/index.php?page=register');
         }
 
+        if (empty($_POST['rdc_id'])) {
+            flash_message('Please select your preferred RDC.', 'error');
+            redirect('/index.php?page=register');
+        }
+
         if (strlen($password) < 6) {
             flash_message('Password must be at least 6 characters.', 'error');
             redirect('/index.php?page=register');
@@ -56,11 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/index.php?page=register');
         }
 
+        $rdcId = !empty($_POST['rdc_id']) ? (int) $_POST['rdc_id'] : null;
+
         if ($userModel->create([
             'username' => $username,
             'email'    => $email,
             'password' => $password,
-            'role'     => $role
+            'role'     => $role,
+            'rdc_id'   => $rdcId
         ])) {
             // Send welcome email
             send_welcome_email($email, $username);
@@ -70,6 +78,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             flash_message('Registration failed! Please try again.', 'error');
             redirect('/index.php?page=register');
+        }
+    }
+
+    // ── SELECT RDC (gate for users without RDC) ────────────────
+    if ($action === 'select_rdc') {
+        if (!isset($_SESSION['user_id'])) {
+            redirect('/index.php?page=login');
+        }
+        $role = $_SESSION['role'] ?? 'customer';
+        $canSkip = in_array($role, ['system_admin', 'head_office_manager']);
+        $rdcId = !empty($_POST['rdc_id']) ? (int) $_POST['rdc_id'] : null;
+
+        if (!$canSkip && empty($rdcId)) {
+            flash_message('Please select your preferred RDC.', 'error');
+            redirect('/index.php?page=select-rdc');
+        }
+
+        if ($userModel->updateRdc((int) $_SESSION['user_id'], $rdcId)) {
+            $_SESSION['rdc_id'] = $rdcId;
+            flash_message('RDC selected successfully!', 'success');
+            $dashboard = dashboard_page_for_role($role);
+            redirect('/index.php?page=' . $dashboard);
+        } else {
+            flash_message('Failed to save selection. Please try again.', 'error');
+            redirect('/index.php?page=select-rdc');
         }
     }
 
@@ -103,6 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             send_login_notification($user['email'], $user['username'], $user['role']);
 
             flash_message('Login successful!', 'success');
+            $rdcId = $user['rdc_id'] ?? null;
+            $canSkipRdc = in_array($user['role'], ['system_admin', 'head_office_manager']);
+            if (empty($rdcId) && !$canSkipRdc) {
+                redirect('/index.php?page=select-rdc');
+            }
             $dashboard = dashboard_page_for_role($user['role']);
             redirect('/index.php?page=' . $dashboard);
         } else {
@@ -317,6 +355,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         send_login_notification($user['email'], $user['username'], $user['role']);
 
         flash_message('Logged in with Google successfully!', 'success');
+        $rdcId = $user['rdc_id'] ?? null;
+        $canSkipRdc = in_array($user['role'], ['system_admin', 'head_office_manager']);
+        if (empty($rdcId) && !$canSkipRdc) {
+            redirect('/index.php?page=select-rdc');
+        }
         $dashboard = dashboard_page_for_role($user['role']);
         redirect('/index.php?page=' . $dashboard);
     }

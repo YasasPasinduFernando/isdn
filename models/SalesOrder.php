@@ -122,6 +122,47 @@ class SalesOrder
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getCustomerOrders($customer_id)
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                o.id AS order_id,
+                o.order_number,
+                DATE_FORMAT(o.order_date, '%Y-%m-%d') AS order_date,
+                o.total_amount,
+                o.status,
+                o.estimated_date,
+                rc.name AS customer,
+                COALESCE(pay.total_paid, 0) AS total_paid,
+                CASE
+                    WHEN COALESCE(pay.total_paid, 0) > 0 THEN 'PAID'
+                    ELSE 'UNPAID'
+                END AS payment_status,
+                COALESCE(oi.item_count, 0) AS item_count
+            FROM
+                orders o
+                    JOIN
+                retail_customers rc ON rc.id = o.customer_id
+                    LEFT JOIN
+                (SELECT 
+                    order_id, SUM(amount) AS total_paid
+                FROM
+                    payments
+                GROUP BY order_id) pay ON pay.order_id = o.id
+                    LEFT JOIN
+                (SELECT 
+                    order_id, COUNT(product_id) AS item_count
+                FROM
+                    order_items
+                GROUP BY order_id) oi ON oi.order_id = o.id
+            WHERE
+                o.customer_id = :customer_id
+            ORDER BY o.order_date DESC;
+        ");
+        $stmt->execute(['customer_id' => $customer_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getOrderbyId($orderId)
     {
         $stmt = $this->pdo->prepare("

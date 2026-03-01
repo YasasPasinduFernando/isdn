@@ -79,7 +79,10 @@ switch ($page) {
         require __DIR__ . '/views/customer/tracking.php';
         break;
     case 'payment':
-        require __DIR__ . '/views/shared/payment_info.php';
+        require __DIR__ . '/controllers/PaymentController.php';
+        break;
+    case 'payment-gateway':
+        require __DIR__ . '/controllers/PaymentController.php';
         break;
     case 'payment-success':
         require __DIR__ . '/controllers/PaymentController.php';
@@ -182,7 +185,7 @@ switch ($page) {
         break;
     case 'rdc-sales-ref-checkout':
         require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';
-         break;
+        break;
     case 'stock-movement-management':
         require __DIR__ . '/controllers/stock-management/StockMovementController.php';
         break;

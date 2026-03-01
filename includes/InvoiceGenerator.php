@@ -9,43 +9,82 @@ use Dompdf\Options;
 
 class InvoiceGenerator
 {
-    public static function generate(array $order): string
-    {
-        $dompdf = new Dompdf([
-            'defaultFont' => 'DejaVu Sans'
-        ]);
+  public static function generate(array $invoiceData)
+  {
+    $dompdf = new Dompdf([
+      'defaultFont' => 'DejaVu Sans'
+    ]);
 
-        $html = self::invoiceHtml($order);
+    $html = self::invoiceHtml($invoiceData);
 
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
 
-        $filePath = __DIR__ . "/../invoices/ISDN-Invoice-{$order['order_no']}.pdf";
+    $order_info = $invoiceData['order_info'];
 
-        file_put_contents($filePath, $dompdf->output());
+    $filePath = __DIR__ . "/../invoices/ISDN-Invoice-{$order_info['order_number']}.pdf";
 
-        return $filePath;
+    file_put_contents($filePath, $dompdf->output());
+
+    return $filePath;
+  }
+
+  private static function invoiceHtml(array $invoiceData): string
+  {
+    $order_info = $invoiceData['order_info'];
+    $order_items = $invoiceData['order_items'];
+    $order_totals = $invoiceData['order_totals'];
+
+    $items_content = '';
+    $subtotal = number_format($order_totals['subtotal'], 2);
+    $discount_total = number_format($order_totals['discount_total'], 2);
+    $tax_amount = number_format($order_totals['tax_amount'], 2);
+    $delivery_fee = number_format($order_totals['delivery_fee'], 2);
+    $grand_total = number_format($order_totals['grand_total'], 2);
+
+    foreach ($order_items as $item) {
+      $items_content .= '
+      <tr>
+        <td>' . htmlspecialchars($item['product_code']) . '</td>
+        <td>' . htmlspecialchars($item['product_name']) . '</td>
+        <td>' . htmlspecialchars($item['product_category']) . '</td>
+        <td>Rs. ' . number_format($item['unit_price'], 2) . '</td>
+        <td>' . (int) $item['quantity'] . '</td>
+        <td>Rs. ' . number_format($item['discount_amount'], 2) . '</td>
+        <td>Rs. ' . number_format($item['discounted_line_amount'], 2) . '</td>
+      </tr>';
     }
-
-    private static function invoiceHtml(array $o): string
-    {
-        return "
+    return "
         <html>
         <body style='font-family:Arial;font-size:12px;'>
 
         <h2>TAX INVOICE</h2>
 
-        <p><strong>Invoice No:</strong> INV-{$o['order_no']}</p>
-        <p><strong>Order No:</strong> {$o['order_no']}</p>
+        <p><strong>Invoice No:</strong> INV-{$order_info['order_number']}</p>
+        <p><strong>Order No:</strong> {$order_info['order_number']}</p>
 
         <hr>
 
         <p><strong>ISDN – IslandLink Sales Distribution Network</strong><br>
         info@isdn.lk | +94 11 234 5678</p>
 
-        <p><strong>Bill To:</strong><br>{$o['customer']}<br>{$o['address']}</p>
+        <table width='100%' cellpadding='5' cellspacing='0'>
+            <tr>
+                <!-- Bill To (Left Side) -->
+                <td width='50%' valign='top'>
+                    <strong>Bill To:</strong><br>
+                    {$order_info['name']}<br>
+                    {$order_info['address']}
+                </td>
 
+                <!-- Invoice Date (Right Side) -->
+                <td width='50%' align='right' valign='bottom'>
+                    <strong>Invoice Date:</strong><br>
+                    " . (new DateTime($order_info['order_date']))->format('Y/m/d') . "
+                </td>
+            </tr>
+        </table>
         <table width='100%' border='1' cellspacing='0' cellpadding='6'>
             <tr>
                 <th>Code</th>
@@ -56,63 +95,19 @@ class InvoiceGenerator
                 <th>Discount</th>
                 <th>Line Total</th>
             </tr>
-          <tr>
-            <td>PRD-BEV-000001</td>
-            <td>Coca-Cola 1L</td>
-            <td>Beverages</td>
-            <td>Rs. 300.00</td>
-            <td>10</td>
-            <td>Rs. 150.00</td>
-            <td>Rs. 2,850.00</td>
-          </tr>
-          <tr>
-            <td>PRD-GNF-000001</td>
-            <td>Nestomalt 400G</td>
-            <td>Grocery & Food Items</td>
-            <td>Rs. 750.00</td>
-            <td>7</td>
-            <td>Rs. 0.00</td>
-            <td>Rs. 5,250.00</td>
-          </tr>
-          <tr>
-            <td>PRD-HCP-000001</td>
-            <td>Harpic Fresh 500ml</td>
-            <td>Home Cleaning Products</td>
-            <td>Rs. 380.50</td>
-            <td>5</td>
-            <td>Rs. 0.00</td>
-            <td>Rs. 1,902.50</td>
-          </tr>
-          <tr>
-            <td>PRD-HHE-000001</td>
-            <td>Sunlight Detergent Powder - 1kg</td>
-            <td>Household Essentials</td>
-            <td>Rs. 320.50</td>
-            <td>5</td>
-            <td>Rs. 160.25</td>
-            <td>Rs. 1,442.25</td>
-          </tr>
-          <tr>
-            <td>PRD-PSC-000001</td>
-            <td>Clogard Toothpaste 200g</td>
-            <td>Personal Care</td>
-            <td>Rs. 360.00</td>
-            <td>10</td>
-            <td>Rs. 0.00</td>
-            <td>Rs. 3,600.00</td>
-          </tr>
-           
+          
+           {$items_content}
         </table>
 
         <br>
 
         <table width='75%' align='right'>
-            <tr><td align='right'>Subtotal:</td><td align='right'>{$o['subtotal']}</td></tr>
-            <tr><td align='right'>Discount:</td><td align='right'>{$o['discount']}</td></tr>
-            <tr><td align='right'>VAT (15%):</td><td align='right'>{$o['vat']}</td></tr>
-            <tr><td align='right'>Delivery Fee:</td><td align='right'>{$o['delivery_fee']}</td></tr>
+            <tr><td align='right'>Subtotal:</td><td align='right'>{$subtotal}</td></tr>
+            <tr><td align='right'>Discount:</td><td align='right'>- {$discount_total}</td></tr>
+            <tr><td align='right'>VAT (15%):</td><td align='right'>{$tax_amount}</td></tr>
+            <tr><td align='right'>Delivery Fee:</td><td align='right'>{$delivery_fee}</td></tr>
             <tr><td align='right'><strong>Grand Total:</strong></td>
-                <td align='right'><strong>Rs. {$o['grand_total']}</strong></td></tr>
+                <td align='right'><strong>Rs. {$grand_total}</strong></td></tr>
         </table>
 
         <div style='
@@ -130,7 +125,6 @@ class InvoiceGenerator
 
         </body>
         </html>";
-    }
+  }
 }
-
 ?>

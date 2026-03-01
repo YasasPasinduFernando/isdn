@@ -42,7 +42,7 @@ switch ($action) {
         //$cartItems = $shopping_cart;//$cart->getUserCart($userId);
         $cartItems = $cart->getUserCart($userId);
         $products_count = $cart->getUserCartCount($userId);
-        $cart_count = $products_count[0]['product_count'];
+        $cart_count = 0;//$products_count[0]['product_count'];
         require __DIR__ . '/../views/customer/cart.php';
 }
 

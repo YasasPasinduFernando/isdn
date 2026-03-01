@@ -59,7 +59,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
 
                     <!-- Download Invoice -->
-                    <a href="ISDN-Invoice-ORD-10245.pdf"
+                    <a href="<?php echo BASE_PATH. $cash_payment_info['invoice_path'] ?>" download
                         class="bg-teal-600 px-6 py-3 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center justify-center">
                         <span class="material-symbols-rounded mr-2 text-lg">download</span>
                         Download Invoice

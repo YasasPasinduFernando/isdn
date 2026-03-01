@@ -358,5 +358,6 @@
         <script src="js/filter_drawer.js?v=<?= time() ?>"></script>
         <script src="js/customer_orders_filter_drawer.js?v=<?= time() ?>"></script>
         <script src="js/checkout.js?v=<?= time() ?>"></script>
+        <script src="js/payment.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -35,24 +35,34 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    let action = "";
     const method = selectedPayment.value;
     const deliveryNotes = document.getElementById("deliveryNotes").value.trim();
-
+    showLoader();
     // If payment method is CASH → Send AJAX POST
-    fetch("index.php?page=sales-orders&method=" + method, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    if (method == "cash") {
+      action = "place";
+    } else if (method == "card") {
+      action = "pay";
+    }
+    fetch(
+      "index.php?page=sales-orders&method=" + method + "&action=" + action,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          delivery_notes: deliveryNotes,
+        }),
       },
-      body: JSON.stringify({
-        delivery_notes: deliveryNotes,
-      }),
-    })
+    )
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
+          hideLoader();
           //alert("Order placed successfully!");
-          window.location.href = "index.php?page=payment-success";
+          window.location.href = data.redirect;
         } else {
           alert("Something went wrong. Please try again.");
         }
@@ -62,4 +72,18 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Server error. Please try again.");
       });
   });
+
+  function showLoader() {
+    const loader = document.getElementById("pageLoader");
+    document.body.style.pointerEvents = "none";
+    loader.classList.remove("hidden");
+    loader.classList.add("flex"); // make it visible and centered
+  }
+
+  function hideLoader() {
+    const loader = document.getElementById("pageLoader");
+    document.body.style.pointerEvents = "auto";
+    loader.classList.add("hidden");
+    loader.classList.remove("flex");
+  }
 });

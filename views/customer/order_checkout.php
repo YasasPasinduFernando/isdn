@@ -171,7 +171,7 @@ $tax_amount = 0;
             </div>
             <!-- ================= Actions ================= -->
             <div class="flex flex-wrap justify-between items-center mt-10 gap-4">
-                <a href="cart.php" class="px-6 py-3 bg-white border rounded-xl shadow hover:bg-gray-50 font-semibold">
+                <a href="index.php?page=cart" class="px-6 py-3 bg-white border rounded-xl shadow hover:bg-gray-50 font-semibold">
                     Back to Cart
                 </a>
 
@@ -187,6 +187,13 @@ $tax_amount = 0;
                 </div>
             </div>
     </div>
+</div>
+
+<div id="pageLoader" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+  <div class="flex flex-col items-center gap-3 rounded-xl bg-white px-6 py-5 shadow-lg">
+    <div class="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-teal-600"></div>
+    <p class="text-sm font-semibold text-gray-700">Processing...</p>
+  </div>
 </div>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

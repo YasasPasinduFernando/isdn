@@ -79,6 +79,34 @@ class ShoppingCart
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getUserCartAmount($userId)
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                ROUND(SUM(
+                    CASE
+                        WHEN pr.id IS NOT NULL 
+                            AND sc.quantity >= pr.product_count
+                        THEN (p.unit_price * sc.quantity) * 
+                            (1 - pr.discount_percentage / 100)
+                        ELSE (p.unit_price * sc.quantity)
+                    END
+                ), 2) AS cart_total
+            FROM shopping_carts sc
+            JOIN products p 
+                ON p.product_id = sc.product_id
+                AND p.is_active = 1
+            LEFT JOIN promotions pr 
+                ON pr.product_id = p.product_id
+                AND pr.is_active = 1
+                AND CURDATE() BETWEEN pr.start_date AND pr.end_date
+            WHERE sc.user_id = :user_id;
+        ");
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
 
     public function addToCart($userId, $productId, $qty)
     {

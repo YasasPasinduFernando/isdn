@@ -135,7 +135,8 @@ class SalesOrder
                 o.id = :order_id
         ");
         $stmt->execute(['order_id' => $orderId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+
     }
 }
 ?>

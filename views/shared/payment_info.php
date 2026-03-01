@@ -28,7 +28,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <label class="text-sm font-semibold text-gray-600">
                         Total Payment Amount (Rs.)
                     </label>
-                    <input type="text" value="Rs. 45,000.00" readonly
+                    <input type="text" value="Rs. 18,751.46" readonly
                         class="w-full border rounded-xl px-4 py-3 mt-1 bg-gray-100 font-semibold text-gray-800 focus:outline-none">
                 </div>
 

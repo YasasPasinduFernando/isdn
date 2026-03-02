@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cAddr = $_POST['address'];
         
         try {
-            $stmt = $pdo->prepare("INSERT INTO retail_customers (name, email, contact_number, address, user_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$cName, $cEmail, $cPhone, $cAddr, $user_id]);
+            $stmt = $pdo->prepare("INSERT INTO retail_customers (name, email, contact_number, address, user_id) VALUES (?, ?, ?, ?, NULL)");
+            $stmt->execute([$cName, $cEmail, $cPhone, $cAddr]);
             $_SESSION['success_msg'] = "New customer added successfully.";
             header("Location: index.php?page=rdc-sales-ref-dashboard&tab=customers");
             exit;
@@ -106,8 +106,23 @@ if (isset($_SESSION['success_msg'])) unset($_SESSION['success_msg']);
 
 // --- 3. Data Fetching ---
 
-// Fetch Rep's Customers
-$customers = $pdo->query("SELECT id, username, email FROM users WHERE role = 'customer'")->fetchAll(PDO::FETCH_ASSOC);
+// Fetch Rep's Customers from retail_customers table
+$customers = $pdo->query("SELECT rc.id, rc.name, rc.email, rc.contact_number, rc.address 
+                          FROM retail_customers rc 
+                          ORDER BY rc.name")->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch Today's Customer Visits (from today's orders)
+$todayVisitsQuery = $pdo->prepare("
+    SELECT DISTINCT rc.id, rc.name, rc.address, rc.contact_number, o.created_at
+    FROM orders o
+    JOIN retail_customers rc ON o.customer_id = rc.id
+    LEFT JOIN users u ON o.placed_by = u.id
+    WHERE (o.placed_by = ? OR u.rdc_id = ?)
+    AND DATE(o.created_at) = CURDATE()
+    ORDER BY o.created_at ASC
+");
+$todayVisitsQuery->execute([$user_id, $rdc_id]);
+$todayVisits = $todayVisitsQuery->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch Products
 $products = $pdo->query("SELECT product_id, product_name FROM products")->fetchAll(PDO::FETCH_ASSOC);
@@ -124,7 +139,7 @@ $orders = $recentOrders->fetchAll(PDO::FETCH_ASSOC);
 
 // Dashboard Stats
 $myCustomersCount = count($customers); 
-$visitsToday = 4; // Mock
+$visitsToday = count($todayVisits);
 $salesThisMonth = 0;
 foreach($orders as $o) {
     // engaging logic: calculate from actual orders if available for this month
@@ -152,11 +167,16 @@ function getStatusBadge($status) {
 
 <style>
     .font-outfit { font-family: 'Outfit', sans-serif; }
-    #map, #liveMap, #routeMap { height: 100%; width: 100%; border-radius: 1rem; z-index: 0; }
+    #map, #liveMap, #routeMap, #miniMap { height: 100%; width: 100%; border-radius: 1rem; z-index: 0; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .hover-lift { transition: transform 0.2s; }
     .hover-lift:hover { transform: translateY(-2px); }
+    .custom-marker {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 </style>
 
 <div class="flex flex-1 overflow-hidden h-full flex-col">
@@ -256,31 +276,36 @@ function getStatusBadge($status) {
                             <span class="material-symbols-rounded text-orange-500 mr-2">schedule</span> Upcoming Visits
                          </h3>
                          <div class="space-y-4">
+                             <?php if(!empty($todayVisits)): ?>
+                                 <?php foreach($todayVisits as $index => $visit): ?>
                              <!-- Timeline Item -->
                              <div class="flex gap-4 relative">
                                  <div class="flex flex-col items-center">
-                                     <div class="w-3 h-3 rounded-full bg-green-500 ring-4 ring-green-100"></div>
+                                     <div class="w-3 h-3 rounded-full <?= $index === 0 ? 'bg-teal-500 ring-4 ring-teal-100' : 'bg-gray-300' ?>"></div>
+                                     <?php if($index < count($todayVisits) - 1): ?>
                                      <div class="w-0.5 h-full bg-gray-200 my-1"></div>
+                                     <?php endif; ?>
                                  </div>
                                  <div class="pb-6">
-                                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">10:00 AM</span>
-                                     <h4 class="text-sm font-bold text-gray-800">Siva Stores</h4>
-                                     <p class="text-xs text-gray-500 mb-2">Jaffna Town • Routine Check</p>
+                                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                                         <?= date('h:i A', strtotime($visit['created_at'])) ?>
+                                     </span>
+                                     <h4 class="text-sm font-bold text-gray-800"><?= htmlspecialchars($visit['name']) ?></h4>
+                                     <p class="text-xs text-gray-500 mb-2"><?= htmlspecialchars($visit['address'] ?? 'Address not available') ?></p>
+                                     <?php if($index === 0): ?>
                                      <button class="bg-teal-50 text-teal-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-100 transition">Check-in</button>
+                                     <?php endif; ?>
                                  </div>
                              </div>
-                             <!-- Timeline Item -->
-                             <div class="flex gap-4 relative">
-                                 <div class="flex flex-col items-center">
-                                     <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                                     <div class="w-0.5 h-full bg-gray-200 my-1"></div>
+                                 <?php endforeach; ?>
+                             <?php else: ?>
+                                 <div class="text-center py-8">
+                                     <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
+                                         <span class="material-symbols-rounded">event_busy</span>
+                                     </div>
+                                     <p class="text-sm text-gray-500">No visits scheduled for today</p>
                                  </div>
-                                 <div class="pb-6">
-                                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">02:00 PM</span>
-                                     <h4 class="text-sm font-bold text-gray-800">New City Mart</h4>
-                                     <p class="text-xs text-gray-500">Kokuvil • Order Collection</p>
-                                 </div>
-                             </div>
+                             <?php endif; ?>
                          </div>
                     </div>
                 </div>
@@ -302,11 +327,11 @@ function getStatusBadge($status) {
                     <div class="glass-card p-6 rounded-3xl hover-lift">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-600 text-lg shadow-inner">
-                                <?= strtoupper(substr($c['username'],0,2)) ?>
+                                <?= strtoupper(substr($c['name'],0,2)) ?>
                             </div>
                             <span class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">Active</span>
                         </div>
-                        <h4 class="font-bold text-gray-800 text-lg mb-1 leading-tight"><?= htmlspecialchars($c['username']) ?></h4>
+                        <h4 class="font-bold text-gray-800 text-lg mb-1 leading-tight"><?= htmlspecialchars($c['name']) ?></h4>
                         <p class="text-sm text-gray-500 mb-5 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">mail</span> <?= htmlspecialchars($c['email']) ?>
                         </p>
@@ -340,54 +365,56 @@ function getStatusBadge($status) {
                         <h3 class="font-bold text-gray-800 flex items-center">
                             <span class="material-symbols-rounded text-orange-500 mr-2">list_alt</span> Scheduled Visits Today
                         </h3>
-                        <span class="text-sm text-gray-500">3 Visits Remaining</span>
+                        <span class="text-sm text-gray-500"><?= count($todayVisits) ?> Visit<?= count($todayVisits) !== 1 ? 's' : '' ?></span>
                     </div>
                     
                     <div class="overflow-x-auto">
+                        <?php if(!empty($todayVisits)): ?>
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-xs font-bold text-gray-500 border-b border-gray-100">
                                     <th class="py-3 px-2">Time</th>
                                     <th class="py-3 px-2">Customer</th>
                                     <th class="py-3 px-2">Location</th>
-                                    <th class="py-3 px-2">Purpose</th>
+                                    <th class="py-3 px-2">Contact</th>
                                     <th class="py-3 px-2">Status</th>
                                     <th class="py-3 px-2">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm">
+                                <?php foreach($todayVisits as $index => $visit): ?>
                                 <tr class="hover:bg-gray-50/50 transition border-b border-gray-100/50">
-                                    <td class="py-4 px-2 font-bold text-gray-700">10:00 AM</td>
-                                    <td class="py-4 px-2 font-medium text-gray-800">Siva Stores</td>
-                                    <td class="py-4 px-2 text-gray-500">Jaffna Town</td>
-                                    <td class="py-4 px-2"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-xs font-bold">Routine Check</span></td>
-                                    <td class="py-4 px-2"><span class="text-orange-500 font-bold text-xs flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1"></span> Pending</span></td>
+                                    <td class="py-4 px-2 font-bold text-gray-700"><?= date('h:i A', strtotime($visit['created_at'])) ?></td>
+                                    <td class="py-4 px-2 font-medium text-gray-800"><?= htmlspecialchars($visit['name']) ?></td>
+                                    <td class="py-4 px-2 text-gray-500"><?= htmlspecialchars($visit['address'] ?? 'N/A') ?></td>
+                                    <td class="py-4 px-2 text-gray-500"><?= htmlspecialchars($visit['contact_number'] ?? 'N/A') ?></td>
                                     <td class="py-4 px-2">
+                                        <?php if($index === 0): ?>
+                                        <span class="text-teal-500 font-bold text-xs flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-teal-500 mr-1"></span> Active</span>
+                                        <?php else: ?>
+                                        <span class="text-gray-400 font-bold text-xs flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1"></span> Pending</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-4 px-2">
+                                        <?php if($index === 0): ?>
                                         <button class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-teal-700">Check-In</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-gray-50/50 transition border-b border-gray-100/50">
-                                    <td class="py-4 px-2 font-bold text-gray-700">02:00 PM</td>
-                                    <td class="py-4 px-2 font-medium text-gray-800">New City Mart</td>
-                                    <td class="py-4 px-2 text-gray-500">Kokuvil</td>
-                                    <td class="py-4 px-2"><span class="bg-purple-50 text-purple-600 px-2 py-1 rounded-md text-xs font-bold">Order Collection</span></td>
-                                    <td class="py-4 px-2"><span class="text-orange-500 font-bold text-xs flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1"></span> Pending</span></td>
-                                    <td class="py-4 px-2">
+                                        <?php else: ?>
                                         <button class="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">Wait</button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-gray-50/50 transition">
-                                    <td class="py-4 px-2 font-bold text-gray-400">04:30 PM</td>
-                                    <td class="py-4 px-2 font-medium text-gray-400">Raja Traders</td>
-                                    <td class="py-4 px-2 text-gray-400">Kopay</td>
-                                    <td class="py-4 px-2"><span class="bg-gray-50 text-gray-500 px-2 py-1 rounded-md text-xs font-bold">Delivery</span></td>
-                                    <td class="py-4 px-2"><span class="text-green-500 font-bold text-xs flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></span> Completed</span></td>
-                                    <td class="py-4 px-2">
-                                        <button class="text-teal-600 text-xs font-bold hover:underline">View Report</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <?php else: ?>
+                        <div class="text-center py-10">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                <span class="material-symbols-rounded text-3xl">event_busy</span>
+                            </div>
+                            <h4 class="text-lg font-bold text-gray-700 mb-2">No Visits Scheduled</h4>
+                            <p class="text-gray-500 text-sm">No customer visits planned for today.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -526,7 +553,7 @@ function getStatusBadge($status) {
                      <select name="customer_id" class="w-full border border-gray-200 bg-gray-50/50 p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition" required>
                          <option value="">Choose...</option>
                          <?php foreach($customers as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['username']) ?></option>
+                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
                          <?php endforeach; ?>
                      </select>
                 </div>
@@ -557,13 +584,171 @@ function getStatusBadge($status) {
         var mainRouteMap = null;
         var miniMapObj = null;
 
-        // Shared Route Data
+        // Shared Route Data - Dynamic from today's orders
         const routeLocations = [
-            {lat: 9.6615, lng: 80.0255, title: "Start Point (Jaffna)"},
-            {lat: 9.6680, lng: 80.0150, title: "Siva Stores"},
-            {lat: 9.6750, lng: 80.0300, title: "New City Mart"},
-            {lat: 9.6650, lng: 80.0400, title: "Raja Traders"}
+            <?php 
+            if(!empty($todayVisits)) {
+                $locationJs = [];
+                foreach($todayVisits as $visit) {
+                    $safeName = addslashes($visit['name']);
+                    $safeAddress = addslashes($visit['address'] ?? 'Address not available');
+                    $locationJs[] = "{address: '$safeAddress', title: '$safeName'}";
+                }
+                echo implode(",\n            ", $locationJs);
+            } else {
+                // Fallback to sample data if no orders today
+                echo "{address: 'Jaffna Town, Jaffna', title: 'Siva Stores'},";
+                echo "\n            {address: 'Kokuvil, Jaffna', title: 'New City Mart'},";
+                echo "\n            {address: 'Kopay, Jaffna', title: 'Raja Traders'}";
+            }
+            ?>
         ];
+
+        // Final fallback coordinates for major Sri Lankan cities
+        const locationKeywords = [
+            { keywords: ['colombo'], coords: [6.9271, 79.8612] },
+            { keywords: ['kandy'], coords: [7.2906, 80.6337] },
+            { keywords: ['galle'], coords: [6.0535, 80.2210] },
+            { keywords: ['jaffna'], coords: [9.6615, 80.0255] },
+            { keywords: ['trincomalee'], coords: [8.5874, 81.2152] },
+            { keywords: ['batticaloa'], coords: [7.7310, 81.6747] },
+            { keywords: ['badulla'], coords: [6.9934, 81.0550] },
+            { keywords: ['ratnapura'], coords: [6.7056, 80.3847] },
+            { keywords: ['kurunegala'], coords: [7.4863, 80.3623] },
+            { keywords: ['anuradhapura'], coords: [8.3114, 80.4037] },
+            { keywords: ['negombo'], coords: [7.2083, 79.8358] },
+            { keywords: ['matara'], coords: [5.9485, 80.5353] },
+            { keywords: ['nuwara eliya'], coords: [6.9497, 80.7891] },
+            { keywords: ['ampara'], coords: [7.2975, 81.6681] },
+            { keywords: ['hambantota'], coords: [6.1429, 81.1212] },
+            { keywords: ['kalutara'], coords: [6.5833, 79.9611] },
+            { keywords: ['gampaha'], coords: [7.0917, 80.0142] },
+            { keywords: ['kilinochchi'], coords: [9.3811, 80.4037] },
+            { keywords: ['vavuniya'], coords: [8.7514, 80.4972] },
+            { keywords: ['mannar'], coords: [8.9833, 79.9167] },
+            { keywords: ['puttalam'], coords: [8.0408, 79.8356] },
+            { keywords: ['polonnaruwa'], coords: [7.9403, 81.0188] },
+            { keywords: ['monaragala'], coords: [6.8722, 81.3508] },
+            { keywords: ['kegalle'], coords: [7.2528, 80.3464] },
+            { keywords: ['matale'], coords: [7.4675, 80.6234] }
+        ];
+
+        // Track used coordinates to add offsets
+        const usedCoords = {};
+        
+        // Geocoding cache
+        const geocodeCache = JSON.parse(localStorage.getItem('geocodeCache') || '{}');
+        let lastGeocodeTime = 0;
+
+        // Get exact coordinates using OpenStreetMap Nominatim API
+        async function geocodeAddress(address) {
+            if (geocodeCache[address]) {
+                return geocodeCache[address];
+            }
+
+            try {
+                const now = Date.now();
+                const timeSinceLastRequest = now - lastGeocodeTime;
+                if (timeSinceLastRequest < 1000) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
+                }
+                lastGeocodeTime = Date.now();
+                
+                let searchAddress = encodeURIComponent(address + ', Sri Lanka');
+                let response = await fetch(`https://nominatim.openstreetmap.org/search?q=${searchAddress}&format=json&limit=1&countrycodes=lk`, {
+                    headers: { 'User-Agent': 'ISDN-SalesApp/1.0' }
+                });
+                
+                if (!response.ok) throw new Error('Geocoding API error');
+                let data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    const cityMatch = address.match(/\b(Colombo|Galle|Kandy|Jaffna|Negombo|Matara|Trincomalee|Batticaloa|Anuradhapura|Kurunegala|Ratnapura|Badulla|Ampara|Kalutara|Gampaha|Kilinochchi|Vavuniya|Mannar|Puttalam|Polonnaruwa|Monaragala|Kegalle|Matale|Hambantota|Nuwara Eliya)\b/i);
+                    
+                    if (cityMatch) {
+                        const cityName = cityMatch[0];
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        searchAddress = encodeURIComponent(cityName + ', Sri Lanka');
+                        response = await fetch(`https://nominatim.openstreetmap.org/search?q=${searchAddress}&format=json&limit=1&countrycodes=lk`, {
+                            headers: { 'User-Agent': 'ISDN-SalesApp/1.0' }
+                        });
+                        data = await response.json();
+                    }
+                }
+                
+                if (data && data.length > 0) {
+                    const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    geocodeCache[address] = coords;
+                    localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache));
+                    return coords;
+                }
+            } catch (error) {
+                console.warn('Geocoding error for', address, ':', error);
+            }
+            
+            return getCoordinatesFallback(address);
+        }
+
+        // Fallback coordinates from address keywords
+        function getCoordinatesFallback(address) {
+            if (!address) return [9.6615, 80.0255]; // Default Jaffna
+
+            const addrLower = address.toLowerCase();
+
+            for (const loc of locationKeywords) {
+                for (const keyword of loc.keywords) {
+                    if (addrLower.includes(keyword.toLowerCase())) {
+                        return loc.coords;
+                    }
+                }
+            }
+
+            // Generate unique position based on address hash
+            const hash = hashString(address);
+            const baseLat = 9.6615;  // Jaffna center
+            const baseLng = 80.0255;
+            const latOffset = ((hash % 1000) / 1000) * 0.15 - 0.075;
+            const lngOffset = (((hash >> 10) % 1000) / 1000) * 0.15 - 0.075;
+            return [baseLat + latOffset, baseLng + lngOffset];
+        }
+        
+        // Synchronous version for immediate use
+        function getCoordinates(address) {
+            if (geocodeCache[address]) {
+                return addOffset(geocodeCache[address]);
+            }
+            return addOffset(getCoordinatesFallback(address));
+        }
+
+        // Add offset to prevent marker overlap
+        function addOffset(coords) {
+            const key = coords[0].toFixed(4) + ',' + coords[1].toFixed(4);
+            if (!usedCoords[key]) {
+                usedCoords[key] = 0;
+            }
+            usedCoords[key]++;
+            const count = usedCoords[key];
+            if (count === 1) return coords;
+
+            const angle = (count - 1) * (2.4);
+            const radius = 0.003 * Math.ceil(count / 6);
+            return [
+                coords[0] + radius * Math.cos(angle),
+                coords[1] + radius * Math.sin(angle)
+            ];
+        }
+
+        // Hash function
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash);
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -641,35 +826,87 @@ function getStatusBadge($status) {
 
         function initMaps() {
             // Always try to init visible maps
-            if(document.getElementById('miniMap') && document.getElementById('tab-dashboard').classList.contains('active')) {
-                initMiniMap();
+            const dashboardTab = document.getElementById('tab-dashboard');
+            const visitsTab = document.getElementById('tab-visits');
+            
+            if(document.getElementById('miniMap') && dashboardTab && !dashboardTab.classList.contains('hidden')) {
+                setTimeout(initMiniMap, 100);
             }
-            if(document.getElementById('routeMap') && document.getElementById('tab-visits').classList.contains('active')) {
-                initRouteMap();
+            if(document.getElementById('routeMap') && visitsTab && !visitsTab.classList.contains('hidden')) {
+                setTimeout(initRouteMap, 100);
             }
         }
 
         function initMiniMap() {
-            if(!miniMapObj && document.getElementById('miniMap')) {
+            const mapContainer = document.getElementById('miniMap');
+            if(!miniMapObj && mapContainer) {
                 miniMapObj = L.map('miniMap', {zoomControl: false, attributionControl: false}).setView([9.6615, 80.0255], 12);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMapObj);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(miniMapObj);
                 
-                // Add Same Markers (no popups for mini map to keep it clean, or can add if desired)
+                // Add markers from route locations using geocoding
                 routeLocations.forEach(loc => {
-                    L.marker([loc.lat, loc.lng]).addTo(miniMapObj);
+                    const coords = getCoordinates(loc.address);
+                    const marker = L.marker(coords).addTo(miniMapObj);
+                    marker.bindPopup(`<b>${loc.title}</b><br><small>${loc.address}</small>`);
                 });
+                
+                // Ensure map renders correctly
+                setTimeout(() => miniMapObj.invalidateSize(), 100);
             }
         }
 
-        function initRouteMap() {
-            if(!mainRouteMap && document.getElementById('routeMap')) {
-                mainRouteMap = L.map('routeMap').setView([9.6615, 80.0255], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mainRouteMap);
+        async function initRouteMap() {
+            const mapContainer = document.getElementById('routeMap');
+            if(!mainRouteMap && mapContainer && routeLocations.length > 0) {
+                // Show loading
+                mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#f3f4f6;"><div style="text-align:center;"><div style="border:4px solid #e5e7eb;border-top:4px solid #14b8a6;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 10px;"></div><p style="color:#6b7280;font-size:14px;">Loading customer locations...</p></div></div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
                 
-                // Add Markers with Popups
-                routeLocations.forEach(loc => {
-                    L.marker([loc.lat, loc.lng]).addTo(mainRouteMap).bindPopup(loc.title);
+                // Geocode all addresses
+                const geocodedLocations = await Promise.all(
+                    routeLocations.map(async (loc) => {
+                        const coords = await geocodeAddress(loc.address);
+                        return { ...loc, coords };
+                    })
+                );
+                
+                // Clear loading
+                mapContainer.innerHTML = '';
+                
+                // Create map
+                mainRouteMap = L.map('routeMap').setView([9.6615, 80.0255], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(mainRouteMap);
+                
+                const bounds = [];
+                
+                // Add markers with popups
+                geocodedLocations.forEach((loc, index) => {
+                    const coords = addOffset(loc.coords);
+                    bounds.push(coords);
+                    
+                    // Marker color (teal for sales visits)
+                    const markerColor = '#14b8a6';
+                    
+                    const customIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background-color: ${markerColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${index + 1}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+                    
+                    const marker = L.marker(coords, {icon: customIcon}).addTo(mainRouteMap);
+                    marker.bindPopup(`<b>#${index + 1} - ${loc.title}</b><br><small>${loc.address}</small>`);
                 });
+                
+                // Fit bounds if we have locations
+                if (bounds.length > 0) {
+                    mainRouteMap.fitBounds(bounds, {padding: [50, 50]});
+                }
+                
+                setTimeout(() => mainRouteMap.invalidateSize(), 100);
             }
         }
     </script>

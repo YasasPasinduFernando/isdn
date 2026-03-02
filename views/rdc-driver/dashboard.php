@@ -11,18 +11,33 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // --- 1. Authentication & Context Setup ---
 try {
-    // Attempt to find a Driver user
-    // For demo/dev purposes, if no specific user is logged in, we fetch the first driver or a specific one
-    $stmt = $pdo->prepare("SELECT u.id as user_id, u.username, u.email, u.rdc_id, r.rdc_name, d.id as driver_id, d.contact_number 
-                           FROM users u 
-                           JOIN rdcs r ON u.rdc_id = r.rdc_id 
-                           LEFT JOIN rdc_drivers d ON u.id = d.user_id
-                           WHERE u.role = 'rdc_driver' LIMIT 1");
-    $stmt->execute();
-    $driver = $stmt->fetch(PDO::FETCH_ASSOC);
+    $session_user_id = $_SESSION['user_id'] ?? null;
+
+    if ($session_user_id) {
+        $stmt = $pdo->prepare("SELECT u.id as user_id, u.username, u.email, u.rdc_id, r.rdc_name, d.id as driver_id, d.contact_number 
+                               FROM users u 
+                               JOIN rdcs r ON u.rdc_id = r.rdc_id 
+                               LEFT JOIN rdc_drivers d ON u.id = d.user_id
+                               WHERE u.id = ? AND u.role = 'rdc_driver'");
+        $stmt->execute([$session_user_id]);
+        $driver = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $driver = null;
+    }
 
     if (!$driver) {
-        // Fallback for demo
+        // Fallback for demo if no session or not found
+        $stmt = $pdo->prepare("SELECT u.id as user_id, u.username, u.email, u.rdc_id, r.rdc_name, d.id as driver_id, d.contact_number 
+                               FROM users u 
+                               JOIN rdcs r ON u.rdc_id = r.rdc_id 
+                               LEFT JOIN rdc_drivers d ON u.id = d.user_id
+                               WHERE u.role = 'rdc_driver' LIMIT 1");
+        $stmt->execute();
+        $driver = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (!$driver) {
+        // Absolute fallback
         $driver = ['user_id' => 0, 'username' => 'Demo Driver', 'email' => 'driver@example.com', 'rdc_id' => 1, 'rdc_name' => 'Northern RDC', 'driver_id' => 1, 'contact_number' => '0771234567'];
     }
 
@@ -49,26 +64,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_orders' &&
     !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
     strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
     
-    // Fetch current orders
+    // Fetch current orders for driver
     $ordersQuery = "
         SELECT o.id, o.order_number, o.total_amount, o.status, o.customer_id, 
                rc.name as customer_name, u.email as customer_email,
-               rc.address as delivery_address, rc.contact_number as customer_phone
-        FROM orders o
+               rc.address as delivery_address, rc.contact_number as customer_phone,
+               (SELECT SUM(quantity) FROM order_items WHERE order_id = o.id) as total_items,
+               p.payment_method
+        FROM order_deliveries od
+        JOIN orders o ON od.order_id = o.id
         JOIN retail_customers rc ON o.customer_id = rc.id
         JOIN users u ON rc.user_id = u.id
-        JOIN users placed_by_user ON o.placed_by = placed_by_user.id
-        WHERE placed_by_user.rdc_id = ? 
-        AND DATE(o.created_at) = CURDATE()
+        LEFT JOIN payments p ON p.order_id = o.id
+        WHERE od.driver_id = ? 
+        AND DATE(od.delivery_date) = CURDATE()
+        AND o.status NOT IN ('delivered', 'failed', 'cancelled')
         ORDER BY CASE 
-            WHEN o.status = 'out_for_delivery' THEN 1 
-            WHEN o.status = 'delivered' THEN 3
-            WHEN o.status = 'failed' THEN 4
-            ELSE 2 
-        END, o.created_at ASC
+            WHEN o.status = 'processing' THEN 1
+            WHEN o.status = 'out_for_delivery' THEN 2 
+            WHEN o.status = 'arrived' THEN 3
+            ELSE 4 
+        END ASC, o.updated_at ASC
+        /* Sorting: processing first (current), then on the way, arrived, pending */
     ";
     $stmt = $pdo->prepare($ordersQuery);
-    $stmt->execute([$rdc_id]);
+    $stmt->execute([$driver_id]);
     $currentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     header('Content-Type: application/json');
@@ -193,31 +213,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Assuming 'out_for_delivery', 'processing' are relevant statuses
 // NOTE: For demo purposes, we might need to simulate some assigned orders if the table is empty.
 
-// Check if any deliveries assigned
-$check = $pdo->prepare("SELECT COUNT(*) FROM order_deliveries WHERE driver_id = ?");
+// Check if any deliveries assigned for today
+$check = $pdo->prepare("SELECT COUNT(*) FROM order_deliveries WHERE driver_id = ? AND DATE(delivery_date) = CURDATE()");
 $check->execute([$driver_id]);
 $count = $check->fetchColumn();
 
-// Today's Deliveries (all statuses for today)
+// Today's Deliveries (all active statuses for today)
 $deliveriesQuery = "
     SELECT o.id, o.order_number, o.total_amount, o.status, o.customer_id, 
            rc.name as customer_name, u.email as customer_email,
-           rc.address as delivery_address, rc.contact_number as customer_phone
-    FROM orders o
+           rc.address as delivery_address, rc.contact_number as customer_phone,
+           (SELECT COALESCE(SUM(quantity), 0) FROM order_items WHERE order_id = o.id) as total_items,
+           p.payment_method
+    FROM order_deliveries od
+    JOIN orders o ON od.order_id = o.id
     JOIN retail_customers rc ON o.customer_id = rc.id
     JOIN users u ON rc.user_id = u.id
-    JOIN users placed_by_user ON o.placed_by = placed_by_user.id
-    WHERE placed_by_user.rdc_id = ? 
-    AND DATE(o.created_at) = CURDATE()
+    LEFT JOIN payments p ON p.order_id = o.id
+    WHERE od.driver_id = ? 
+    AND DATE(od.delivery_date) = CURDATE()
+    AND o.status NOT IN ('delivered', 'failed', 'cancelled')
     ORDER BY CASE 
-        WHEN o.status = 'out_for_delivery' THEN 1 
-        WHEN o.status = 'delivered' THEN 3
-        WHEN o.status = 'failed' THEN 4
-        ELSE 2 
-    END, o.created_at ASC
+        WHEN o.status = 'processing' THEN 1
+        WHEN o.status = 'out_for_delivery' THEN 2 
+        WHEN o.status = 'arrived' THEN 3
+        ELSE 4 
+    END ASC, o.updated_at ASC
+    /* Sorting: processing first (current), then on the way, arrived, pending */
 ";
 $stmt = $pdo->prepare($deliveriesQuery);
-$stmt->execute([$rdc_id]);
+$stmt->execute([$driver_id]);
 $deliveries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Delivery History (completed today)
@@ -226,17 +251,16 @@ $historyQuery = "
            rc.name as customer_name, rc.address as delivery_address, 
            rc.contact_number as customer_phone,
            od.completed_date
-    FROM orders o
+    FROM order_deliveries od
+    JOIN orders o ON od.order_id = o.id
     JOIN retail_customers rc ON o.customer_id = rc.id
-    JOIN users placed_by_user ON o.placed_by = placed_by_user.id
-    LEFT JOIN order_deliveries od ON o.id = od.order_id
-    WHERE placed_by_user.rdc_id = ? 
+    WHERE od.driver_id = ? 
     AND o.status IN ('delivered', 'cancelled', 'failed')
     AND DATE(o.updated_at) = CURDATE()
     ORDER BY o.updated_at DESC
 ";
 $stmt = $pdo->prepare($historyQuery);
-$stmt->execute([$rdc_id]);
+$stmt->execute([$driver_id]);
 $completedDeliveries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate Total Cash Collected Today
@@ -247,20 +271,20 @@ foreach ($completedDeliveries as $d) {
     }
 }
 
-// All deliveries for map (include delivered for color coding)
+// All deliveries for map (include ALL statuses: delivered, failed, cancelled, active)
 $allDeliveriesQuery = "
     SELECT o.id, o.order_number, o.total_amount, o.status, o.customer_id, 
            rc.name as customer_name, rc.address as delivery_address, 
            rc.contact_number as customer_phone
-    FROM orders o
+    FROM order_deliveries od
+    JOIN orders o ON od.order_id = o.id
     JOIN retail_customers rc ON o.customer_id = rc.id
-    JOIN users placed_by_user ON o.placed_by = placed_by_user.id
-    WHERE placed_by_user.rdc_id = ? 
-    AND DATE(o.created_at) = CURDATE()
+    WHERE od.driver_id = ? 
+    AND DATE(od.delivery_date) = CURDATE()
     ORDER BY o.created_at ASC
 ";
 $stmt = $pdo->prepare($allDeliveriesQuery);
-$stmt->execute([$rdc_id]);
+$stmt->execute([$driver_id]);
 $allDeliveries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Separate into Active/Next for UI
@@ -268,13 +292,14 @@ $activeDelivery = null;
 $pendingDeliveries = [];
 
 foreach($deliveries as $d) {
-    if ($d['status'] === 'out_for_delivery' && !$activeDelivery) {
+    // Current stop: processing or out_for_delivery status
+    if (($d['status'] === 'processing' || $d['status'] === 'out_for_delivery') && !$activeDelivery) {
         $activeDelivery = $d;
     } else {
         $pendingDeliveries[] = $d;
     }
 }
-// If no specific 'out_for_delivery', take the first one as 'Next Up'
+// If no specific 'processing' or 'out_for_delivery', take the first one as 'Next Up'
 if (!$activeDelivery && count($pendingDeliveries) > 0) {
     $activeDelivery = array_shift($pendingDeliveries);
 }
@@ -286,9 +311,6 @@ $remainingCount = count($deliveries);
 
 ?>
 <?php
-// Debug: Log the deliveries data to verify status
-file_put_contents('debug_view.log', date('Y-m-d H:i:s') . " - View Data: " . print_r($deliveries, true) . "\n", FILE_APPEND);
-
 // Include header
 require_once __DIR__ . '/../../includes/header.php';
 ?>
@@ -321,8 +343,6 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
-
-
         <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-20 md:pb-8">
             <?php if($success_msg): ?>
                 <div class="glass-card bg-green-50 border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 flex items-center shadow-sm relative z-20">
@@ -395,7 +415,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-800 leading-tight mb-1"><?= htmlspecialchars($activeDelivery['customer_name']) ?></h2>
                                 <p class="text-lg text-gray-600 font-medium"><?= htmlspecialchars($activeDelivery['delivery_address']) ?></p>
-                                <p class="text-sm text-gray-400 mt-1">Order #<?= $activeDelivery['order_number'] ?> • <span class="text-teal-600 font-bold"><?= count(explode(',',$activeDelivery['customer_phone'])) ?> items</span></p>
+                                <p class="text-sm text-gray-400 mt-1">Order #<?= $activeDelivery['order_number'] ?> • <span class="text-teal-600 font-bold"><?= $activeDelivery['total_items'] ?? 0 ?> items</span></p>
                             </div>
                         </div>
 
@@ -518,11 +538,17 @@ require_once __DIR__ . '/../../includes/header.php';
                             <h3 class="font-bold text-lg flex items-center">
                                 <span class="material-symbols-rounded mr-2">alt_route</span> Delivery Route Map
                             </h3>
-                            <p class="text-sm text-teal-100 mt-1"><?= count($deliveries) ?> delivery locations</p>
+                            <p class="text-sm text-teal-100 mt-1"><?= count($deliveries) ?> delivery locations (Real GPS coordinates)</p>
                         </div>
-                        <div class="text-right">
-                            <div class="text-xs text-teal-100">Total Distance</div>
-                            <div class="font-bold text-xl">~25 km</div>
+                        <div class="flex gap-3 items-center">
+                            <button onclick="refreshGeocoding()" class="bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1" title="Clear cache and reload locations">
+                                <span class="material-symbols-rounded" style="font-size: 16px;">refresh</span>
+                                Refresh Locations
+                            </button>
+                            <div class="text-right">
+                                <div class="text-xs text-teal-100">Total Distance</div>
+                                <div class="font-bold text-xl">~25 km</div>
+                            </div>
                         </div>
                     </div>
                     <div id="routeMap" style="height: calc(100% - 80px); width: 100%;"></div>
@@ -618,6 +644,12 @@ require_once __DIR__ . '/../../includes/header.php';
                             <span class="text-gray-500 text-sm">Phone</span>
                             <span class="font-bold text-gray-800"><?= $driver['contact_number'] ?></span>
                         </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <a href="controllers/AuthController.php?action=logout" class="w-full flex justify-center items-center py-3 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-bold rounded-xl transition-all">
+                            <span class="material-symbols-rounded mr-2">logout</span> Logout
+                        </a>
                     </div>
                  </div>
             </div>
@@ -905,9 +937,11 @@ require_once __DIR__ . '/../../includes/header.php';
                 Special Instruction: Deliver to the back gate. Call before arrival.
             </div>
 
+            <?php if (in_array(strtolower($activeDelivery['payment_method'] ?? ''), ['cash_on_delivery', 'cod', 'cash'])): ?>
             <button onclick="openModal('modal-payment-<?= $activeDelivery['id'] ?>')" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 flex items-center justify-center">
                 <span class="material-symbols-rounded mr-2">payments</span> Collect Payment
             </button>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -948,61 +982,116 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php endif; ?>
 
     <script>
-        // Comprehensive keyword-based geocoding for Northern Province locations
-        // Each keyword maps to real coordinates of that area
+        // Final fallback coordinates for major Sri Lankan cities  
+        // Only used if Nominatim API fails completely
         const locationKeywords = [
-            // Jaffna District - Towns & Areas
-            { keywords: ['jaffna fort', 'fort area', 'stanley'], coords: [9.6630, 80.0100] },
-            { keywords: ['nallur', 'point pedro road'], coords: [9.6856, 80.0331] },
-            { keywords: ['hospital road'], coords: [9.6615, 80.0255] },
-            { keywords: ['kopay', 'kks road'], coords: [9.7183, 80.0561] },
-            { keywords: ['chavakachcheri', 'chavakacheri'], coords: [9.6678, 80.1657] },
-            { keywords: ['tellippalai', 'palaly'], coords: [9.7689, 80.0789] },
-            { keywords: ['chunnakam', 'station road'], coords: [9.7167, 80.0333] },
-            { keywords: ['nelliady', 'market street'], coords: [9.7500, 80.1500] },
-            { keywords: ['point pedro', 'valvettithurai road'], coords: [9.8167, 80.2333] },
-            { keywords: ['valvettithurai', 'harbor road'], coords: [9.8167, 80.1667] },
-            { keywords: ['karainagar', 'beach road'], coords: [9.7897, 79.9622] },
-            { keywords: ['nainativu', 'temple road'], coords: [9.5692, 79.8333] },
-            { keywords: ['kayts', 'velanai'], coords: [9.6500, 79.9833] },
-            { keywords: ['sandilipay'], coords: [9.7100, 80.0200] },
-            { keywords: ['manipay'], coords: [9.7300, 80.0400] },
-            { keywords: ['uduvil'], coords: [9.7400, 80.0600] },
-            { keywords: ['chankanai'], coords: [9.7550, 80.0900] },
-            { keywords: ['araly', 'alaveddy'], coords: [9.7450, 80.0150] },
-            { keywords: ['moolai'], coords: [9.7250, 80.0750] },
-            { keywords: ['kokuvil'], coords: [9.6950, 80.0450] },
-            { keywords: ['thirunelvely', 'thirunelveli'], coords: [9.6880, 80.0350] },
-            { keywords: ['kondavil'], coords: [9.7050, 80.0200] },
-            { keywords: ['columbuthurai'], coords: [9.6550, 80.0050] },
-            { keywords: ['gurunagar'], coords: [9.6580, 80.0120] },
-            { keywords: ['navanthurai'], coords: [9.6630, 80.0180] },
-            { keywords: ['passaiyoor'], coords: [9.6480, 80.0150] },
-            // Kilinochchi District
-            { keywords: ['kilinochchi', 'kandy road'], coords: [9.3811, 80.4037] },
-            { keywords: ['elephant pass', 'mannar road'], coords: [9.5400, 80.4097] },
-            { keywords: ['poonakary', 'pooneryn'], coords: [9.5200, 80.2200] },
-            { keywords: ['paranthan'], coords: [9.4500, 80.3900] },
-            // Mullaitivu District
-            { keywords: ['mullaitivu'], coords: [9.2671, 80.8142] },
-            { keywords: ['oddusuddan'], coords: [9.3200, 80.6100] },
-            { keywords: ['puthukkudiyiruppu'], coords: [9.2800, 80.5800] },
-            // Mannar District
-            { keywords: ['mannar'], coords: [8.9833, 79.9167] },
-            { keywords: ['madhu'], coords: [8.8500, 80.2000] },
-            // Vavuniya District
-            { keywords: ['vavuniya'], coords: [8.7514, 80.4972] },
-            // Catch-all Jaffna areas
+            // Provincial Capitals
+            { keywords: ['colombo'], coords: [6.9271, 79.8612] },
+            { keywords: ['kandy'], coords: [7.2906, 80.6337] },
+            { keywords: ['galle'], coords: [6.0535, 80.2210] },
             { keywords: ['jaffna'], coords: [9.6615, 80.0255] },
-            { keywords: ['main street'], coords: [9.6620, 80.0150] }
+            { keywords: ['trincomalee'], coords: [8.5874, 81.2152] },
+            { keywords: ['batticaloa'], coords: [7.7310, 81.6747] },
+            { keywords: ['badulla'], coords: [6.9934, 81.0550] },
+            { keywords: ['ratnapura'], coords: [6.7056, 80.3847] },
+            { keywords: ['kurunegala'], coords: [7.4863, 80.3623] },
+            { keywords: ['anuradhapura'], coords: [8.3114, 80.4037] },
+            
+            // Major Cities
+            { keywords: ['negombo'], coords: [7.2083, 79.8358] },
+            { keywords: ['matara'], coords: [5.9485, 80.5353] },
+            { keywords: ['nuwara eliya'], coords: [6.9497, 80.7891] },
+            { keywords: ['ampara'], coords: [7.2975, 81.6681] },
+            { keywords: ['hambantota'], coords: [6.1429, 81.1212] },
+            { keywords: ['kalutara'], coords: [6.5833, 79.9611] },
+            { keywords: ['gampaha'], coords: [7.0917, 80.0142] },
+            { keywords: ['kilinochchi'], coords: [9.3811, 80.4037] },
+            { keywords: ['vavuniya'], coords: [8.7514, 80.4972] },
+            { keywords: ['mannar'], coords: [8.9833, 79.9167] },
+            { keywords: ['puttalam'], coords: [8.0408, 79.8356] },
+            { keywords: ['polonnaruwa'], coords: [7.9403, 81.0188] },
+            { keywords: ['monaragala'], coords: [6.8722, 81.3508] },
+            { keywords: ['kegalle'], coords: [7.2528, 80.3464] },
+            { keywords: ['matale'], coords: [7.4675, 80.6234] }
         ];
 
         // Track used coordinates to add offsets for overlapping markers
         const usedCoords = {};
+        
+        // Geocoding cache to avoid repeated API calls
+        const geocodeCache = JSON.parse(localStorage.getItem('geocodeCache') || '{}');
+        let lastGeocodeTime = 0;
 
-        // Get approximate coordinates from address with smart keyword matching
-        function getCoordinates(address) {
-            if (!address) return addOffset([9.6615, 80.0255]); // Default Jaffna
+        // Get exact coordinates using OpenStreetMap Nominatim API
+        async function geocodeAddress(address) {
+            // Check cache first
+            if (geocodeCache[address]) {
+                console.log('Using cached coordinates for:', address);
+                return geocodeCache[address];
+            }
+
+            try {
+                // Respect Nominatim usage policy: max 1 request per second
+                const now = Date.now();
+                const timeSinceLastRequest = now - lastGeocodeTime;
+                if (timeSinceLastRequest < 1000) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
+                }
+                lastGeocodeTime = Date.now();
+                
+                // Try 1: Full address + Sri Lanka
+                let searchAddress = encodeURIComponent(address + ', Sri Lanka');
+                let response = await fetch(`https://nominatim.openstreetmap.org/search?q=${searchAddress}&format=json&limit=1&countrycodes=lk`, {
+                    headers: { 'User-Agent': 'ISDN-DeliveryApp/1.0' }
+                });
+                
+                if (!response.ok) throw new Error('Geocoding API error');
+                
+                let data = await response.json();
+                
+                // Try 2: If no result, extract city name and try again
+                if (!data || data.length === 0) {
+                    console.log('⚠ No results for full address, trying city name only...');
+                    
+                    // Extract city name (common Sri Lankan cities)
+                    const cityMatch = address.match(/\b(Colombo|Galle|Kandy|Jaffna|Negombo|Matara|Trincomalee|Batticaloa|Anuradhapura|Kurunegala|Ratnapura|Badulla|Ampara|Kalutara|Gampaha|Moratuwa|Dehiwala|Kotte|Nugegoda|Maharagama|Kesbewa|Homagama|Kaduwela|Kelaniya|Panadura|Horana|Beruwala|Aluthgama|Hikkaduwa|Ambalangoda|Elpitiya|Baddegama|Unawatuna|Weligama|Deniyaya|Akuressa|Hambantota|Tangalle|Tissamaharama|Peradeniya|Gampola|Nawalapitiya|Katugastota|Matale|Dambulla|Sigiriya|Hatton|Kilinochchi|Mannar|Vavuniya|Mullaitivu|Puttalam|Chilaw|Maho|Kuliyapitiya|Polonnaruwa|Medawachchiya|Bandarawela|Haputale|Welimada|Monaragala|Wellawaya|Balangoda|Embilipitiya|Kegalle|Mawanella|Warakapola)\b/i);
+                    
+                    if (cityMatch) {
+                        const cityName = cityMatch[0];
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+                        
+                        searchAddress = encodeURIComponent(cityName + ', Sri Lanka');
+                        response = await fetch(`https://nominatim.openstreetmap.org/search?q=${searchAddress}&format=json&limit=1&countrycodes=lk`, {
+                            headers: { 'User-Agent': 'ISDN-DeliveryApp/1.0' }
+                        });
+                        
+                        data = await response.json();
+                        console.log(`Tried city name "${cityName}":`, data.length > 0 ? 'Success' : 'Failed');
+                    }
+                }
+                
+                if (data && data.length > 0) {
+                    const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    console.log('✓ Geocoded:', address, '→', coords);
+                    
+                    // Cache the result
+                    geocodeCache[address] = coords;
+                    localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache));
+                    
+                    return coords;
+                }
+            } catch (error) {
+                console.warn('⚠ Geocoding error for', address, ':', error);
+            }
+            
+            // Fallback to keyword matching if geocoding fails
+            console.log('Using fallback for:', address);
+            return getCoordinatesFallback(address);
+        }
+
+        // Fallback: Get approximate coordinates from address with smart keyword matching
+        function getCoordinatesFallback(address) {
+            if (!address) return [6.9271, 79.8612]; // Default Colombo
 
             const addrLower = address.toLowerCase();
 
@@ -1010,19 +1099,29 @@ require_once __DIR__ . '/../../includes/header.php';
             for (const loc of locationKeywords) {
                 for (const keyword of loc.keywords) {
                     if (addrLower.includes(keyword.toLowerCase())) {
-                        return addOffset(loc.coords);
+                        return loc.coords;
                     }
                 }
             }
 
             // If no match found, generate a unique position based on the address string hash
-            // This ensures each unique address gets a different location scattered around Jaffna
+            // This ensures each unique address gets a different location scattered around Colombo
             const hash = hashString(address);
-            const baseLat = 9.6615;
-            const baseLng = 80.0255;
+            const baseLat = 6.9271;  // Colombo center
+            const baseLng = 79.8612;
             const latOffset = ((hash % 1000) / 1000) * 0.15 - 0.075; // spread ±0.075 degrees
             const lngOffset = (((hash >> 10) % 1000) / 1000) * 0.15 - 0.075;
             return [baseLat + latOffset, baseLng + lngOffset];
+        }
+        
+        // Synchronous version for immediate use (uses cache or fallback)
+        function getCoordinates(address) {
+            // Check cache first
+            if (geocodeCache[address]) {
+                return addOffset(geocodeCache[address]);
+            }
+            // Use fallback for immediate display
+            return addOffset(getCoordinatesFallback(address));
         }
 
         // Add a small offset to prevent markers from stacking on top of each other
@@ -1055,8 +1154,8 @@ require_once __DIR__ . '/../../includes/header.php';
             return Math.abs(hash);
         }
 
-        // Delivery data from PHP - use same data as Today's Route (includes all statuses)
-        const allDeliveries = <?php echo json_encode($deliveries); ?>;
+        // Delivery data from PHP - ALL orders for the day (includes delivered, failed, cancelled)
+        const allDeliveries = <?php echo json_encode($allDeliveries); ?>;
         console.log('Map data:', allDeliveries.map(d => d.order_number + ' => [' + d.status + ']'));
         
 function switchTab(id) {
@@ -1104,11 +1203,26 @@ function switchTab(id) {
              }
         }
 
-        function initRouteMap() {
+        async function initRouteMap() {
             var mapContainer = document.getElementById('routeMap');
             if(mapContainer && allDeliveries.length > 0 && !window.routeMapObj) {
-                // Center map on Jaffna area
-                window.routeMapObj = L.map('routeMap').setView([9.6615, 80.0255], 11);
+                // Show loading indicator
+                mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#f3f4f6;"><div style="text-align:center;"><div style="border:4px solid #e5e7eb;border-top:4px solid #3b82f6;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 10px;"></div><p style="color:#6b7280;font-size:14px;">Loading accurate locations...</p></div></div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
+                
+                // Geocode all addresses first
+                console.log('Geocoding', allDeliveries.length, 'delivery addresses...');
+                const geocodedDeliveries = await Promise.all(
+                    allDeliveries.map(async (delivery) => {
+                        const coords = await geocodeAddress(delivery.delivery_address);
+                        return { ...delivery, coords };
+                    })
+                );
+                
+                // Clear loading indicator
+                mapContainer.innerHTML = '';
+                
+                // Center map on Sri Lanka (will auto-adjust with fitBounds)
+                window.routeMapObj = L.map('routeMap').setView([7.8731, 80.7718], 8);
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors'
@@ -1116,9 +1230,9 @@ function switchTab(id) {
 
                 const bounds = [];
                 
-                // Add markers for all deliveries (including completed)
-                allDeliveries.forEach((delivery, index) => {
-                    const coords = getCoordinates(delivery.delivery_address);
+                // Add markers for all deliveries with geocoded coordinates
+                geocodedDeliveries.forEach((delivery, index) => {
+                    const coords = addOffset(delivery.coords);
                     bounds.push(coords);
                     
                     // Determine marker color based on status (using hex codes matching the legend)
@@ -1186,6 +1300,19 @@ function switchTab(id) {
                 if (bounds.length > 0) {
                     window.routeMapObj.fitBounds(bounds, {padding: [50, 50]});
                 }
+            }
+        }
+        
+        // Refresh geocoding - clear cache and reload map
+        function refreshGeocoding() {
+            if (confirm('This will clear the location cache and fetch fresh coordinates from the server. Continue?')) {
+                localStorage.removeItem('geocodeCache');
+                if (window.routeMapObj) {
+                    window.routeMapObj.remove();
+                    window.routeMapObj = null;
+                }
+                console.log('Cache cleared. Reloading map with fresh geocoding...');
+                setTimeout(initRouteMap, 100);
             }
         }
         

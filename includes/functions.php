@@ -57,7 +57,7 @@ function get_allowed_pages_for_role($role) {
             'rdc-driver-dashboard', 'rdc-driver-dashboard&tab=overview', 'rdc-driver-dashboard&tab=map', 'rdc-driver-dashboard&tab=history', 'profile'
         ],
         'head_office_manager' => [
-            'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
+            'select-rdc', 'head-office-manager-dashboard', 'stock-movement-management', 'stock-reports',  'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
             'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',

@@ -20,31 +20,28 @@ if (isset($_GET['order_id'])) {
     $order_id_input = trim($_GET['order_id']);
     
     try {
-        // Fetch Order Details
-        // Join with retail_customers and users/rdc/drivers for rich info
-        $sql = "SELECT o.*, rc.name as customer_name, rc.address as customer_address, 
+        // Fetch Order Details with actual database structure
+        $sql = "SELECT o.*, 
+                       rc.name as customer_name, 
+                       rc.address as customer_address, 
                        rc.contact_number as customer_phone,
+                       u.id as customer_user_id,
                        u.email as customer_email,
-                       ds.status as delivery_status, ds.scheduled_date,
-                       v.vehicle_type, v.registration_number,
-                       dru.username as driver_name, dr.contact_number as driver_phone,
-                       r.rdc_name, r.address as rdc_location
+                       od.delivery_date as scheduled_date,
+                       od.completed_date,
+                       dru.username as driver_name, 
+                       dr.contact_number as driver_phone,
+                       r.rdc_name, 
+                       r.address as rdc_location
                 FROM orders o
                 JOIN retail_customers rc ON o.customer_id = rc.id
                 JOIN users u ON rc.user_id = u.id
-                LEFT JOIN delivery_schedules ds ON o.schedule_id = ds.schedule_id
-                LEFT JOIN vehicles v ON ds.vehicle_id = v.vehicle_id
-                LEFT JOIN users dru ON ds.driver_id = dru.id
-                LEFT JOIN rdc_drivers dr ON dru.id = dr.user_id
-                LEFT JOIN rdcs r ON (
-                     (o.placed_by IN (SELECT id FROM users WHERE rdc_id = r.rdc_id)) OR 
-                     (u.rdc_id = r.rdc_id)
-                )
+                LEFT JOIN order_deliveries od ON o.id = od.order_id
+                LEFT JOIN rdc_drivers dr ON od.driver_id = dr.id
+                LEFT JOIN users dru ON dr.user_id = dru.id
+                LEFT JOIN rdcs r ON o.rdc_id = r.rdc_id
                 WHERE o.order_number = ? OR o.id = ?
                 LIMIT 1";
-        
-        // Note: Joining RDC logic is complex because of my loose linking earlier. 
-        // But for display, even basic order info is good.
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$order_id_input, $order_id_input]);
@@ -53,15 +50,13 @@ if (isset($_GET['order_id'])) {
         if (!$tracking_data) {
             $error_message = "Order not found. Please check the Order ID.";
         } else {
-            // Security check: If logged in, is this MY order?
-            // If user is customer, check ownership.
-            if (isset($_SESSION['role']) && $_SESSION['role'] === 'retail_customer') {
-                // Check if order's customer user_id matches session user_id
-                // We joined `users u` on `rc.user_id`.
-                // Wait, `u` is the customer user. 
-                // So check if $tracking_data['user_id'] (from join, explicit select needed?)
-                // I didn't select u.id. Let's assume nice open tracking or add check.
-                // For better UX, I'll allow searching if you know the ID.
+            // Security check: Customer can only view their own orders
+            if (isset($_SESSION['role']) && $_SESSION['role'] === 'customer') {
+                // Compare user IDs (cast to int for strict comparison)
+                if ((int)$tracking_data['customer_user_id'] !== (int)$user_id) {
+                    $error_message = "Access denied. You can only view tracking details for your own orders.";
+                    $tracking_data = null; // Clear the data
+                }
             }
         }
 
@@ -85,35 +80,24 @@ $current_step_index = 0;
 // Map status to index
 $status_map = [
     'pending' => 0,
-    'confirmed' => 0, // Treated same as Placed/Pending for now
+    'confirmed' => 1, 
     'processing' => 1,
     'dispatched' => 2,
-    'shipped' => 2,      // Alias
+    'shipped' => 2,
     'out_for_delivery' => 3, 
+    'arrived' => 3, // Driver arrived at location
     'delivered' => 4,
+    'failed' => -1,
     'cancelled' => -1
 ];
 
 // Handle edge cases
-if($current_status == 'cancelled') {
+if($current_status == 'cancelled' || $current_status == 'failed') {
     $current_step_index = -1; 
 } else {
     // Basic mapping from order status
     if (isset($status_map[$current_status])) {
         $current_step_index = $status_map[$current_status];
-    }
-    
-    // Check Delivery Schedule Status for finer granularity
-    // If order is 'dispatched', check if delivery has actually started
-    if (isset($tracking_data['delivery_status'])) {
-        $ds_status = strtolower($tracking_data['delivery_status']);
-        
-        if ($ds_status == 'started' || $ds_status == 'in_transit' || $ds_status == 'in_progress') {
-             $current_step_index = 3; // Out for Delivery
-        }
-        if ($ds_status == 'completed' || $ds_status == 'delivered') {
-             $current_step_index = 4; // Delivered
-        }
     }
 }
 ?>
@@ -267,7 +251,9 @@ if($current_status == 'cancelled') {
                                 <div>
                                     <p class="text-xs text-gray-400 font-bold uppercase">Courier</p>
                                     <p class="font-bold text-gray-800"><?= htmlspecialchars($tracking_data['driver_name']) ?></p>
-                                    <p class="text-xs text-gray-500"><?= htmlspecialchars($tracking_data['vehicle_type']) ?> - <?= htmlspecialchars($tracking_data['registration_number']) ?></p>
+                                    <?php if ($tracking_data['driver_phone']): ?>
+                                    <p class="text-xs text-gray-500"><?= htmlspecialchars($tracking_data['driver_phone']) ?></p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endif; ?>
@@ -296,4 +282,5 @@ if($current_status == 'cancelled') {
     animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
+
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

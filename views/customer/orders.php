@@ -102,8 +102,8 @@ require_once __DIR__ . '/../../includes/header.php';
                                 'dot' => 'bg-green-500'
                             ],
                             'unpaid' => [
-                                'container' => 'bg-gray-100 text-gray-700 border-gray-200',
-                                'dot' => 'bg-gray-500'
+                                'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                'dot' => 'bg-yellow-500'
                             ]
                         ];
 

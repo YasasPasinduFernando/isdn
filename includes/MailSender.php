@@ -131,7 +131,7 @@ class Mailsender
             <td><strong>Order Date:</strong></td><td>' . htmlspecialchars($orderDate) . '</td>
           </tr>
           <tr>
-            <td><strong>Customer:</strong></td><td>' . $order_info['name'] . '</td>
+            <td><strong>Customer:</strong></td><td>' . $order_info['customer'] . '</td>
             <td><strong>Sales Ref:</strong></td><td>N/A</td>
           </tr>
           <tr>
@@ -193,7 +193,7 @@ class Mailsender
     <tr>
       <td style="padding:0 28px 24px;font-size:13px;color:#374151;">
         <strong>Delivery Address:</strong><br>
-        ' . $order_info['address'] . '
+        ' . $order_info['address'] . '<br>
         <strong>Delivery Notes:</strong><br>
         ' . $deliveryNotes . '
       </td>

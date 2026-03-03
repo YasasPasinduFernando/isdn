@@ -1,15 +1,15 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 ?>
-<div id="toastContainer" class="mx-auto max-w-6xl px-4 mt-3"></div>
+
 <div class="min-h-screen py-8">
     <div class="container mx-auto px-4">
 
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">My Orders</h1>
-                <p class="text-gray-600 mt-1">Manage and track your recent purchases</p>
+                <h1 class="text-3xl font-bold text-gray-800 font-['Outfit']">All RDC Orders - Southern RDC</h1>
+                <p class="text-gray-600 mt-1">Manage and track orders</p>
             </div>
             <div class="flex gap-2">
                 <div class="flex-1">
@@ -36,7 +36,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 class="hidden md:grid grid-cols-10 gap-5 bg-white/30 backdrop-blur-sm p-5 border-b border-gray-100 text-sm font-bold text-gray-600 uppercase tracking-wider">
                 <div class="col-span-2">Code</div>
                 <div class="col-span-1">Customer</div>
-                <div class="col-span-1">Sales Rep</div>
+                <div class="col-span-1">Sales Ref</div>
                 <div class="col-span-1">Date</div>
                 <div class="col-span-1">Amount</div>
                 <div class="col-span-1">Payment</div>
@@ -45,12 +45,11 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="col-span-1 text-center">Action</div>
             </div>
             <!-- Order Items Mock List -->
-            <div class="px-10 hover:bg-white/40 transition duration-200 group">
+            <div class="p-5 hover:bg-white/40 transition duration-200 group">
                 <div class="grid grid-cols-1 md:grid-cols-10 gap-5 items-center">
                     <!-- Mobile Label -->
+                    <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
                     <?php foreach ($userOrders as $userOrder): ?>
-
-                        <div class="md:hidden text-sm font-bold text-gray-500 mb-1">Order Details</div>
 
                         <div class="col-span-2 flex items-center space-x-4">
                             <div>
@@ -59,83 +58,70 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <p class="text-xs text-gray-500"> <?php echo $userOrder['item_count'] ?> Items</p>
                             </div>
                         </div>
-
                         <div class="col-span-1 font-bold text-gray-800">
+                            <span class="md:hidden font-semibold mr-2">Date:</span>
                             <?php echo $userOrder['customer'] ?>
                         </div>
                         <div class="col-span-1 font-bold text-gray-800">
-                            <?php echo $userOrder['sales_rep'] ?>
+                            <span class="md:hidden font-semibold mr-2">Date:</span>
+                            <?php echo $userOrder['sales_ref'] ?>
                         </div>
-
                         <div class="col-span-1 text-sm text-gray-600 font-medium">
+                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
                             <?php echo $userOrder['order_date'] ?>
                         </div>
                         <div class="col-span-1 font-bold text-gray-800">
+                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
                             Rs. <?php echo number_format($userOrder['total_amount'], 2) ?>
                         </div>
-                        <?php
-                        $orderStatus = strtolower($userOrder['status'] ?? '');
-                        $paymentStatus = strtolower($userOrder['payment_status'] ?? '');
 
-                        $statusStyles = [
-                            'pending' => [
-                                'container' => 'bg-purple-100 text-purple-700 border-purple-200',
-                                'dot' => 'bg-purple-500'
-                            ],
-                            'processing' => [
-                                'container' => 'bg-blue-100 text-blue-700 border-blue-200',
-                                'dot' => 'bg-blue-500'
-                            ],
-                            'delivered' => [
-                                'container' => 'bg-green-100 text-green-700 border-green-200',
-                                'dot' => 'bg-green-500'
-                            ],
-                            'in transit' => [
-                                'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                'dot' => 'bg-yellow-500'
-                            ],
-                            'cancelled' => [
-                                'container' => 'bg-red-100 text-red-700 border-red-200',
-                                'dot' => 'bg-red-500'
-                            ],
-                            'paid' => [
-                                'container' => 'bg-green-100 text-green-700 border-green-200',
-                                'dot' => 'bg-green-500'
-                            ],
-                            'unpaid' => [
-                                'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                'dot' => 'bg-yellow-500'
-                            ]
-                        ];
+                        <div class="col-span-1">
+                            <span class="md:hidden font-semibold mr-2 text-gray-600">Payment:</span>
+                            <span
+                                class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">Paid</span>
+                        </div>
+                        <?php if ($userOrder['status'] === 'Pending') {
+                            $bg_color = 'bg-purple-100';
+                            $text_color = 'text-purple-700';
+                            $border_color = 'border-purple-200';
+                            $span_bg_color = 'bg-purple-500';
 
-                        $orderStyle = $statusStyles[$orderStatus] ?? [
-                            'container' => 'bg-gray-100 text-gray-700 border-gray-200',
-                            'dot' => 'bg-gray-500'
-                        ];
+                        } else if ($userOrder['status'] === 'Processing') {
+                            $bg_color = 'bg-blue-100';
+                            $text_color = 'text-blue-700';
+                            $border_color = 'border-blue-200';
+                            $span_bg_color = 'bg-blue-500';
+                        } else if ($userOrder['status'] === 'Delivered') {
+                            $bg_color = 'bg-green-100';
+                            $text_color = 'text-green-700';
+                            $border_color = 'border-green-200';
+                            $span_bg_color = 'bg-green-500';
+                        } else if ($userOrder['status'] === 'In Transit') {
+                            $bg_color = 'bg-yellow-100';
+                            $text_color = 'text-yellow-700';
+                            $border_color = 'border-yellow-200';
+                            $span_bg_color = 'bg-yellow-500';
+                        } else if ($userOrder['status'] === 'Cancelled') {
+                            $bg_color = 'bg-red-100';
+                            $text_color = 'text-red-700';
+                            $border_color = 'border-red-200';
+                            $span_bg_color = 'bg-red-500';
+                        }
 
-                        $paymentStyle = $statusStyles[$paymentStatus] ?? [
-                            'container' => 'bg-gray-100 text-gray-700 border-gray-200',
-                            'dot' => 'bg-gray-500'
-                        ];
                         ?>
+
                         <div class="col-span-1">
+                            <span class="md:hidden font-semibold mr-2 text-gray-600">Status:</span>
                             <span
-                                class="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full border <?= $paymentStyle['container']; ?>">
-                                <span class="w-2 h-2 <?= $paymentStyle['dot']; ?> rounded-full"></span>
-                                <?= ucwords($paymentStatus); ?>
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold <?php echo $bg_color; ?> <?php echo $text_color; ?> border <?php echo $border_color; ?>">
+                                <span class="w-2 h-2 mr-2 <?php echo $span_bg_color; ?> rounded-full"></span>
+                                <?php echo $userOrder['status']; ?>
                             </span>
                         </div>
 
-
-                        <div class="col-span-1">
-                            <span
-                                class="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full border <?= $orderStyle['container']; ?>">
-                                <span class="w-2 h-2 <?= $orderStyle['dot']; ?> rounded-full"></span>
-                                <?= ucwords($orderStatus); ?>
-                            </span>
-                        </div>
 
                         <div class="col-span-1 text-sm text-gray-600 font-medium">
+                            <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
                             <?php echo $userOrder['estimated_date'] ?>
                         </div>
 
@@ -145,7 +131,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                 title="Track Order">
                                 <span class="material-symbols-rounded">location_on</span>
                             </a>
-                            <a href="index.php?page=order-info&id=<?= $userOrder['order_id']; ?>"
+                            <a href="#"
                                 class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition ml-2"
                                 title="View Details">
                                 <span class="material-symbols-rounded">visibility</span>
@@ -155,7 +141,6 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 </div>
             </div>
-
 
             <!-- Pagination -->
             <div
@@ -178,24 +163,6 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
-<?php if (!empty($_SESSION['flash_success'])): ?>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const msg = <?= json_encode($_SESSION['flash_success']); ?>;
-      const container = document.getElementById("toastContainer");
-      if (container) {
-        const el = document.createElement("div");
-        el.className = "mt-3 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 shadow-sm";
-        el.innerHTML = `
-          <span class="material-symbols-rounded text-emerald-600">check_circle</span>
-          <div class="flex-1"><p class="text-sm font-semibold">${msg}</p></div>
-        `;
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 5000);
-      }
-    });
-  </script>
-  <?php unset($_SESSION['flash_success']); ?>
-<?php endif; ?>
-<?php require_once __DIR__ . '/../../components/customer_orders_filter_drawer.php'; ?>
+
+<?php require_once __DIR__ . '/../../components/clerk_orders_filter_drawer.php'; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

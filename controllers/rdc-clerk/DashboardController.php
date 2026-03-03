@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../models/ProductStock.php';
 require_once __DIR__ . '/../../models/Order.php';
 
-session_start();
+//session_start();
 
 // Current user and RDC context (fall back to sensible defaults)
 $userId = $_SESSION['user_id'] ?? null;

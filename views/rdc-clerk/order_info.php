@@ -221,6 +221,7 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 </div>
 <?php if (!empty($_SESSION['flash_success'])): ?>
+<<<<<<< HEAD
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const msg = <?= json_encode($_SESSION['flash_success']); ?>;
@@ -238,5 +239,24 @@ require_once __DIR__ . '/../../includes/header.php';
         });
     </script>
     <?php unset($_SESSION['flash_success']); ?>
+=======
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const msg = <?= json_encode($_SESSION['flash_success']); ?>;
+      const container = document.getElementById("toastContainer");
+      if (container) {
+        const el = document.createElement("div");
+        el.className = "mt-3 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 shadow-sm";
+        el.innerHTML = `
+          <span class="material-symbols-rounded text-emerald-600">check_circle</span>
+          <div class="flex-1"><p class="text-sm font-semibold">${msg}</p></div>
+        `;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 5000);
+      }
+    });
+  </script>
+  <?php unset($_SESSION['flash_success']); ?>
+>>>>>>> 1b724ad (Order and payment status update flow)
 <?php endif; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

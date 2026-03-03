@@ -4,6 +4,8 @@ ob_start();
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../models/SalesOrder.php';
+
 
 // Include header
 require_once __DIR__ . '/../../includes/header.php';
@@ -96,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['description']
             ]);
             $newProductId = $pdo->lastInsertId();
-            
+
             // Initialize stock for this RDC
             $stmt = $pdo->prepare("INSERT INTO product_stocks (rdc_id, product_id, available_quantity) VALUES (?, ?, 0)");
             $stmt->execute([$rdc_id, $newProductId]);
@@ -166,40 +168,70 @@ $allProducts = $allProducts ?? [];
 $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 ?>
 
+<?php
+$rdc_id = $_SESSION['rdc_id'] ?? 1;
+$orderModel = new SalesOrder($pdo);
+$recentOrders = $orderModel->getRdcOrders($rdc_id, 4);
+?>
 
 <style>
-    .font-outfit { font-family: 'Outfit', sans-serif; }
-    .glass-card { 
-        background: rgba(255, 255, 255, 0.7); 
-        backdrop-filter: blur(12px); 
-        border: 1px solid rgba(255, 255, 255, 0.5); 
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); 
+    .font-outfit {
+        font-family: 'Outfit', sans-serif;
     }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    }
+
     .glass-panel {
         background: rgba(255, 255, 255, 0.5);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
-    
+
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+    }
+
     /* Custom Scrollbar for tables */
-    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
 </style>
 
 <div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 font-outfit py-8 px-4 sm:px-6 lg:px-8">
-    
+
     <!-- Header -->
     <div class="max-w-7xl mx-auto mb-10">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Clerk Dashboard</h1>
-                <p class="text-gray-500 mt-1">Managed by <span class="font-semibold text-teal-600"><?= htmlspecialchars($clerk_name) ?></span> at <?= htmlspecialchars($rdc_name) ?></p>
+                <p class="text-gray-500 mt-1">Managed by <span
+                        class="font-semibold text-teal-600"><?= htmlspecialchars($clerk_name) ?></span> at
+                    <?= htmlspecialchars($rdc_name) ?>
+                </p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="px-4 py-2 rounded-full bg-white/60 text-sm font-semibold text-gray-600 shadow-sm border border-white/50">
+                <span
+                    class="px-4 py-2 rounded-full bg-white/60 text-sm font-semibold text-gray-600 shadow-sm border border-white/50">
                     <?= date('l, F j, Y') ?>
                 </span>
             </div>
@@ -208,44 +240,53 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 
     <!-- Main Content Area -->
     <div class="max-w-7xl mx-auto">
-        
-        <?php if($activeTab === 'dashboard'): ?>
-             <!-- OVERVIEW SECTION -->
-             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+
+        <?php if ($activeTab === 'dashboard'): ?>
+            <!-- OVERVIEW SECTION -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <!-- Total Orders -->
-                <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-blue-500">
+                <div
+                    class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-blue-500">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Orders</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']"><?= count($pendingOrders) + $processedToday // Approximate ?></h3> 
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                                <?= count($pendingOrders) + $processedToday // Approximate ?>
+                            </h3>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-blue-100/50 flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-blue-100/50 flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
                             <span class="material-symbols-rounded">shopping_cart</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Pending -->
-                <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-yellow-400">
+                <div
+                    class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-yellow-400">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']"><?= count($pendingOrders) ?></h3>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']"><?= count($pendingOrders) ?>
+                            </h3>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-yellow-100/50 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-400 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-yellow-100/50 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-400 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
                             <span class="material-symbols-rounded">pending</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Processed Today -->
-                <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-green-500">
+                <div
+                    class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-green-500">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Processed Today</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']"><?= $processedToday ?></h3>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-green-100/50 flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-green-100/50 flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
                             <span class="material-symbols-rounded">check_circle</span>
                         </div>
                     </div>
@@ -258,7 +299,8 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Low Stock</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']"><?= $lowStockCount ?></h3>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-red-100/50 flex items-center justify-center text-red-600 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-red-100/50 flex items-center justify-center text-red-600 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
                             <span class="material-symbols-rounded">warning</span>
                         </div>
                     </div>
@@ -266,48 +308,91 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
             </div>
 
             <!-- Recent Activity -->
-             <div class="glass-card rounded-3xl p-6 sm:p-8">
+            <div class="glass-card rounded-3xl p-6 sm:p-8">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center space-x-3">
                         <span class="material-symbols-rounded text-gray-500 text-2xl">history</span>
                         <h2 class="text-xl font-bold text-gray-800 font-['Outfit']">Recent Orders</h2>
                     </div>
-                    <a href="index.php?page=rdc-clerk-dashboard&tab=orders" class="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center transition">
+                    <a href="index.php?page=rdc-clerk-sales-orders"
+                        class="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center transition">
                         View All <span class="material-symbols-rounded text-sm ml-1">arrow_forward</span>
                     </a>
                 </div>
 
                 <div class="space-y-4">
-                    <?php if(empty($recentOrders)): ?>
+                    <?php if (empty($recentOrders)): ?>
                         <p class="text-center text-gray-400 py-4">No recent activity.</p>
                     <?php else: ?>
-                        <?php foreach($recentOrders as $order): ?>
-                        <div class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-100">
-                                        <span class="material-symbols-rounded">receipt_long</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 font-['Outfit']"><?= $order['order_number'] ?></h3>
-                                        <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                            <span><?= htmlspecialchars($order['customer']) ?></span>
-                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                            <span>Rs. <?= number_format($order['total']) ?></span>
+                        <?php foreach ($recentOrders as $order): ?>
+                            <div
+                                class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center space-x-4">
+                                        <div
+                                            class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-100">
+                                            <span class="material-symbols-rounded">receipt_long</span>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-gray-800 font-['Outfit']"><?= $order['order_number'] ?></h3>
+                                            <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
+                                                <span><?= htmlspecialchars($order['customer']) ?></span>
+                                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                <span>Rs. <?= number_format($order['total_amount']) ?></span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <?php
+                                    $orderStatus = strtolower($order['status'] ?? '');
+                                    $statusStyles = [
+                                        'pending' => [
+                                            'container' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                            'dot' => 'bg-purple-500'
+                                        ],
+                                        'processing' => [
+                                            'container' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                            'dot' => 'bg-blue-500'
+                                        ],
+                                        'delivered' => [
+                                            'container' => 'bg-green-100 text-green-700 border-green-200',
+                                            'dot' => 'bg-green-500'
+                                        ],
+                                        'in transit' => [
+                                            'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                            'dot' => 'bg-yellow-500'
+                                        ],
+                                        'cancelled' => [
+                                            'container' => 'bg-red-100 text-red-700 border-red-200',
+                                            'dot' => 'bg-red-500'
+                                        ],
+                                        'paid' => [
+                                            'container' => 'bg-green-100 text-green-700 border-green-200',
+                                            'dot' => 'bg-green-500'
+                                        ],
+                                        'unpaid' => [
+                                            'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                            'dot' => 'bg-yellow-500'
+                                        ]
+                                    ];
+
+                                    $orderStyle = $statusStyles[$orderStatus] ?? [
+                                        'container' => 'bg-gray-100 text-gray-700 border-gray-200',
+                                        'dot' => 'bg-gray-500'
+                                    ];
+                                    ?>
+                                    <span
+                                        class="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full border <?= $orderStyle['container']; ?>">
+                                        <span class="w-2 h-2 <?= $orderStyle['dot']; ?> rounded-full"></span>
+                                        <?= ucwords($orderStatus); ?>
+                                    </span>
                                 </div>
-                                <span class="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold uppercase transition">
-                                    <?= ucfirst(str_replace('_', ' ', $order['status'])) ?>
-                                </span>
                             </div>
-                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
 
-        <?php elseif($activeTab === 'orders'): ?>
+        <?php elseif ($activeTab === 'orders'): ?>
             <!-- ORDER MANAGEMENT SECTION -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <!-- Stats Column -->
@@ -327,12 +412,14 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                     <div class="glass-card rounded-3xl overflow-hidden p-6 min-h-[500px]">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-xl font-bold text-gray-800 flex items-center">
-                                <span class="material-symbols-rounded mr-2 text-teal-600">receipt_long</span> 
+                                <span class="material-symbols-rounded mr-2 text-teal-600">receipt_long</span>
                                 RDC Orders
                             </h2>
                             <div class="flex space-x-2">
-                                <button class="px-4 py-2 bg-white rounded-xl text-sm font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition border border-gray-100">Filter</button>
-                                <button class="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-teal-200 hover:bg-teal-700 transition">Export</button>
+                                <button
+                                    class="px-4 py-2 bg-white rounded-xl text-sm font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition border border-gray-100">Filter</button>
+                                <button
+                                    class="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-teal-200 hover:bg-teal-700 transition">Export</button>
                             </div>
                         </div>
 
@@ -349,34 +436,43 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if(empty($pendingOrders)): ?>
-                                        <tr><td colspan="6" class="text-center py-10 text-gray-400">No pending orders found.</td></tr>
-                                    <?php else: ?>
-                                        <?php foreach($pendingOrders as $order): ?>
-                                        <tr class="bg-white/40 hover:bg-white/80 transition duration-200 group">
-                                            <td class="py-4 pl-4 rounded-l-xl font-bold text-gray-800 border-y border-l border-white/50">
-                                                <?= $order['order_number'] ?>
-                                            </td>
-                                            <td class="py-4 border-y border-white/50">
-                                                <div class="font-medium text-gray-800"><?= htmlspecialchars($order['customer_name']) ?></div>
-                                            </td>
-                                            <td class="py-4 border-y border-white/50 text-sm text-gray-500">
-                                                <?= date('M d, H:i', strtotime($order['created_at'])) ?>
-                                            </td>
-                                            <td class="py-4 border-y border-white/50 font-mono font-bold text-gray-700">
-                                                Rs. <?= number_format($order['total_amount']) ?>
-                                            </td>
-                                            <td class="py-4 border-y border-white/50 text-center">
-                                                <span class="inline-block px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-xs font-bold border border-yellow-200">
-                                                    Pending
-                                                </span>
-                                            </td>
-                                            <td class="py-4 pr-4 rounded-r-xl border-y border-r border-white/50 text-right">
-                                                <button onclick="openReviewModal(<?= $order['id'] ?>, '<?= $order['order_number'] ?>', '<?= htmlspecialchars($order['customer_name'], ENT_QUOTES) ?>', '<?= number_format($order['total_amount'], 2) ?>')" class="text-teal-600 hover:text-teal-800 font-bold text-xs uppercase bg-teal-50 px-3 py-2 rounded-lg hover:bg-teal-100 transition">
-                                                    Review
-                                                </button>
+                                    <?php if (empty($pendingOrders)): ?>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-10 text-gray-400">No pending orders found.
                                             </td>
                                         </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($pendingOrders as $order): ?>
+                                            <tr class="bg-white/40 hover:bg-white/80 transition duration-200 group">
+                                                <td
+                                                    class="py-4 pl-4 rounded-l-xl font-bold text-gray-800 border-y border-l border-white/50">
+                                                    <?= $order['order_number'] ?>
+                                                </td>
+                                                <td class="py-4 border-y border-white/50">
+                                                    <div class="font-medium text-gray-800">
+                                                        <?= htmlspecialchars($order['customer_name']) ?>
+                                                    </div>
+                                                </td>
+                                                <td class="py-4 border-y border-white/50 text-sm text-gray-500">
+                                                    <?= date('M d, H:i', strtotime($order['created_at'])) ?>
+                                                </td>
+                                                <td class="py-4 border-y border-white/50 font-mono font-bold text-gray-700">
+                                                    Rs. <?= number_format($order['total_amount']) ?>
+                                                </td>
+                                                <td class="py-4 border-y border-white/50 text-center">
+                                                    <span
+                                                        class="inline-block px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-xs font-bold border border-yellow-200">
+                                                        Pending
+                                                    </span>
+                                                </td>
+                                                <td class="py-4 pr-4 rounded-r-xl border-y border-r border-white/50 text-right">
+                                                    <button
+                                                        onclick="openReviewModal(<?= $order['id'] ?>, '<?= $order['order_number'] ?>', '<?= htmlspecialchars($order['customer_name'], ENT_QUOTES) ?>', '<?= number_format($order['total_amount'], 2) ?>')"
+                                                        class="text-teal-600 hover:text-teal-800 font-bold text-xs uppercase bg-teal-50 px-3 py-2 rounded-lg hover:bg-teal-100 transition">
+                                                        Review
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </tbody>
@@ -386,21 +482,30 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                 </div>
             </div>
 
-        <?php elseif($activeTab === 'products'): ?>
+        <?php elseif ($activeTab === 'products'): ?>
             <!-- PRODUCTS SECTION -->
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Sub-Sidebar -->
                 <div class="w-full lg:w-64 flex-shrink-0">
                     <div class="glass-card rounded-3xl p-4 sticky top-8">
                         <nav class="space-y-2">
-                            <button onclick="switchSubTab('prod-manage')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm bg-teal-50 text-teal-700 border border-teal-100 transition" id="nav-prod-manage">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">inventory_2</span> Product Management
+                            <button onclick="switchSubTab('prod-manage')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm bg-teal-50 text-teal-700 border border-teal-100 transition"
+                                id="nav-prod-manage">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">inventory_2</span> Product
+                                Management
                             </button>
-                            <button onclick="switchSubTab('cat-manage')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent" id="nav-cat-manage">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">category</span> Category Management
+                            <button onclick="switchSubTab('cat-manage')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent"
+                                id="nav-cat-manage">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">category</span> Category
+                                Management
                             </button>
-                            <button onclick="switchSubTab('promo-manage')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent" id="nav-promo-manage">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">loyalty</span> Promotion Management
+                            <button onclick="switchSubTab('promo-manage')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent"
+                                id="nav-promo-manage">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">loyalty</span> Promotion
+                                Management
                             </button>
                         </nav>
                     </div>
@@ -413,7 +518,8 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                         <div class="glass-card rounded-3xl p-6">
                             <div class="flex justify-between items-center mb-6">
                                 <h2 class="text-xl font-bold text-gray-800">Product List</h2>
-                                <button onclick="openModal('modal-add-product')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-blue-700 transition flex items-center">
+                                <button onclick="openModal('modal-add-product')"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-blue-700 transition flex items-center">
                                     <span class="material-symbols-rounded mr-2">add</span> Add Product
                                 </button>
                             </div>
@@ -429,26 +535,36 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
-                                        <?php foreach($allProducts as $p): ?>
-                                        <tr class="hover:bg-blue-50/30 transition">
-                                            <td class="p-4 font-bold text-gray-800"><?= htmlspecialchars($p['product_name']) ?></td>
-                                            <td class="p-4 text-gray-500 font-mono"><?= $p['product_code'] ?></td>
-                                            <td class="p-4">Rs. <?= number_format($p['unit_price'], 2) ?></td>
-                                            <td class="p-4 text-right">
-                                                <div class="flex items-center justify-end gap-2">
-                                                    <button onclick='openEditModal(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8') ?>)' class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition" title="Edit">
-                                                        <span class="material-symbols-rounded text-sm">edit</span>
-                                                    </button>
-                                                    <form method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="display:inline;">
-                                                        <input type="hidden" name="action" value="delete_product">
-                                                        <input type="hidden" name="product_id" value="<?= $p['product_id'] ?>">
-                                                        <button type="submit" class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition" title="Delete">
-                                                            <span class="material-symbols-rounded text-sm">delete</span>
+                                        <?php foreach ($allProducts as $p): ?>
+                                            <tr class="hover:bg-blue-50/30 transition">
+                                                <td class="p-4 font-bold text-gray-800">
+                                                    <?= htmlspecialchars($p['product_name']) ?>
+                                                </td>
+                                                <td class="p-4 text-gray-500 font-mono"><?= $p['product_code'] ?></td>
+                                                <td class="p-4">Rs. <?= number_format($p['unit_price'], 2) ?></td>
+                                                <td class="p-4 text-right">
+                                                    <div class="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onclick='openEditModal(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8') ?>)'
+                                                            class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition"
+                                                            title="Edit">
+                                                            <span class="material-symbols-rounded text-sm">edit</span>
                                                         </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                        <form method="POST"
+                                                            onsubmit="return confirm('Are you sure you want to delete this product?');"
+                                                            style="display:inline;">
+                                                            <input type="hidden" name="action" value="delete_product">
+                                                            <input type="hidden" name="product_id"
+                                                                value="<?= $p['product_id'] ?>">
+                                                            <button type="submit"
+                                                                class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition"
+                                                                title="Delete">
+                                                                <span class="material-symbols-rounded text-sm">delete</span>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
@@ -458,48 +574,70 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 
                     <!-- Categories Sub-Tab -->
                     <div id="view-cat-manage" class="sub-view hidden">
-                        <div class="glass-card rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[400px]">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                        <div
+                            class="glass-card rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[400px]">
+                            <div
+                                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
                                 <span class="material-symbols-rounded text-3xl">category</span>
                             </div>
                             <h3 class="text-xl font-bold text-gray-800">Category Management</h3>
-                            <p class="text-gray-500 mb-6 max-w-md">Manage product categories to organize your inventory effectively.</p>
-                            <button onclick="openModal('modal-create-category')" class="px-6 py-3 bg-gray-800 text-white rounded-xl font-bold shadow-lg hover:bg-gray-900 transition">Create First Category</button>
+                            <p class="text-gray-500 mb-6 max-w-md">Manage product categories to organize your inventory
+                                effectively.</p>
+                            <button onclick="openModal('modal-create-category')"
+                                class="px-6 py-3 bg-gray-800 text-white rounded-xl font-bold shadow-lg hover:bg-gray-900 transition">Create
+                                First Category</button>
                         </div>
                     </div>
 
                     <!-- Promotions Sub-Tab -->
                     <div id="view-promo-manage" class="sub-view hidden">
-                        <div class="glass-card rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[400px]">
-                             <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-4 text-pink-500">
+                        <div
+                            class="glass-card rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[400px]">
+                            <div
+                                class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-4 text-pink-500">
                                 <span class="material-symbols-rounded text-3xl">celebration</span>
                             </div>
                             <h3 class="text-xl font-bold text-gray-800">Promotions Management</h3>
-                            <p class="text-gray-500 mb-6 max-w-md">Create and manage discounts, bundle offers, and seasonal sales.</p>
-                            <button onclick="openModal('modal-create-promotion')" class="px-6 py-3 bg-pink-600 text-white rounded-xl font-bold shadow-lg hover:bg-pink-700 transition">Create Promotion</button>
+                            <p class="text-gray-500 mb-6 max-w-md">Create and manage discounts, bundle offers, and seasonal
+                                sales.</p>
+                            <button onclick="openModal('modal-create-promotion')"
+                                class="px-6 py-3 bg-pink-600 text-white rounded-xl font-bold shadow-lg hover:bg-pink-700 transition">Create
+                                Promotion</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-        <?php elseif($activeTab === 'inventory'): ?>
+        <?php elseif ($activeTab === 'inventory'): ?>
             <!-- INVENTORY SECTION -->
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Sub-Sidebar -->
-                 <div class="w-full lg:w-64 flex-shrink-0">
+                <div class="w-full lg:w-64 flex-shrink-0">
                     <div class="glass-card rounded-3xl p-4 sticky top-8">
                         <nav class="space-y-2">
-                            <button onclick="switchInvTab('stock-levels')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm bg-teal-50 text-teal-700 border border-teal-100 transition" id="nav-stock-levels">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">bar_chart</span> Stock Levels
+                            <button onclick="switchInvTab('stock-levels')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm bg-teal-50 text-teal-700 border border-teal-100 transition"
+                                id="nav-stock-levels">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">bar_chart</span> Stock
+                                Levels
                             </button>
-                            <button onclick="switchInvTab('stock-adj')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent" id="nav-stock-adj">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">tune</span> Start Adjustment
+                            <button onclick="switchInvTab('stock-adj')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent"
+                                id="nav-stock-adj">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">tune</span> Start
+                                Adjustment
                             </button>
-                            <button onclick="switchInvTab('move-logs')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent" id="nav-move-logs">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">history</span> Movement Logs
+                            <button onclick="switchInvTab('move-logs')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent"
+                                id="nav-move-logs">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">history</span> Movement
+                                Logs
                             </button>
-                            <button onclick="switchInvTab('transfers')" class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent" id="nav-transfers">
-                                <span class="material-symbols-rounded align-middle mr-2 text-lg">local_shipping</span> Stock Transfers
+                            <button onclick="switchInvTab('transfers')"
+                                class="w-full text-left px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-white/50 transition border border-transparent"
+                                id="nav-transfers">
+                                <span class="material-symbols-rounded align-middle mr-2 text-lg">local_shipping</span> Stock
+                                Transfers
                             </button>
                         </nav>
                     </div>
@@ -509,17 +647,17 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                     <!-- Stock Levels -->
                     <div id="view-stock-levels" class="inv-view block">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            <?php foreach($inventory as $item): ?>
-                            <div class="glass-card p-5 rounded-3xl flex justify-between items-center group hover-lift">
-                                <div>
-                                    <h4 class="font-bold text-gray-800"><?= htmlspecialchars($item['product_name']) ?></h4>
-                                    <p class="text-xs text-gray-500 font-mono"><?= $item['product_code'] ?></p>
+                            <?php foreach ($inventory as $item): ?>
+                                <div class="glass-card p-5 rounded-3xl flex justify-between items-center group hover-lift">
+                                    <div>
+                                        <h4 class="font-bold text-gray-800"><?= htmlspecialchars($item['product_name']) ?></h4>
+                                        <p class="text-xs text-gray-500 font-mono"><?= $item['product_code'] ?></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-3xl font-bold text-teal-600"><?= $item['available_quantity'] ?></div>
+                                        <div class="text-[10px] uppercase text-gray-400 font-bold">In Stock</div>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-3xl font-bold text-teal-600"><?= $item['available_quantity'] ?></div>
-                                    <div class="text-[10px] uppercase text-gray-400 font-bold">In Stock</div>
-                                </div>
-                            </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -531,36 +669,42 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                             <form class="space-y-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Product</label>
-                                    <select class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200"><option>Select Product</option></select>
+                                    <select class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200">
+                                        <option>Select Product</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Adjustment Type</label>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Adjustment
+                                        Type</label>
                                     <div class="flex gap-4">
-                                        <label class="flex items-center"><input type="radio" name="adj_type" class="mr-2"> Add (+)</label>
-                                        <label class="flex items-center"><input type="radio" name="adj_type" class="mr-2"> Remove (-)</label>
+                                        <label class="flex items-center"><input type="radio" name="adj_type" class="mr-2">
+                                            Add (+)</label>
+                                        <label class="flex items-center"><input type="radio" name="adj_type" class="mr-2">
+                                            Remove (-)</label>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Quantity</label>
                                     <input type="number" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200">
                                 </div>
-                                <button class="w-full py-3 bg-teal-600 text-white font-bold rounded-xl mt-4">Submit Adjustment</button>
+                                <button class="w-full py-3 bg-teal-600 text-white font-bold rounded-xl mt-4">Submit
+                                    Adjustment</button>
                             </form>
                         </div>
                     </div>
-                    
+
                     <div id="view-move-logs" class="inv-view hidden">
-                         <div class="glass-card rounded-3xl p-6 text-center text-gray-500">
+                        <div class="glass-card rounded-3xl p-6 text-center text-gray-500">
                             <span class="material-symbols-rounded text-4xl mb-2 block">history_edu</span>
                             No movement logs available yet.
-                         </div>
+                        </div>
                     </div>
 
                     <div id="view-transfers" class="inv-view hidden">
-                         <div class="glass-card rounded-3xl p-6 text-center text-gray-500">
+                        <div class="glass-card rounded-3xl p-6 text-center text-gray-500">
                             <span class="material-symbols-rounded text-4xl mb-2 block">move_up</span>
                             No active transfers.
-                         </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -571,40 +715,53 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 
 <!-- Modals -->
 <!-- Add Product Modal -->
-<div id="modal-add-product" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+<div id="modal-add-product"
+    class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative animate-up">
-        <button type="button" onclick="closeModal('modal-add-product')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+        <button type="button" onclick="closeModal('modal-add-product')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <span class="material-symbols-rounded">close</span>
         </button>
         <h3 class="font-bold text-2xl text-gray-800 mb-6">Add New Product</h3>
         <form action="index.php?page=rdc-clerk-dashboard" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Product Name</label>
-                <input type="text" name="product_name" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <input type="text" name="product_name"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    required>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">SKU / Code</label>
-                    <input type="text" name="product_code" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                    <input type="text" name="product_code"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price (Rs.)</label>
-                    <input type="number" step="0.01" name="unit_price" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                    <input type="number" step="0.01" name="unit_price"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        required>
                 </div>
             </div>
             <div>
-                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
-                 <textarea name="description" rows="3" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                <textarea name="description" rows="3"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
             </div>
-            <button type="submit" name="add_product" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition mt-2">Save Product</button>
+            <button type="submit" name="add_product"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition mt-2">Save
+                Product</button>
         </form>
     </div>
 </div>
 
 <!-- Edit Product Modal -->
-<div id="modal-edit-product" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+<div id="modal-edit-product"
+    class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative animate-up">
-        <button type="button" onclick="closeModal('modal-edit-product')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+        <button type="button" onclick="closeModal('modal-edit-product')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <span class="material-symbols-rounded">close</span>
         </button>
         <h3 class="font-bold text-2xl text-gray-800 mb-6">Edit Product</h3>
@@ -612,34 +769,45 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
             <input type="hidden" name="product_id" id="edit_product_id">
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Product Name</label>
-                <input type="text" name="product_name" id="edit_product_name" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <input type="text" name="product_name" id="edit_product_name"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    required>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">SKU / Code</label>
-                    <input type="text" name="product_code" id="edit_product_code" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                    <input type="text" name="product_code" id="edit_product_code"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price (Rs.)</label>
-                    <input type="number" step="0.01" name="unit_price" id="edit_unit_price" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                    <input type="number" step="0.01" name="unit_price" id="edit_unit_price"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        required>
                 </div>
             </div>
             <div>
-                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
-                 <textarea name="description" id="edit_description" rows="3" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                <textarea name="description" id="edit_description" rows="3"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
             </div>
-            <button type="submit" name="edit_product" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition mt-2">Update Product</button>
+            <button type="submit" name="edit_product"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition mt-2">Update
+                Product</button>
         </form>
     </div>
 </div>
 
 <!-- Review Order Modal -->
-<div id="modal-review-order" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+<div id="modal-review-order"
+    class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-2xl relative animate-up">
-        <button type="button" onclick="closeModal('modal-review-order')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+        <button type="button" onclick="closeModal('modal-review-order')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <span class="material-symbols-rounded">close</span>
         </button>
-        
+
         <div class="flex justify-between items-start mb-6">
             <div>
                 <h3 class="font-bold text-2xl text-gray-800 flex items-center gap-2">
@@ -673,7 +841,9 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
                     </thead>
                     <tbody id="review_items_body">
                         <!-- Items injected via JS -->
-                        <tr><td colspan="4" class="p-4 text-center text-gray-400">Loading items...</td></tr>
+                        <tr>
+                            <td colspan="4" class="p-4 text-center text-gray-400">Loading items...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -682,13 +852,16 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
         <div class="flex gap-4">
             <form method="POST" action="index.php?page=rdc-clerk-dashboard" class="flex-1">
                 <input type="hidden" name="order_id" id="reject_order_id">
-                <button type="submit" name="reject_order" onclick="return confirm('Are you sure you want to reject this order?');" class="w-full py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+                <button type="submit" name="reject_order"
+                    onclick="return confirm('Are you sure you want to reject this order?');"
+                    class="w-full py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-bold flex items-center justify-center gap-2 transition">
                     <span class="material-symbols-rounded text-lg">cancel</span> Reject Order
                 </button>
             </form>
             <form method="POST" action="index.php?page=rdc-clerk-dashboard" class="flex-1">
                 <input type="hidden" name="order_id" id="approve_order_id">
-                <button type="submit" name="approve_order" class="w-full py-3 bg-teal-600 text-white hover:bg-teal-700 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-200 transition">
+                <button type="submit" name="approve_order"
+                    class="w-full py-3 bg-teal-600 text-white hover:bg-teal-700 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-200 transition">
                     <span class="material-symbols-rounded text-lg">check_circle</span> Approve Order
                 </button>
             </form>
@@ -697,9 +870,11 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 </div>
 
 <!-- Create Category Modal -->
-<div id="modal-create-category" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+<div id="modal-create-category"
+    class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-up">
-        <button type="button" onclick="closeModal('modal-create-category')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+        <button type="button" onclick="closeModal('modal-create-category')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <span class="material-symbols-rounded">close</span>
         </button>
         <div class="text-center mb-6">
@@ -711,17 +886,23 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
         <form action="index.php?page=rdc-clerk-dashboard" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category Name</label>
-                <input type="text" name="category_name" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-gray-500 transition" required>
+                <input type="text" name="category_name"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-gray-500 transition"
+                    required>
             </div>
-            <button type="submit" name="create_category" class="w-full py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold shadow-lg transition mt-2">Create Category</button>
+            <button type="submit" name="create_category"
+                class="w-full py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold shadow-lg transition mt-2">Create
+                Category</button>
         </form>
     </div>
 </div>
 
 <!-- Create Promotion Modal -->
-<div id="modal-create-promotion" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+<div id="modal-create-promotion"
+    class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-up">
-        <button type="button" onclick="closeModal('modal-create-promotion')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+        <button type="button" onclick="closeModal('modal-create-promotion')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <span class="material-symbols-rounded">close</span>
         </button>
         <div class="text-center mb-6">
@@ -733,19 +914,25 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
         <form action="index.php?page=rdc-clerk-dashboard" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Promotion Title</label>
-                <input type="text" name="promo_title" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition" required>
+                <input type="text" name="promo_title"
+                    class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition"
+                    required>
             </div>
-             <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Discount (%)</label>
-                     <input type="number" name="discount_percent" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Discount (%)</label>
+                    <input type="number" name="discount_percent"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition">
                 </div>
-                 <div>
-                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Valid Until</label>
-                     <input type="date" name="valid_until" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Valid Until</label>
+                    <input type="date" name="valid_until"
+                        class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-pink-500 transition">
                 </div>
             </div>
-            <button type="submit" name="create_promotion" class="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold shadow-lg shadow-pink-200 transition mt-2">Launch Promotion</button>
+            <button type="submit" name="create_promotion"
+                class="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold shadow-lg shadow-pink-200 transition mt-2">Launch
+                Promotion</button>
         </form>
     </div>
 </div>
@@ -755,7 +942,7 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
     function switchSubTab(id) {
         document.querySelectorAll('.sub-view').forEach(el => el.classList.add('hidden'));
         document.getElementById('view-' + id).classList.remove('hidden');
-        
+
         // Update Nav Styles
         document.querySelectorAll('[id^="nav-"]').forEach(el => {
             el.classList.remove('bg-teal-50', 'text-teal-700', 'border-teal-100');
@@ -770,7 +957,7 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
         document.querySelectorAll('.inv-view').forEach(el => el.classList.add('hidden'));
         document.getElementById('view-' + id).classList.remove('hidden');
 
-         // Update Nav Styles
+        // Update Nav Styles
         document.querySelectorAll('[id^="nav-"]').forEach(el => {
             el.classList.remove('bg-teal-50', 'text-teal-700', 'border-teal-100');
             el.classList.add('text-gray-600', 'border-transparent', 'hover:bg-white/50');
@@ -782,7 +969,7 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 
     function openModal(id) {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             el.classList.remove('hidden');
             el.classList.add('flex');
         }
@@ -790,7 +977,7 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
 
     function closeModal(id) {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             el.classList.add('hidden');
             el.classList.remove('flex');
         }
@@ -816,16 +1003,16 @@ $activeTab = $_GET['tab'] ?? ($activeTab ?? 'dashboard');
         // Reset details
         const tbody = document.getElementById('review_items_body');
         tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">Loading items...</td></tr>';
-        
+
         openModal('modal-review-order');
 
         // Fetch Items
         fetch('index.php?page=rdc-clerk-dashboard&action=get_order_details&order_id=' + orderId)
             .then(res => res.json())
             .then(data => {
-                if(data.success) {
+                if (data.success) {
                     tbody.innerHTML = '';
-                    if(data.items.length === 0) {
+                    if (data.items.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">No items found.</td></tr>';
                     } else {
                         data.items.forEach(item => {

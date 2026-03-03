@@ -24,32 +24,29 @@ $error_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_schedule'])) {
     try {
         $driver_id = $_POST['driver_id'];
-        $vehicle_id = $_POST['vehicle_id'];
         $schedule_date = $_POST['schedule_date'];
         $selected_orders = $_POST['order_ids'] ?? [];
 
         if (empty($selected_orders)) {
             throw new Exception("Please select at least one order.");
         }
-        if (empty($driver_id) || empty($vehicle_id) || empty($schedule_date)) {
-            throw new Exception("Please select driver, vehicle, and date.");
+        if (empty($driver_id) || empty($schedule_date)) {
+            throw new Exception("Please select driver and date.");
         }
 
         $pdo->beginTransaction();
 
-        // Create Schedule
-        $stmt = $pdo->prepare("INSERT INTO delivery_schedules (rdc_id, driver_id, vehicle_id, scheduled_date, status) VALUES (?, ?, ?, ?, 'scheduled')");
-        $stmt->execute([$rdc_id, $driver_id, $vehicle_id, $schedule_date]);
-        $schedule_id = $pdo->lastInsertId();
-
-        // Update Orders
-        $upd = $pdo->prepare("UPDATE orders SET schedule_id = ?, status = 'dispatched', updated_at = NOW() WHERE id = ?");
+        // Create order deliveries for each selected order
+        $stmt = $pdo->prepare("INSERT INTO order_deliveries (order_id, delivery_date, driver_id) VALUES (?, ?, ?)");
         foreach ($selected_orders as $oid) {
-            $upd->execute([$schedule_id, $oid]);
+            $stmt->execute([$oid, $schedule_date, $driver_id]);
         }
 
-        // Update Vehicle Status (Optional)
-        $pdo->prepare("UPDATE vehicles SET status = 'in_use' WHERE vehicle_id = ?")->execute([$vehicle_id]);
+        // Update Orders: set delivery_date and status
+        $upd = $pdo->prepare("UPDATE orders SET delivery_date = ?, status = 'out_for_delivery', updated_at = NOW() WHERE id = ?");
+        foreach ($selected_orders as $oid) {
+            $upd->execute([$schedule_date, $oid]);
+        }
 
         $pdo->commit();
         $success_msg = "Delivery schedule created successfully with " . count($selected_orders) . " orders.";
@@ -61,25 +58,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_schedule'])) {
 }
 
 // --- 3. Data Fetching ---
-// Drivers
-$drivers = $pdo->prepare("SELECT id, username FROM users WHERE role = 'rdc_driver' AND rdc_id = ?");
+// Drivers from rdc_drivers table
+$drivers = $pdo->prepare("SELECT rd.id, rd.name, u.username 
+                           FROM rdc_drivers rd 
+                           JOIN users u ON rd.user_id = u.id 
+                           WHERE u.rdc_id = ?");
 $drivers->execute([$rdc_id]);
 $driversList = $drivers->fetchAll(PDO::FETCH_ASSOC);
 
-// Vehicles
-$vehicles = $pdo->prepare("SELECT vehicle_id, registration_number, vehicle_type, capacity FROM vehicles WHERE rdc_id = ? AND status = 'available'");
-$vehicles->execute([$rdc_id]);
-$vehiclesList = $vehicles->fetchAll(PDO::FETCH_ASSOC);
+// Vehicles list is not available in current database structure
+$vehiclesList = [];
 
-// Pending Orders (Processed but not Scheduled)
+// Pending Orders (not yet scheduled for delivery)
 $ordersSql = "SELECT o.id, o.order_number, o.total_amount, rc.name as customer_name, rc.address 
               FROM orders o
               JOIN retail_customers rc ON o.customer_id = rc.id
-              LEFT JOIN users u ON o.placed_by = u.id 
-              WHERE (u.rdc_id = ? OR rc.user_id IN (SELECT id FROM users WHERE rdc_id = ?))
-              AND o.status = 'processing' 
-              AND o.schedule_id IS NULL";
-$params = [$rdc_id, $rdc_id];
+              LEFT JOIN order_deliveries od ON o.id = od.order_id
+              WHERE o.rdc_id = ?
+              AND o.status IN ('pending', 'processing') 
+              AND od.order_id IS NULL";
+$params = [$rdc_id];
 
 // Ensure we catch orders linked to this RDC properly. 
 // Similar logic to clerk dashboard: linked by placed_by OR customer user.
@@ -91,13 +89,14 @@ $stmt = $pdo->prepare($ordersSql);
 $stmt->execute($params);
 $pendingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Recent Schedules
-$histSql = "SELECT ds.*, u.username as driver_name, v.registration_number 
-            FROM delivery_schedules ds
-            JOIN users u ON ds.driver_id = u.id
-            JOIN vehicles v ON ds.vehicle_id = v.vehicle_id
-            WHERE ds.rdc_id = ? 
-            ORDER BY ds.created_at DESC LIMIT 5";
+// Recent Deliveries (using order_deliveries table)
+$histSql = "SELECT od.*, o.order_number, u.username as driver_name, od.delivery_date
+            FROM order_deliveries od
+            JOIN orders o ON od.order_id = o.id
+            JOIN rdc_drivers rd ON od.driver_id = rd.id
+            JOIN users u ON rd.user_id = u.id
+            WHERE u.rdc_id = ? 
+            ORDER BY od.delivery_date DESC LIMIT 5";
 $stmt = $pdo->prepare($histSql);
 $stmt->execute([$rdc_id]);
 $recentSchedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -211,7 +210,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
                                         <select name="driver_id" required class="w-full appearance-none bg-white/50 border border-white/60 backdrop-blur-sm text-gray-700 py-3 px-4 pr-8 rounded-xl focus:outline-none focus:bg-white/80 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 cursor-pointer shadow-sm transition">
                                             <option value="">-- Choose Driver --</option>
                                             <?php foreach($driversList as $d): ?>
-                                                <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['username']) ?></option>
+                                                <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
@@ -220,22 +219,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Select Vehicle</label>
-                                    <div class="relative">
-                                        <select name="vehicle_id" required class="w-full appearance-none bg-white/50 border border-white/60 backdrop-blur-sm text-gray-700 py-3 px-4 pr-8 rounded-xl focus:outline-none focus:bg-white/80 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 cursor-pointer shadow-sm transition">
-                                            <option value="">-- Choose Vehicle --</option>
-                                            <?php foreach($vehiclesList as $v): ?>
-                                                <option value="<?= $v['vehicle_id'] ?>">
-                                                    <?= htmlspecialchars($v['registration_number']) ?> (<?= $v['vehicle_type'] ?> - <?= $v['capacity'] ?>kg)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                            <span class="material-symbols-rounded">expand_more</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- Vehicle selection removed - not available in current database structure -->
 
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Schedule Date</label>
@@ -266,25 +250,21 @@ $activeTab = $_GET['tab'] ?? 'overview';
                         <table class="w-full text-left">
                             <thead class="bg-teal-50/50 text-gray-500 text-xs uppercase font-bold">
                                 <tr>
-                                    <th class="p-4 rounded-l-xl">ID</th>
+                                    <th class="p-4 rounded-l-xl">Order</th>
                                     <th class="p-4">Driver</th>
-                                    <th class="p-4">Vehicle</th>
-                                    <th class="p-4">Date</th>
-                                    <th class="p-4 text-center">Status</th>
-                                    <th class="p-4 rounded-r-xl text-right">Created</th>
+                                    <th class="p-4">Delivery Date</th>
+                                    <th class="p-4 rounded-r-xl text-right">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100/50">
                                 <?php foreach($recentSchedules as $rs): ?>
                                 <tr class="hover:bg-white/40 transition">
-                                    <td class="p-4 font-mono font-bold text-gray-700">SCH-<?= $rs['schedule_id'] ?></td>
+                                    <td class="p-4 font-mono font-bold text-gray-700"><?= htmlspecialchars($rs['order_number']) ?></td>
                                     <td class="p-4 font-medium text-gray-800"><?= htmlspecialchars($rs['driver_name']) ?></td>
-                                    <td class="p-4 text-gray-600"><?= htmlspecialchars($rs['registration_number']) ?></td>
-                                    <td class="p-4"><?= date('M d, Y', strtotime($rs['scheduled_date'])) ?></td>
-                                    <td class="p-4 text-center">
-                                        <span class="px-3 py-1 bg-white/60 backdrop-blur-sm border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase shadow-sm"><?= $rs['status'] ?></span>
+                                    <td class="p-4"><?= date('M d, Y', strtotime($rs['delivery_date'])) ?></td>
+                                    <td class="p-4 text-right">
+                                        <span class="px-3 py-1 bg-white/60 backdrop-blur-sm border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase shadow-sm"><?= $rs['completed_date'] ? 'Completed' : 'Scheduled' ?></span>
                                     </td>
-                                    <td class="p-4 text-right text-gray-500 text-sm"><?= date('M d, H:i', strtotime($rs['created_at'])) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -342,25 +322,21 @@ $activeTab = $_GET['tab'] ?? 'overview';
                         <table class="w-full text-left">
                             <thead class="bg-teal-50/50 text-gray-500 text-xs uppercase font-bold">
                                 <tr>
-                                    <th class="p-4 rounded-l-xl">ID</th>
+                                    <th class="p-4 rounded-l-xl">Order</th>
                                     <th class="p-4">Driver</th>
-                                    <th class="p-4">Vehicle</th>
-                                    <th class="p-4">Date</th>
-                                    <th class="p-4 text-center">Status</th>
-                                    <th class="p-4 rounded-r-xl text-right">Created</th>
+                                    <th class="p-4">Delivery Date</th>
+                                    <th class="p-4 rounded-r-xl text-right">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100/50">
                                 <?php foreach($recentSchedules as $rs): ?>
                                 <tr class="hover:bg-white/40 transition">
-                                    <td class="p-4 font-mono font-bold text-gray-700">SCH-<?= $rs['schedule_id'] ?></td>
+                                    <td class="p-4 font-mono font-bold text-gray-700"><?= htmlspecialchars($rs['order_number']) ?></td>
                                     <td class="p-4 font-medium text-gray-800"><?= htmlspecialchars($rs['driver_name']) ?></td>
-                                    <td class="p-4 text-gray-600"><?= htmlspecialchars($rs['registration_number']) ?></td>
-                                    <td class="p-4"><?= date('M d, Y', strtotime($rs['scheduled_date'])) ?></td>
-                                    <td class="p-4 text-center">
-                                        <span class="px-3 py-1 bg-white/60 backdrop-blur-sm border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase shadow-sm"><?= $rs['status'] ?></span>
+                                    <td class="p-4"><?= date('M d, Y', strtotime($rs['delivery_date'])) ?></td>
+                                    <td class="p-4 text-right">
+                                        <span class="px-3 py-1 bg-white/60 backdrop-blur-sm border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase shadow-sm"><?= $rs['completed_date'] ? 'Completed' : 'Scheduled' ?></span>
                                     </td>
-                                    <td class="p-4 text-right text-gray-500 text-sm"><?= date('M d, H:i', strtotime($rs['created_at'])) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

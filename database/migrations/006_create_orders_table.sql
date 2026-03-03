@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS orders (
     placed_by INT,
     order_number VARCHAR(20) UNIQUE NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
-    status ENUM('pending', 'confirmed', 'processing', 'delivered', 'cancelled') DEFAULT 'pending',
+    status ENUM('pending', 'confirmed', 'processing', 'out_for_delivery', 'arrived', 'delivered', 'failed', 'cancelled') DEFAULT 'pending',
     estimated_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

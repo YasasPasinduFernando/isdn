@@ -38,33 +38,34 @@ function get_profile_page_for_role($role) {
 function get_allowed_pages_for_role($role) {
     $map = [
         'customer' => [
-            'select-rdc', 'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
+            'dashboard', 'products', 'cart', 'customer-sales-orders', 'tracking', 'payment', 'profile'
         ],
         'rdc_manager' => [
-            'select-rdc', 'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
+            'rdc-manager-dashboard', 'request-product-units', 'send-product-units',  'stock-movement-management', 'stock-reports', 'profile'
         ],
         'rdc_clerk' => [
-            'select-rdc', 'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
+            'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
         ],
         'rdc_sales_ref' => [
-            'select-rdc', 'rdc-sales-ref-dashboard', 'products', 'orders', 'profile'
+            'rdc-sales-ref-dashboard', 'rdc-sales-ref-dashboard&tab=dashboard', 'rdc-sales-ref-dashboard&tab=customers', 
+            'rdc-sales-ref-dashboard&tab=orders', 'tracking', 'cart', 'profile'
         ],
         'logistics_officer' => [
-            'select-rdc', 'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
+            'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
         ],
         'rdc_driver' => [
-            'select-rdc', 'rdc-driver-dashboard', 'tracking', 'profile'
+            'rdc-driver-dashboard', 'rdc-driver-dashboard&tab=overview', 'rdc-driver-dashboard&tab=map', 'rdc-driver-dashboard&tab=history', 'profile'
         ],
         'head_office_manager' => [
-            'select-rdc', 'head-office-manager-dashboard', 'stock-reports', 'delivery-report', 'sales-report', 'profile'
+            'select-rdc', 'head-office-manager-dashboard', 'stock-movement-management', 'stock-reports',  'delivery-report', 'sales-report', 'profile'
         ],
         'system_admin' => [
-            'select-rdc', 'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
+            'system-admin-dashboard', 'system-admin-users', 'system-admin-products', 'system-admin-promotions', 'system-admin-profile', 'system-admin-audit',
             'stock-reports', 'delivery-report', 'sales-report'
         ]
     ];
 
-    return $map[$role] ?? ['select-rdc', 'dashboard'];
+    return $map[$role] ?? ['dashboard'];
 }
 
 function is_page_allowed_for_role($role, $page) {
@@ -90,9 +91,10 @@ function get_nav_page_labels() {
         'stock-reports' => ['icon' => 'bar_chart', 'label' => 'Stock Reports'],
         'rdc-clerk-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
-        'rdc-sales-ref-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
+        'rdc-sales-ref-dashboard&tab=dashboard' => ['icon' => 'dashboard', 'label' => 'Overview'],
+        'rdc-sales-ref-dashboard&tab=customers' => ['icon' => 'groups', 'label' => 'My Customers'],
+        'rdc-sales-ref-dashboard&tab=orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
         'logistics-officer-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
-        'rdc-driver-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'delivery-report' => ['icon' => 'local_shipping', 'label' => 'Delivery Report'],
         'sales-report' => ['icon' => 'trending_up', 'label' => 'Sales Report'],
@@ -101,7 +103,10 @@ function get_nav_page_labels() {
         'system-admin-products' => ['icon' => 'inventory_2', 'label' => 'Manage Products'],
         'system-admin-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
         'system-admin-audit' => ['icon' => 'history', 'label' => 'Audit Log'],
-        'stock-movement-management' => ['icon' => 'swap_horiz', 'label' => 'Stock Movement']
+        'stock-movement-management' => ['icon' => 'swap_horiz', 'label' => 'Stock Movement'],
+        'rdc-driver-dashboard&tab=overview' => ['icon' => 'dashboard', 'label' => "Today's Route"],
+        'rdc-driver-dashboard&tab=map' => ['icon' => 'map', 'label' => 'Route Map'],
+        'rdc-driver-dashboard&tab=history' => ['icon' => 'history', 'label' => 'Delivery History']
     ];
 }
 

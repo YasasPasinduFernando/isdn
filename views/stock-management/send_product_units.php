@@ -26,6 +26,15 @@ if (!isset($current_user)) {
 if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     $pending_transfers = [];
 }
+
+// Filter out transfers that are still in 'CLERK_REQUESTED' status so the
+// pending approvals list only shows items that require manager action.
+if (!empty($pending_transfers)) {
+    $pending_transfers = array_values(array_filter($pending_transfers, function($t) {
+        return strtoupper($t['status'] ?? '') !== 'CLERK_REQUESTED';
+    }));
+}
+
 if (!isset($processed_transfers) || !is_array($processed_transfers)) {
     $processed_transfers = [];
 }

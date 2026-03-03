@@ -143,7 +143,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         </div>
 
                         <div class="col-span-1 flex md:justify-center">
-                            <a href="index.php?page=tracking&order_id=ORD-2025-001"
+                            <a href="index.php?page=tracking&order_id=<?php echo urlencode($userOrder['order_number']); ?>"
                                 class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition relative group/icon"
                                 title="Track Order">
                                 <span class="material-symbols-rounded">location_on</span>

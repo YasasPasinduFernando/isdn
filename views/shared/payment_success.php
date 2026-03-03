@@ -41,7 +41,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span class="text-gray-500 font-medium">Payment Amount</span>
                         <span class="font-semibold text-gray-800 sm:text-right">
-                            <?php echo $cash_payment_info['payment_amount'] ?>
+                            Rs. <?php echo $cash_payment_info['payment_amount'] ?>
                         </span>
                     </div>
 

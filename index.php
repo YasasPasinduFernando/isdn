@@ -191,7 +191,7 @@ switch ($page) {
         require __DIR__ . '/controllers/SalesOrderController.php';
         break;
     case 'rdc-clerk-sales-orders':
-        require __DIR__ . '/controllers/SalesOrderController.php';
+        require __DIR__ . '/controllers/rdc-clerk/SalesOrderController.php';
         break;
     case 'head-office-manager-sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';

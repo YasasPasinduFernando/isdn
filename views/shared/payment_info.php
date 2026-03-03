@@ -38,8 +38,10 @@ require_once __DIR__ . '/../../includes/header.php';
                     <label class="text-sm font-semibold text-gray-600">
                         Mobile Number
                     </label>
-                    <input type="tel" placeholder="Enter your mobile number"
+                    <input id="mobileNumber" name="mobile_number" type="tel" required
+                        placeholder="Enter your mobile number"
                         class="w-full border rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+
                 </div>
 
                 <!-- Email Address -->
@@ -47,7 +49,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <label class="text-sm font-semibold text-gray-600">
                         Email Address
                     </label>
-                    <input type="email" placeholder="Enter your email address"
+                    <input id="emailAddress" name="email" type="email" required placeholder="Enter your email address"
                         class="w-full border rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-teal-500 focus:outline-none">
                 </div>
 
@@ -85,8 +87,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
 
                 <!-- Payment Button -->
-                <button
-                id="proceedToPayBtn"
+                <button id="proceedToPayBtn" type="button"
                     class="w-full bg-teal-600 px-6 py-4 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center justify-center">
                     <span class="material-symbols-rounded mr-2">payments</span>
                     Proceed to Payment

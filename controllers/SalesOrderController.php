@@ -46,35 +46,36 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     $userCartItems = $shopping_cart->getUserCart($userId);
     $customer_info = $retail_customer->findByUserId($userId);
 
+
     $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
 
-    $order_info   = $orderModel->getOrderbyId($orderId);
-    $order_items  = $orderItem->getOrderItems($orderId);
+    $order_info = $orderModel->getOrderbyId($orderId);
+    $order_items = $orderItem->getOrderItems($orderId);
     $order_totals = $orderItem->calculateOrderTotals($orderId);
 
     $invoice_location = '/invoices/ISDN-Invoice-' . $order_info['order_number'] . '.pdf';
 
     Mailsender::sendMailAndGenerateInvoice([
         'delivery_notes' => $deliveryNotes,
-        'order_info'     => $order_info,
-        'order_items'    => $order_items,
-        'order_totals'   => $order_totals
+        'order_info' => $order_info,
+        'order_items' => $order_items,
+        'order_totals' => $order_totals
     ]);
 
     $_SESSION['cash_payment_info'] = [
-        'invoice_no'         => 'INV-' . $order_info['order_number'],
-        'customer_name'      => $order_info['name'],
-        'payment_amount'     => number_format($order_info['total_amount'], 2),
+        'invoice_no' => 'INV-' . $order_info['order_number'],
+        'customer_name' => $order_info['customer'],
+        'payment_amount' => number_format($order_info['total_amount'], 2),
         'payment_date_label' => $payment_date_label,
-        'payment_date'       => $payment_date,
-        'invoice_path'       => $invoice_location,
+        'payment_date' => $payment_date,
+        'invoice_path' => $invoice_location,
     ];
 
     $shopping_cart->clearCart($userId);
 
     header('Content-Type: application/json');
     echo json_encode([
-        'success'  => true,
+        'success' => true,
         'redirect' => 'index.php?page=payment-success'
     ]);
     exit;
@@ -84,25 +85,29 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     $input = json_decode(file_get_contents('php://input'), true) ?: [];
     $deliveryNotes = $input['delivery_notes'] ?? '';
 
+    $retail_customer = new RetailCustomer(pdo: $pdo);
     $shopping_cart = new ShoppingCart($pdo);
+    $orderModel = new SalesOrder($pdo);
+    $orderItem = new OrderItem($pdo);
+
+    $customer_info = $retail_customer->findByUserId($userId);
+    $userCartItems = $shopping_cart->getUserCart($userId);
     $cartAmount = $shopping_cart->getUserCartAmount($userId);
 
-    $tax_percentage = 15;
-    $delivery_fee = 1450;
-
-    $cartTotal = (float) ($cartAmount['cart_total'] ?? 0);
-
-    $cartTax = round($cartTotal * ((float)$tax_percentage) / 100, 2);
-    $cartGrandTotal = round($cartTotal + $cartTax + (float)$delivery_fee, 2);
+    $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
+    $shopping_cart->clearCart($userId);
+    $order_info = $orderModel->getOrderbyId($orderId);
+    $order_totals = $orderItem->calculateOrderTotals($orderId);
 
     $_SESSION['checkout'] = [
-        'delivery_notes'   => $deliveryNotes,
-        'cart_grand_total' => $cartGrandTotal
+        'order_id' => $orderId,
+        'delivery_notes' => $deliveryNotes,
+        'cart_grand_total' => $order_totals['grand_total']
     ];
 
     header('Content-Type: application/json');
     echo json_encode([
-        'success'  => true,
+        'success' => true,
         'redirect' => 'index.php?page=payment'
     ]);
     exit;

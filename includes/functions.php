@@ -47,8 +47,8 @@ function get_allowed_pages_for_role($role) {
             'rdc-clerk-dashboard', 'rdc-clerk-promotions', 'request-product-units', 'stock-reports', 'profile'
         ],
         'rdc_sales_ref' => [
-            'rdc-sales-ref-dashboard', 'rdc-sales-ref-dashboard&tab=dashboard', 'rdc-sales-ref-dashboard&tab=customers', 
-            'rdc-sales-ref-dashboard&tab=orders', 'tracking', 'cart', 'profile'
+            'rdc-sales-ref-dashboard', 'rdc-sales-ref-dashboard&tab=dashboard', 'products', 'rdc-sales-ref-dashboard&tab=customers', 
+            'rdc-sales-ref-sales-orders','tracking', 'payment', 'cart', 'profile'
         ],
         'logistics_officer' => [
             'logistics-officer-dashboard', 'stock-reports', 'tracking', 'profile'
@@ -93,7 +93,7 @@ function get_nav_page_labels() {
         'rdc-clerk-promotions' => ['icon' => 'loyalty', 'label' => 'Promotions'],
         'rdc-sales-ref-dashboard&tab=dashboard' => ['icon' => 'dashboard', 'label' => 'Overview'],
         'rdc-sales-ref-dashboard&tab=customers' => ['icon' => 'groups', 'label' => 'My Customers'],
-        'rdc-sales-ref-dashboard&tab=orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
+        'rdc-sales-ref-sales-orders' => ['icon' => 'receipt_long', 'label' => 'Orders'],
         'logistics-officer-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'head-office-manager-dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard'],
         'delivery-report' => ['icon' => 'local_shipping', 'label' => 'Delivery Report'],

@@ -3,8 +3,16 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../models/SystemAdmin.php';
+require_once __DIR__ . '/../models/ShoppingCart.php';
+
+const TAX_RATE = 0.15;
+const DELIVERY_CHARGE = 1450;
+
 
 $adminModel = new SystemAdmin($pdo);
+$cart = new ShoppingCart($pdo);
+$userId = $_SESSION['user_id'] ?? 1; // logged user
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $page = $_GET['page'] ?? '';
@@ -34,7 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'product_id' => $p['product_id'] ?? null,
                 'product_code' => $p['product_code'] ?? '',
                 'product_name' => $p['product_name'] ?? '',
-                'promotion' => '',
+                'promotion' => $p['is_promo_active'] ?? '',
+                'product_count' => $p['product_count'] ?? 0,
+                'discount_percentage' => $p['discount_percentage'] ?? 0,
                 'category' => $p['category'] ?? '',
                 'unit_price' => (float) ($p['unit_price'] ?? 0),
                 'minimum_stock_level' => $minStock,
@@ -46,6 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'availability' => $availability,
             ];
         }, $rows);
+
+        $cartCountRow = $cart->getUserCartCount($userId);
+        $cartAmountRow = $cart->getUserCartAmount($userId);
+
+        $cartCount = (int) ($cartCountRow['product_count'] ?? 0);
+        $subTotal = (float) ($cartAmountRow['cart_total'] ?? 0.0);
+
+
+        $deliveryCharge = $subTotal > 0 ? DELIVERY_CHARGE : 0;
+
+        $taxAmount = round($subTotal * TAX_RATE, 2);
+        $grandTotal = round($subTotal + $taxAmount + $deliveryCharge, 2);
 
         require_once __DIR__ . '/../views/customer/products.php';
     }

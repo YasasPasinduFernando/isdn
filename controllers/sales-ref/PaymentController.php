@@ -1,12 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/ShoppingCart.php';
-require_once __DIR__ . '/../models/SalesOrder.php';
-require_once __DIR__ . '/../models/OrderItem.php';
-require_once __DIR__ . '/../models/RetailCustomer.php';
-require_once __DIR__ . '/../models/OrderPayment.php';
-require_once __DIR__ . '/../includes/MailSender.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../models/ShoppingCart.php';
+require_once __DIR__ . '/../../models/SalesOrder.php';
+require_once __DIR__ . '/../../models/OrderItem.php';
+require_once __DIR__ . '/../../models/RetailCustomer.php';
+require_once __DIR__ . '/../../models/OrderPayment.php';
+require_once __DIR__ . '/../../includes/MailSender.php';
 
 
 
@@ -21,16 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if ($page === 'payment-success') {
         $cash_payment_info = $_SESSION['cash_payment_info'] ?? [];
-        require __DIR__ . '/../views/shared/payment_success.php';
+        require __DIR__ . '/../../views/shared/payment_success.php';
     } else if ($page === 'payment') {
 
         //get cart total and show 
         $checkout_info = $_SESSION['checkout'] ?? [];
-        require __DIR__ . '/../views/shared/payment_info.php';
+        require __DIR__ . '/../../views/shared/payment_info.php';
 
     } else if ($page === 'payment-gateway') {
         $checkout_info = $_SESSION['checkout'] ?? [];
-        require __DIR__ . '/../views/shared/payment_gateway.php';
+        require __DIR__ . '/../../views/shared/payment_gateway.php';
 
     }
 }

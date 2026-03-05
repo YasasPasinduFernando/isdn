@@ -91,8 +91,9 @@ function calculateTotal() {
   const taxAmount = (discountedTotal * taxRate) / 100;
 
   const deliveryFee = 1450;
+  deliveryCharge = discountedTotal > 0 ? deliveryFee : 0;
 
-  const finalTotal = discountedTotal + taxAmount + deliveryFee;
+  const finalTotal = discountedTotal + taxAmount + deliveryCharge;
 
   // Update summary
   document.querySelector(".order-total").innerText =
@@ -123,3 +124,19 @@ function clearCart() {
 document.addEventListener("DOMContentLoaded", () => {
   calculateTotal();
 });
+
+function updateCheckoutButton() {
+    const cartDiv = document.getElementById("cartItems");
+    const checkoutBtn = document.getElementById("checkoutBtn1");
+
+    if (cartDiv.children.length === 0) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
+    } else {
+        checkoutBtn.disabled = false;
+        checkoutBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+}
+
+// Call initially
+document.addEventListener("DOMContentLoaded", updateCheckoutButton);

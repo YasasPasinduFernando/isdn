@@ -189,7 +189,11 @@ require_once __DIR__ . '/../../includes/header.php';
                         Select New Status
                     </label>
 
-                    <select id="order_status"
+                    <select <?php $order_status = $customer_order_info['status'];
+                    if ($order_status == 'delivered' || $order_status == 'cancelled') {
+                        echo 'disabled';
+                    }
+                    ?> id="order_status"
                         class="w-full bg-white/70 backdrop-blur border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
                         <option value="">-- Choose Status --</option>
                         <option value="processing">Processing</option>
@@ -217,22 +221,22 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 </div>
 <?php if (!empty($_SESSION['flash_success'])): ?>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const msg = <?= json_encode($_SESSION['flash_success']); ?>;
-      const container = document.getElementById("toastContainer");
-      if (container) {
-        const el = document.createElement("div");
-        el.className = "mt-3 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 shadow-sm";
-        el.innerHTML = `
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const msg = <?= json_encode($_SESSION['flash_success']); ?>;
+            const container = document.getElementById("toastContainer");
+            if (container) {
+                const el = document.createElement("div");
+                el.className = "mt-3 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 shadow-sm";
+                el.innerHTML = `
           <span class="material-symbols-rounded text-emerald-600">check_circle</span>
           <div class="flex-1"><p class="text-sm font-semibold">${msg}</p></div>
         `;
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 5000);
-      }
-    });
-  </script>
-  <?php unset($_SESSION['flash_success']); ?>
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 5000);
+            }
+        });
+    </script>
+    <?php unset($_SESSION['flash_success']); ?>
 <?php endif; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

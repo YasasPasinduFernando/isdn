@@ -26,7 +26,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     </div>
                     <div>
                         <p class="text-xs text-teal-600 font-semibold uppercase tracking-wider">Your Cart</p>
-                        <span id="cartSummary" class="font-bold text-teal-800">5 items - Rs. 1,250</span>
+                        <span id="cartSummary"
+                            class="font-bold text-teal-800"><?= $cartCount . ' items - Rs.' . number_format($grandTotal, 2); ?></span>
                     </div>
                 </div>
             </div>
@@ -197,12 +198,15 @@ require_once __DIR__ . '/../../includes/header.php';
 
                         <!-- Promotion Badge -->
                         <?php $promotion_bg = '';
-                        if (!empty($product['promotion'])) {
+                        $promotion_text = '';
+                        if (($product['promotion'] && $product['discount_percentage'] > 0)) {
                             $promotion_bg = 'bg-yellow-400/90';
+                            $promotion_text = rtrim(rtrim(number_format($product['discount_percentage'], 2, '.', ''), '0'), '.') . '% OFF FOR ' . $product['product_count'];
+
                         } ?>
                         <span
                             class="absolute top-3 left-3  <?php echo $promotion_bg ?> backdrop-blur text-gray-900 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                            <?php echo $product['promotion'] ?>
+                            <?php echo $promotion_text ?>
                         </span>
                     </div>
 
@@ -288,6 +292,122 @@ require_once __DIR__ . '/../../includes/header.php';
 
     </div>
 </div>
+<!-- Floating Cart (Green: #00AC9D) -->
+<a href="index.php?page=cart" id="floatingCart" class="floating-cart" aria-label="Open cart">
+    <span class="cart-icon" aria-hidden="true">
+        <!-- Cart SVG -->
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M7 6h15l-1.5 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.6L5.2 3.5A1.5 1.5 0 0 0 3.7 2H2" stroke="white"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="9.5" cy="20" r="1.5" fill="white" />
+            <circle cx="18" cy="20" r="1.5" fill="white" />
+        </svg>
+
+        <!-- Item count badge -->
+        <span id="cartCount" class="cart-badge"><?= $cartCount; ?></span>
+    </span>
+
+    <!-- Amount -->
+    <span class="cart-amount">
+        <span class="amount-label">Rs.</span>
+        <span id="cartAmount"><?= number_format($grandTotal, 2); ?></span>
+    </span>
+</a>
+
+<style>
+    :root {
+        --cart-green: #00AC9D;
+        /* sampled from your image */
+        --cart-green-dark: #009687;
+    }
+
+    .floating-cart {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 9999;
+
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        padding: 12px 14px;
+        border-radius: 999px;
+        background: var(--cart-green);
+        color: #fff;
+        text-decoration: none;
+
+        box-shadow: 0 14px 35px rgba(0, 0, 0, .18);
+        transform: translateZ(0);
+        transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .floating-cart:hover {
+        background: var(--cart-green-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+    }
+
+    .cart-icon {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, .12);
+        flex: 0 0 auto;
+    }
+
+    .cart-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+
+        display: grid;
+        place-items: center;
+
+        background: #fff;
+        color: var(--cart-green);
+        font-weight: 800;
+        font-size: 12px;
+        line-height: 1;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
+    }
+
+    .cart-amount {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-weight: 800;
+        letter-spacing: .2px;
+        white-space: nowrap;
+    }
+
+    .amount-label {
+        font-weight: 700;
+        opacity: .95;
+    }
+
+    /* Optional: hide on very small screens if you want */
+    @media (max-width: 360px) {
+        .floating-cart {
+            padding: 10px 12px;
+            gap: 8px;
+        }
+
+        .cart-icon {
+            width: 40px;
+            height: 40px;
+        }
+    }
+</style>
 
 <script>
     function toggleDropdown(id) {
@@ -347,6 +467,23 @@ require_once __DIR__ . '/../../includes/header.php';
             }
         });
     });
+    // Example: update these values from your backend / session / API response
+    // Replace with your real cart values
+    function setFloatingCart(count, amount) {
+        const countEl = document.getElementById("cartCount");
+        const amountEl = document.getElementById("cartAmount");
+
+
+        const formattedTotal = Number(amount).toLocaleString("en-LK", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+        countEl.textContent = Number(count || 0);
+        amountEl.textContent = formattedTotal;
+    }
+
+    // Demo values (change/remove)
+    setFloatingCart(count, amount);
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

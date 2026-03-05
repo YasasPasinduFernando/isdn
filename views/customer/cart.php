@@ -23,7 +23,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         </button>
                     </div>
 
-                    <div class="divide-y divide-gray-100/50">
+                    <div id="cartItems" class="divide-y divide-gray-100/50">
                         <!-- Item 1 -->
                         <?php $subtotal = 0; ?>
                         <?php foreach ($cartItems as $item):

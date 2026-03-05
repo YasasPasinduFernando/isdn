@@ -32,11 +32,11 @@ class SystemAdmin
     {
         $stats = [];
 
-        $stats['total_users']    = (int) $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-        $stats['active_users']   = (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE is_active = 1")->fetchColumn();
+        $stats['total_users'] = (int) $this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        $stats['active_users'] = (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE is_active = 1")->fetchColumn();
         $stats['total_products'] = (int) $this->pdo->query("SELECT COUNT(*) FROM products")->fetchColumn();
-        $stats['total_orders']   = (int) $this->pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn();
-        $stats['total_revenue']  = (float) $this->pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM orders WHERE status != 'cancelled'")->fetchColumn();
+        $stats['total_orders'] = (int) $this->pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn();
+        $stats['total_revenue'] = (float) $this->pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM orders WHERE status != 'cancelled'")->fetchColumn();
         $stats['pending_orders'] = (int) $this->pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pending'")->fetchColumn();
 
         return $stats;
@@ -109,7 +109,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(u.username LIKE :search OR u.email LIKE :search2)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
         }
         if ($roleFilter !== '') {
@@ -138,7 +138,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(username LIKE :search OR email LIKE :search2)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
         }
         if ($roleFilter !== '') {
@@ -168,11 +168,11 @@ class SystemAdmin
              VALUES (:username, :email, :password, :role, :rdc_id, :is_active, NOW())"
         );
         $stmt->execute([
-            'username'  => $data['username'],
-            'email'     => $data['email'],
-            'password'  => password_hash($data['password'], PASSWORD_DEFAULT),
-            'role'      => $data['role'],
-            'rdc_id'    => !empty($data['rdc_id']) ? (int) $data['rdc_id'] : null,
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'password' => password_hash($data['password'], PASSWORD_DEFAULT),
+            'role' => $data['role'],
+            'rdc_id' => !empty($data['rdc_id']) ? (int) $data['rdc_id'] : null,
             'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ]);
         return (int) $this->pdo->lastInsertId();
@@ -182,11 +182,11 @@ class SystemAdmin
     {
         $fields = ['username = :username', 'email = :email', 'role = :role', 'rdc_id = :rdc_id', 'is_active = :is_active'];
         $params = [
-            'id'        => $id,
-            'username'  => $data['username'],
-            'email'     => $data['email'],
-            'role'      => $data['role'],
-            'rdc_id'    => !empty($data['rdc_id']) ? (int) $data['rdc_id'] : null,
+            'id' => $id,
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'role' => $data['role'],
+            'rdc_id' => !empty($data['rdc_id']) ? (int) $data['rdc_id'] : null,
             'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ];
 
@@ -220,14 +220,14 @@ class SystemAdmin
     public function getAllRoles(): array
     {
         return [
-            'customer'             => 'Customer',
-            'rdc_manager'          => 'RDC Manager',
-            'rdc_clerk'            => 'RDC Clerk',
-            'rdc_sales_ref'        => 'Sales Representative',
-            'logistics_officer'    => 'Logistics Officer',
-            'rdc_driver'           => 'RDC Driver',
-            'head_office_manager'  => 'Head Office Manager',
-            'system_admin'         => 'System Administrator',
+            'customer' => 'Customer',
+            'rdc_manager' => 'RDC Manager',
+            'rdc_clerk' => 'RDC Clerk',
+            'rdc_sales_ref' => 'Sales Representative',
+            'logistics_officer' => 'Logistics Officer',
+            'rdc_driver' => 'RDC Driver',
+            'head_office_manager' => 'Head Office Manager',
+            'system_admin' => 'System Administrator',
         ];
     }
 
@@ -235,32 +235,46 @@ class SystemAdmin
      * PRODUCT MANAGEMENT
      * ================================================================ */
 
-    public function getProducts(int $page = 1, int $perPage = 10, string $search = '', string $category = ''): array
-    {
+    public function getProducts(
+        int $page = 1,
+        int $perPage = 10,
+        string $search = '',
+        string $category = ''
+    ): array {
         $offset = ($page - 1) * $perPage;
         $conditions = [];
         $params = [];
+
         $categoryTable = $this->getCategoryTableName();
         $hasCategoryId = $this->productsHasCategoryId();
         $hasCategory = $this->productsHasCategory();
 
-        $join = '';
+        $joinCategory = '';
         $categorySelect = "'' AS category";
+
         if ($hasCategoryId && $categoryTable !== null) {
-            $join = " LEFT JOIN {$categoryTable} ct ON p.category_id = ct.category_id";
+            $joinCategory = " LEFT JOIN {$categoryTable} ct ON p.category_id = ct.category_id";
             $categorySelect = "ct.name AS category";
         } elseif ($hasCategory) {
             $categorySelect = "p.category AS category";
         }
 
+        // Search condition
         if ($search !== '') {
-            $conditions[] = "(p.product_name LIKE :search OR p.product_code LIKE :search2" .
-                (($hasCategoryId && $categoryTable !== null) ? " OR ct.name LIKE :search3" : ($hasCategory ? " OR p.category LIKE :search3" : "")) .
+            $conditions[] =
+                "(p.product_name LIKE :search 
+              OR p.product_code LIKE :search2" .
+                (($hasCategoryId && $categoryTable !== null)
+                    ? " OR ct.name LIKE :search3"
+                    : ($hasCategory ? " OR p.category LIKE :search3" : "")) .
                 ")";
-            $params['search']  = "%{$search}%";
+
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
         }
+
+        // Category filter
         if ($category !== '') {
             if ($hasCategoryId && $categoryTable !== null) {
                 $conditions[] = "ct.name = :category";
@@ -273,17 +287,47 @@ class SystemAdmin
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-        $sql = "SELECT p.*,
-                       {$categorySelect},
-                       COALESCE((SELECT SUM(ps.available_quantity) FROM product_stocks ps WHERE ps.product_id = p.product_id), 0) AS total_stock
-                FROM products p
-                {$join}
-                {$where}
-                ORDER BY p.created_at DESC
-                LIMIT {$perPage} OFFSET {$offset}";
+        $sql = "
+            SELECT 
+                p.*,
+                {$categorySelect},
+
+                COALESCE(SUM(ps.available_quantity), 0) AS total_stock,
+
+                pr.product_count,
+                pr.discount_percentage,
+                COALESCE(pr.is_active, 0) AS is_promo_active
+
+            FROM products p
+            {$joinCategory}
+
+            LEFT JOIN product_stocks ps 
+                ON ps.product_id = p.product_id
+
+            LEFT JOIN promotions pr
+                ON pr.product_id = p.product_id
+                AND CURDATE() BETWEEN pr.start_date AND pr.end_date
+                AND pr.is_active = 1
+
+            {$where}
+
+            GROUP BY p.product_id
+            ORDER BY p.created_at DESC
+            LIMIT :perPage OFFSET :offset
+";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+
+        // bind search/category params
+        foreach ($params as $key => $val) {
+            $stmt->bindValue(':' . $key, $val, PDO::PARAM_STR);
+        }
+
+        // bind paging params as INT
+        $stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -304,7 +348,7 @@ class SystemAdmin
             $conditions[] = "(p.product_name LIKE :search OR p.product_code LIKE :search2" .
                 (($hasCategoryId && $categoryTable !== null) ? " OR ct.name LIKE :search3" : ($hasCategory ? " OR p.category LIKE :search3" : "")) .
                 ")";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
         }
@@ -362,13 +406,13 @@ class SystemAdmin
                  VALUES (:code, :name, :category_id, :price, :min_stock, :image, :active)"
             );
             $stmt->execute([
-                'code'        => $data['product_code'],
-                'name'        => $data['product_name'],
+                'code' => $data['product_code'],
+                'name' => $data['product_name'],
                 'category_id' => $categoryId,
-                'price'       => $data['unit_price'],
-                'min_stock'   => $data['minimum_stock_level'] ?? 100,
-                'image'       => $data['image_url'] ?? null,
-                'active'      => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+                'price' => $data['unit_price'],
+                'min_stock' => $data['minimum_stock_level'] ?? 100,
+                'image' => $data['image_url'] ?? null,
+                'active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
             ]);
         } elseif ($this->productsHasCategory()) {
             $stmt = $this->pdo->prepare(
@@ -376,13 +420,13 @@ class SystemAdmin
                  VALUES (:code, :name, :category, :price, :min_stock, :image, :active)"
             );
             $stmt->execute([
-                'code'      => $data['product_code'],
-                'name'      => $data['product_name'],
-                'category'  => $data['category'] ?? '',
-                'price'     => $data['unit_price'],
+                'code' => $data['product_code'],
+                'name' => $data['product_name'],
+                'category' => $data['category'] ?? '',
+                'price' => $data['unit_price'],
                 'min_stock' => $data['minimum_stock_level'] ?? 100,
-                'image'     => $data['image_url'] ?? null,
-                'active'    => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+                'image' => $data['image_url'] ?? null,
+                'active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
             ]);
         } else {
             throw new RuntimeException('Products table does not contain category_id or category column.');
@@ -400,12 +444,12 @@ class SystemAdmin
             'is_active = :active',
         ];
         $params = [
-            'id'        => $id,
-            'code'      => $data['product_code'],
-            'name'      => $data['product_name'],
-            'price'     => $data['unit_price'],
+            'id' => $id,
+            'code' => $data['product_code'],
+            'name' => $data['product_name'],
+            'price' => $data['unit_price'],
             'min_stock' => $data['minimum_stock_level'] ?? 100,
-            'active'    => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+            'active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ];
 
         if ($this->productsHasCategoryId()) {
@@ -537,7 +581,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(pr.name LIKE :search OR p.product_name LIKE :search2)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
         }
         if ($statusFilter === 'active') {
@@ -571,7 +615,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(pr.name LIKE :search OR p.product_name LIKE :search2)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
         }
         if ($statusFilter === 'active') {
@@ -611,14 +655,14 @@ class SystemAdmin
              VALUES (:name, :description, :product_id, :product_count, :discount, :start_date, :end_date, :is_active)"
         );
         $stmt->execute([
-            'name'          => $data['name'],
-            'description'   => $data['description'] ?? null,
-            'product_id'    => (int) $data['product_id'],
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'product_id' => (int) $data['product_id'],
             'product_count' => (int) ($data['product_count'] ?? 1),
-            'discount'      => (float) $data['discount_percentage'],
-            'start_date'    => $data['start_date'],
-            'end_date'      => $data['end_date'],
-            'is_active'     => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+            'discount' => (float) $data['discount_percentage'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ]);
         return (int) $this->pdo->lastInsertId();
     }
@@ -638,15 +682,15 @@ class SystemAdmin
              WHERE id = :id"
         );
         return $stmt->execute([
-            'id'            => $id,
-            'name'          => $data['name'],
-            'description'   => $data['description'] ?? null,
-            'product_id'    => (int) $data['product_id'],
+            'id' => $id,
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'product_id' => (int) $data['product_id'],
             'product_count' => (int) ($data['product_count'] ?? 1),
-            'discount'      => (float) $data['discount_percentage'],
-            'start_date'    => $data['start_date'],
-            'end_date'      => $data['end_date'],
-            'is_active'     => isset($data['is_active']) ? (int) $data['is_active'] : 1,
+            'discount' => (float) $data['discount_percentage'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : 1,
         ]);
     }
 
@@ -755,12 +799,12 @@ class SystemAdmin
              VALUES (:uid, :action, :entity_type, :entity_id, :details, :ip)"
         );
         $stmt->execute([
-            'uid'         => $userId,
-            'action'      => $action,
+            'uid' => $userId,
+            'action' => $action,
             'entity_type' => $entityType,
-            'entity_id'   => $entityId,
-            'details'     => $details,
-            'ip'          => $ip,
+            'entity_id' => $entityId,
+            'details' => $details,
+            'ip' => $ip,
         ]);
     }
 
@@ -772,7 +816,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(COALESCE(u.username, CONCAT('User #', a.user_id)) LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3 OR a.action LIKE :search4)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
             $params['search4'] = "%{$search}%";
@@ -811,7 +855,7 @@ class SystemAdmin
 
         if ($search !== '') {
             $conditions[] = "(COALESCE(u.username, CONCAT('User #', a.user_id)) LIKE :search OR a.details LIKE :search2 OR a.entity_type LIKE :search3 OR a.action LIKE :search4)";
-            $params['search']  = "%{$search}%";
+            $params['search'] = "%{$search}%";
             $params['search2'] = "%{$search}%";
             $params['search3'] = "%{$search}%";
             $params['search4'] = "%{$search}%";

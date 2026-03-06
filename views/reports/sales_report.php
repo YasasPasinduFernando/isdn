@@ -11,6 +11,7 @@
  */
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../models/DeliveryReport.php';
+require_once __DIR__ . '/../../models/SalesReport.php';
 
 // ── Role-based access control ────────────────────────────────
 $allowedRoles = [USER_ROLE_HEAD_OFFICE_MANAGER, USER_ROLE_SYSTEM_ADMIN];
@@ -21,6 +22,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', $allowedR
 
 // ── Initialize model and ensure indexes ──────────────────────
 $report = new DeliveryReport($pdo);
+$salesReport = new SalesReport($pdo);
 $report->ensureIndexes(); // Idempotent index creation for performance
 
 // ── Sanitize filters ─────────────────────────────────────────
@@ -34,17 +36,47 @@ if (!empty($_GET['end_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['end_
 if (!empty($_GET['rdc_id']) && is_numeric($_GET['rdc_id'])) {
     $filters['rdc_id'] = (int) $_GET['rdc_id'];
 }
-if (!empty($_GET['status']) && in_array($_GET['status'], ['completed', 'pending', 'on_time', 'delayed'])) {
-    $filters['status'] = $_GET['status'];
-}
-
 // ── Fetch data ───────────────────────────────────────────────
 $error = null;
 try {
-    $rdcData = $report->getRdcEfficiency($filters);
-    $summary = $report->getOverallSummary($filters);
-    $details = $report->getDeliveryDetails($filters, 50);
     $allRdcs = $report->getAllRdcs();
+    $totalSales = $salesReport->getTotalSales($filters);
+    $totalPayments = $salesReport->getPaymentsReceived($filters);
+    $statusSummary = $salesReport->getStatusSummary($filters);
+    $topProduct = $salesReport->getTopProductAndAverageSale($filters);
+    $topCustomer = $salesReport->getTopPurchasingCustomerByAmount($filters);
+    $topSalesRep = $salesReport->getTopSalesRefByOrderAmount($filters);
+    $rdcSalesSummary = $salesReport->getSalesSummaryReport($filters);
+    $orderRecords = $salesReport->getOrderReport($filters);
+    $topSellingItems = $salesReport->getTopSellingItems($filters);
+
+    $salesSummary = [
+        'total_sales' => $totalSales['total_sales'],
+        'order_count' => $totalSales['order_count'],
+        'payment_received' => $totalPayments['total_payment_received'],
+        'pending_count' => 0,
+        'pending_sum' => 0,
+        'processing_count' => 0,
+        'processing_sum' => 0,
+        'in_transit_count' => 0,
+        'in_transit_sum' => 0,
+        'delivered_count' => 0,
+        'delivered_sum' => 0,
+        'cancelled_count' => 0,
+        'cancelled_sum' => 0
+
+    ];
+    foreach ($statusSummary as $row) {
+
+        $status = str_replace(' ', '_', $row['status']);
+
+        $salesSummary[$status . '_count'] = (int) $row['order_count'];
+        $salesSummary[$status . '_sum'] = (float) $row['total_amount_sum'];
+    }
+    //print_r($rdcSalesSummary);
+
+
+
 } catch (Exception $e) {
     $error = $e->getMessage();
     $rdcData = $details = $allRdcs = [];
@@ -56,6 +88,22 @@ try {
         'pending' => 0,
         'overall_efficiency' => 0,
         'avg_hours' => 0
+    ];
+    $salesSummary = [
+        'total_sales' => 0,
+        'order_count' => 0,
+        'payment_received' => 0,
+        'pending_count' => 0,
+        'pending_sum' => 0,
+        'processing_count' => 0,
+        'processing_sum' => 0,
+        'in_transit_count' => 0,
+        'in_transit_sum' => 0,
+        'delivered_count' => 0,
+        'delivered_sum' => 0,
+        'cancelled_count' => 0,
+        'cancelled_sum' => 0
+
     ];
 }
 
@@ -151,7 +199,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'pdf') {
         return is_numeric($value) ? number_format((float) $value, 1) . ' h' : '-';
     };
 
-    $rankedRdcs = $rdcData;
+    $rankedRdcs = [];
     usort($rankedRdcs, static function ($a, $b) use ($num) {
         return $num($b['efficiency_pct'] ?? 0) <=> $num($a['efficiency_pct'] ?? 0);
     });
@@ -165,324 +213,129 @@ if (isset($_GET['export']) && $_GET['export'] === 'pdf') {
     $pdf->setMeta($generatedAt, $filterSummary);
     $pdf->AddPage();
 
-    $sectionTitle = static function (FPDF $pdfDoc, string $title): void {
-        $pdfDoc->SetTextColor(30, 41, 59);
-        $pdfDoc->SetFont('Helvetica', 'B', 11);
-        $pdfDoc->Cell(0, 7, $title, 0, 1, 'L');
-    };
+    $pdf->SetFont('Helvetica', 'B', 16);
+    $pdf->Cell(0, 10, 'ISDN Sales Report', 0, 1, 'C');
 
-    $drawKpiCard = static function (FPDF $pdfDoc, float $x, float $y, float $w, float $h, string $label, string $value, array $color): void {
-        $pdfDoc->SetFillColor($color[0], $color[1], $color[2]);
-        $pdfDoc->SetDrawColor(226, 232, 240);
-        $pdfDoc->Rect($x, $y, $w, $h, 'DF');
-        $pdfDoc->SetTextColor(255, 255, 255);
-        $pdfDoc->SetXY($x + 3, $y + 3);
-        $pdfDoc->SetFont('Helvetica', '', 8);
-        $pdfDoc->Cell($w - 6, 4, $label, 0, 2, 'L');
-        $pdfDoc->SetFont('Helvetica', 'B', 15);
-        $pdfDoc->Cell($w - 6, 8, $value, 0, 0, 'L');
-    };
-
-    $drawKpiCard($pdf, 10, 34, 89, 17, 'TOTAL DELIVERIES', $fmtInt($summary['total_deliveries'] ?? 0), [15, 23, 42]);
-    $drawKpiCard($pdf, 104, 34, 89, 17, 'ON-TIME DELIVERIES', $fmtInt($summary['on_time'] ?? 0), [16, 185, 129]);
-    $drawKpiCard($pdf, 198, 34, 89, 17, 'DELAYED DELIVERIES', $fmtInt($summary['delayed'] ?? 0), [239, 68, 68]);
-    $drawKpiCard($pdf, 10, 54, 89, 17, 'PENDING DELIVERIES', $fmtInt($summary['pending'] ?? 0), [245, 158, 11]);
-    $drawKpiCard($pdf, 104, 54, 89, 17, 'OVERALL EFFICIENCY', $fmtPct($summary['overall_efficiency'] ?? 0), [59, 130, 246]);
-    $drawKpiCard($pdf, 198, 54, 89, 17, 'AVG DELIVERY TIME', $fmtHours($summary['avg_hours'] ?? 0), [99, 102, 241]);
-
-    $pdf->SetY(76);
-    $sectionTitle($pdf, 'Performance Snapshot');
-    $pdf->SetDrawColor(226, 232, 240);
-    $pdf->SetFillColor(248, 250, 252);
-
-    $pdf->SetFont('Helvetica', '', 9);
-    $pdf->SetTextColor(30, 41, 59);
-
-    $pdf->Rect(10, $pdf->GetY(), 136, 18, 'DF');
-    $pdf->Rect(151, $pdf->GetY(), 136, 18, 'DF');
-
-    $bestText = 'No RDC data available';
-    if ($bestRdc) {
-        $bestText = sprintf(
-            '%s (%s)  |  Efficiency: %s  |  On-time: %s  |  Avg: %s',
-            substr((string) ($bestRdc['rdc_name'] ?? 'Unknown'), 0, 32),
-            (string) ($bestRdc['rdc_code'] ?? '-'),
-            $fmtPct($bestRdc['efficiency_pct'] ?? 0),
-            $fmtInt($bestRdc['on_time'] ?? 0),
-            $fmtHours($bestRdc['avg_delivery_hours'] ?? null)
-        );
-    }
-
-    $worstText = 'No RDC data available';
-    if ($worstRdc) {
-        $worstText = sprintf(
-            '%s (%s)  |  Efficiency: %s  |  Delayed: %s  |  Pending: %s',
-            substr((string) ($worstRdc['rdc_name'] ?? 'Unknown'), 0, 32),
-            (string) ($worstRdc['rdc_code'] ?? '-'),
-            $fmtPct($worstRdc['efficiency_pct'] ?? 0),
-            $fmtInt($worstRdc['delayed'] ?? 0),
-            $fmtInt($worstRdc['pending'] ?? 0)
-        );
-    }
-
-    $pdf->SetXY(13, $pdf->GetY() + 3);
-    $pdf->SetFont('Helvetica', 'B', 9);
-    $pdf->SetTextColor(5, 150, 105);
-    $pdf->Cell(28, 5, 'Top Performer', 0, 0, 'L');
-    $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetTextColor(51, 65, 85);
-    $pdf->Cell(104, 5, $bestText, 0, 0, 'L');
-
-    $pdf->SetXY(154, $pdf->GetY());
-    $pdf->SetFont('Helvetica', 'B', 9);
-    $pdf->SetTextColor(220, 38, 38);
-    $pdf->Cell(34, 5, 'Needs Attention', 0, 0, 'L');
-    $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetTextColor(51, 65, 85);
-    $pdf->Cell(96, 5, $worstText, 0, 1, 'L');
-
-    $pdf->Ln(12);
-    $sectionTitle($pdf, 'RDC Comparison');
-
-    $rdcWidths = [68, 21, 21, 21, 21, 28, 26, 20, 25];
-    $rdcHeaders = ['RDC', 'Total', 'Completed', 'On-time', 'Delayed', 'Pending', 'Efficiency', 'Avg Hrs', 'Code'];
-
-    $pdf->SetFillColor(15, 23, 42);
-    $pdf->SetTextColor(255, 255, 255);
-    $pdf->SetDrawColor(226, 232, 240);
-    $pdf->SetFont('Helvetica', 'B', 8);
-    foreach ($rdcHeaders as $idx => $header) {
-        $pdf->Cell($rdcWidths[$idx], 7, $header, 1, 0, 'C', true);
-    }
-    $pdf->Ln();
-
-    $pdf->SetFont('Helvetica', '', 8);
-    $rowIndex = 0;
-    foreach ($rdcData as $r) {
-        $fill = ($rowIndex % 2 === 0);
-        if ($fill) {
-            $pdf->SetFillColor(248, 250, 252);
-        } else {
-            $pdf->SetFillColor(255, 255, 255);
-        }
-        $pdf->SetTextColor(31, 41, 55);
-        $pdf->Cell($rdcWidths[0], 6, substr((string) ($r['rdc_name'] ?? ''), 0, 34), 1, 0, 'L', true);
-        $pdf->Cell($rdcWidths[1], 6, $fmtInt($r['total_deliveries'] ?? 0), 1, 0, 'R', true);
-        $pdf->Cell($rdcWidths[2], 6, $fmtInt($r['completed'] ?? 0), 1, 0, 'R', true);
-        $pdf->Cell($rdcWidths[3], 6, $fmtInt($r['on_time'] ?? 0), 1, 0, 'R', true);
-        $pdf->Cell($rdcWidths[4], 6, $fmtInt($r['delayed'] ?? 0), 1, 0, 'R', true);
-        $pdf->Cell($rdcWidths[5], 6, $fmtInt($r['pending'] ?? 0), 1, 0, 'R', true);
-
-        $efficiency = $num($r['efficiency_pct'] ?? 0);
-        if ($efficiency >= 80) {
-            $pdf->SetTextColor(5, 150, 105);
-        } elseif ($efficiency >= 50) {
-            $pdf->SetTextColor(217, 119, 6);
-        } else {
-            $pdf->SetTextColor(220, 38, 38);
-        }
-        $pdf->Cell($rdcWidths[6], 6, $fmtPct($r['efficiency_pct'] ?? 0), 1, 0, 'R', true);
-
-        $pdf->SetTextColor(31, 41, 55);
-        $pdf->Cell($rdcWidths[7], 6, $fmtHours($r['avg_delivery_hours'] ?? null), 1, 0, 'R', true);
-        $pdf->Cell($rdcWidths[8], 6, (string) ($r['rdc_code'] ?? '-'), 1, 1, 'C', true);
-        $rowIndex++;
-    }
-
-    if (empty($rdcData)) {
-        $pdf->SetFillColor(248, 250, 252);
-        $pdf->SetTextColor(100, 116, 139);
-        $pdf->Cell(array_sum($rdcWidths), 8, 'No RDC data available for selected filters.', 1, 1, 'C', true);
-    }
+    $pdf->SetFont('Helvetica', '', 10);
+    $pdf->Cell(0, 6, 'Generated: ' . date('Y-m-d H:i:s'), 0, 1);
 
     $pdf->Ln(5);
-    $sectionTitle($pdf, 'Delivery Records (Sample)');
 
-    $detailWidths = [28, 58, 35, 43, 43, 33, 25];
-    $drawDetailHeader = static function (FPDF $pdfDoc, array $widths): void {
-        $pdfDoc->SetFillColor(30, 41, 59);
-        $pdfDoc->SetTextColor(255, 255, 255);
-        $pdfDoc->SetFont('Helvetica', 'B', 8);
-        $pdfDoc->Cell($widths[0], 7, 'Order #', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[1], 7, 'RDC', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[2], 7, 'Driver', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[3], 7, 'Scheduled', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[4], 7, 'Completed', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[5], 7, 'Status', 1, 0, 'C', true);
-        $pdfDoc->Cell($widths[6], 7, 'Duration', 1, 1, 'C', true);
-    };
+    // Sales Summary
+    $pdf->SetFont('Helvetica', 'B', 12);
+    $pdf->Cell(0, 8, 'Sales Summary', 0, 1);
 
-    $drawDetailHeader($pdf, $detailWidths);
-    $pdf->SetFont('Helvetica', '', 8);
-    $detailRow = 0;
-    foreach ($details as $d) {
-        if ($pdf->GetY() > 184) {
-            $pdf->AddPage();
-            $sectionTitle($pdf, 'Delivery Records (Continued)');
-            $drawDetailHeader($pdf, $detailWidths);
-            $detailRow = 0;
-        }
+    $pdf->SetFont('Helvetica', '', 10);
+    $pdf->Cell(80, 7, 'Total Sales', 1);
+    $pdf->Cell(40, 7, $salesSummary['total_sales'], 1, 1);
 
-        $fill = ($detailRow % 2 === 0);
-        if ($fill) {
-            $pdf->SetFillColor(248, 250, 252);
-        } else {
-            $pdf->SetFillColor(255, 255, 255);
-        }
-        $pdf->SetTextColor(31, 41, 55);
+    $pdf->Cell(80, 7, 'Order Count', 1);
+    $pdf->Cell(40, 7, $salesSummary['order_count'], 1, 1);
 
-        $status = (string) ($d['delivery_status'] ?? '-');
-        $pdf->Cell($detailWidths[0], 6, substr((string) ($d['order_number'] ?? ''), 0, 18), 1, 0, 'L', true);
-        $pdf->Cell($detailWidths[1], 6, substr((string) ($d['rdc_name'] ?? '-'), 0, 33), 1, 0, 'L', true);
-        $pdf->Cell($detailWidths[2], 6, substr((string) ($d['driver_name'] ?? '-'), 0, 19), 1, 0, 'L', true);
-        $pdf->Cell($detailWidths[3], 6, !empty($d['scheduled_date']) ? date('M j, Y H:i', strtotime($d['scheduled_date'])) : '-', 1, 0, 'C', true);
-        $pdf->Cell($detailWidths[4], 6, !empty($d['completed_date']) ? date('M j, Y H:i', strtotime($d['completed_date'])) : '-', 1, 0, 'C', true);
+    $pdf->Cell(80, 7, 'Payments Received', 1);
+    $pdf->Cell(40, 7, $salesSummary['payment_received'], 1, 1);
 
-        if ($status === 'On-time') {
-            $pdf->SetTextColor(5, 150, 105);
-        } elseif ($status === 'Delayed') {
-            $pdf->SetTextColor(220, 38, 38);
-        } else {
-            $pdf->SetTextColor(217, 119, 6);
-        }
-        $pdf->Cell($detailWidths[5], 6, $status, 1, 0, 'C', true);
+    $pdf->Ln(6);
 
-        $pdf->SetTextColor(31, 41, 55);
-        $pdf->Cell($detailWidths[6], 6, $fmtHours($d['duration_hours'] ?? null), 1, 1, 'R', true);
-        $detailRow++;
+    // RDC Sales Summary
+    $pdf->SetFont('Helvetica', 'B', 12);
+    $pdf->Cell(0, 8, 'RDC Sales Summary', 0, 1);
+
+    $pdf->SetFont('Helvetica', 'B', 10);
+    $pdf->Cell(90, 7, 'RDC', 1);
+    $pdf->Cell(40, 7, 'Orders', 1);
+    $pdf->Cell(50, 7, 'Sales Amount', 1);
+    $pdf->Ln();
+
+    $pdf->SetFont('Helvetica', '', 10);
+
+    foreach ($rdcSalesSummary as $r) {
+        $pdf->Cell(90, 7, $r['rdc_name'], 1);
+        $pdf->Cell(40, 7, $r['order_count'], 1);
+        $pdf->Cell(50, 7, $r['total_sales'], 1);
+        $pdf->Ln();
     }
 
-    if (empty($details)) {
-        $pdf->SetFillColor(248, 250, 252);
-        $pdf->SetTextColor(100, 116, 139);
-        $pdf->Cell(array_sum($detailWidths), 8, 'No delivery records available for selected filters.', 1, 1, 'C', true);
+    $pdf->Ln(6);
+
+    // Order Records
+    $pdf->SetFont('Helvetica', 'B', 12);
+    $pdf->Cell(0, 8, 'Order Records', 0, 1);
+
+    $pdf->SetFont('Helvetica', 'B', 9);
+    $pdf->Cell(30, 7, 'Order No', 1);
+    $pdf->Cell(50, 7, 'Customer', 1);
+    $pdf->Cell(40, 7, 'Sales Rep', 1);
+    $pdf->Cell(30, 7, 'Amount', 1);
+    $pdf->Cell(30, 7, 'Status', 1);
+    $pdf->Ln();
+
+    $pdf->SetFont('Helvetica', '', 9);
+
+    foreach ($orderRecords as $o) {
+        $pdf->Cell(30, 7, $o['order_no'], 1);
+        $pdf->Cell(50, 7, $o['customer_name'], 1);
+        $pdf->Cell(40, 7, $o['sales_rep'], 1);
+        $pdf->Cell(30, 7, $o['total_amount'], 1);
+        $pdf->Cell(30, 7, $o['status'], 1);
+        $pdf->Ln();
     }
 
-    $pdf->Output('D', 'delivery_efficiency_report_' . date('Y-m-d') . '.pdf');
+    $pdf->Output('D', 'sales_report_' . date('Y-m-d') . '.pdf');
     exit;
 }
 
 // ── CSV Export ───────────────────────────────────────────────
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="delivery_efficiency_report_' . date('Y-m-d') . '.csv"');
+    header('Content-Disposition: attachment; filename="sales_report_' . date('Y-m-d') . '.csv"');
+
     $out = fopen('php://output', 'w');
-    // UTF-8 BOM so Excel detects encoding correctly
-    fwrite($out, "\xEF\xBB\xBF");
+    fwrite($out, "\xEF\xBB\xBF"); // Excel UTF-8 support
 
-    $rdcLookup = [];
-    foreach ($allRdcs as $rdc) {
-        $rdcLookup[(int) $rdc['rdc_id']] = $rdc['rdc_name'];
-    }
-    $statusLabels = [
-        'completed' => 'Completed',
-        'pending' => 'Pending',
-        'on_time' => 'On-time',
-        'delayed' => 'Delayed',
-    ];
-    $filterParts = [];
-    if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
-        $from = !empty($filters['start_date']) ? $filters['start_date'] : 'Any';
-        $to = !empty($filters['end_date']) ? $filters['end_date'] : 'Any';
-        $filterParts[] = 'Date: ' . $from . ' to ' . $to;
-    }
-    if (!empty($filters['rdc_id'])) {
-        $rdcName = $rdcLookup[(int) $filters['rdc_id']] ?? ('RDC #' . (int) $filters['rdc_id']);
-        $filterParts[] = 'RDC: ' . $rdcName;
-    }
-    if (!empty($filters['status'])) {
-        $filterParts[] = 'Status: ' . ($statusLabels[$filters['status']] ?? $filters['status']);
-    }
-    $filterSummary = empty($filterParts) ? 'All deliveries' : implode(' | ', $filterParts);
-
-    $rankedRdcs = $rdcData;
-    usort($rankedRdcs, static function ($a, $b) {
-        return ((float) ($b['efficiency_pct'] ?? 0)) <=> ((float) ($a['efficiency_pct'] ?? 0));
-    });
-    $bestRdc = $rankedRdcs[0] ?? null;
-    $worstRdc = !empty($rankedRdcs) ? $rankedRdcs[count($rankedRdcs) - 1] : null;
-
-    // Report header
-    fputcsv($out, ['ISDN Delivery Efficiency Report']);
+    // Report Header
+    fputcsv($out, ['ISDN Sales Report']);
     fputcsv($out, ['Generated At', date('Y-m-d H:i:s')]);
-    fputcsv($out, ['Filter Summary', $filterSummary]);
     fputcsv($out, []);
 
-    // KPI snapshot
-    fputcsv($out, ['KPI Snapshot']);
+    // Sales Summary
+    fputcsv($out, ['Sales Summary']);
     fputcsv($out, ['Metric', 'Value']);
-    fputcsv($out, ['Total Deliveries', $summary['total_deliveries']]);
-    fputcsv($out, ['Completed Deliveries', $summary['completed']]);
-    fputcsv($out, ['On-time Deliveries', $summary['on_time']]);
-    fputcsv($out, ['Delayed Deliveries', $summary['delayed']]);
-    fputcsv($out, ['Pending Deliveries', $summary['pending']]);
-    fputcsv($out, ['Overall Efficiency %', number_format((float) ($summary['overall_efficiency'] ?? 0), 1)]);
-    fputcsv($out, ['Average Delivery Hours', number_format((float) ($summary['avg_hours'] ?? 0), 1)]);
+
+    fputcsv($out, ['Total Sales', $salesSummary['total_sales']]);
+    fputcsv($out, ['Order Count', $salesSummary['order_count']]);
+    fputcsv($out, ['Payments Received', $salesSummary['payment_received']]);
+
     fputcsv($out, []);
 
-    // Performance snapshot
-    fputcsv($out, ['Performance Snapshot']);
-    fputcsv($out, ['Type', 'RDC Name', 'Code', 'Efficiency %', 'On-time', 'Delayed', 'Pending', 'Avg Hours']);
-    if ($bestRdc) {
-        fputcsv($out, [
-            'Top Performer',
-            $bestRdc['rdc_name'] ?? '-',
-            $bestRdc['rdc_code'] ?? '-',
-            number_format((float) ($bestRdc['efficiency_pct'] ?? 0), 1),
-            $bestRdc['on_time'] ?? 0,
-            $bestRdc['delayed'] ?? 0,
-            $bestRdc['pending'] ?? 0,
-            $bestRdc['avg_delivery_hours'] ?? '-',
-        ]);
-    }
-    if ($worstRdc) {
-        fputcsv($out, [
-            'Needs Attention',
-            $worstRdc['rdc_name'] ?? '-',
-            $worstRdc['rdc_code'] ?? '-',
-            number_format((float) ($worstRdc['efficiency_pct'] ?? 0), 1),
-            $worstRdc['on_time'] ?? 0,
-            $worstRdc['delayed'] ?? 0,
-            $worstRdc['pending'] ?? 0,
-            $worstRdc['avg_delivery_hours'] ?? '-',
-        ]);
-    }
-    fputcsv($out, []);
+    // RDC Sales Summary
+    fputcsv($out, ['RDC Sales Summary']);
+    fputcsv($out, ['RDC', 'Orders', 'Sales Amount']);
 
-    // RDC comparison
-    fputcsv($out, ['RDC Comparison']);
-    fputcsv($out, ['RDC Name', 'Code', 'Total', 'Completed', 'On-time', 'Delayed', 'Pending', 'Efficiency %', 'Avg Hours', 'Performance Band']);
-    foreach ($rdcData as $row) {
-        $eff = (float) ($row['efficiency_pct'] ?? 0);
-        $band = $eff >= 80 ? 'Good' : ($eff >= 50 ? 'Medium' : 'Needs Attention');
+    print_r($rdcSalesSummary);
+    foreach ($rdcSalesSummary as $r) {
         fputcsv($out, [
-            $row['rdc_name'],
-            $row['rdc_code'],
-            $row['total_deliveries'],
-            $row['completed'],
-            $row['on_time'],
-            $row['delayed'],
-            $row['pending'],
-            number_format($eff, 1),
-            $row['avg_delivery_hours'] ?? 0,
-            $band,
+            $r['rdc_name'],
+            $r['total_sales'],
+            $r['total_orders']
         ]);
     }
 
     fputcsv($out, []);
-    fputcsv($out, ['Delivery Records (Sample)']);
-    fputcsv($out, ['Order #', 'RDC', 'Driver', 'Scheduled Date', 'Completed Date', 'Status', 'Duration (hrs)']);
-    foreach ($details as $d) {
-        $schedDate = !empty($d['scheduled_date']) ? date('Y-m-d', strtotime($d['scheduled_date'])) : '-';
-        $compDate = !empty($d['completed_date']) ? date('Y-m-d', strtotime($d['completed_date'])) : '-';
+
+    // Order Records
+    fputcsv($out, ['Order Records']);
+    fputcsv($out, ['Order No', 'Customer', 'Sales Rep', 'Total Amount', 'Status', 'Date']);
+
+    foreach ($orderRecords as $o) {
         fputcsv($out, [
-            $d['order_number'],
-            $d['rdc_name'],
-            $d['driver_name'] ?? '-',
-            $schedDate,
-            $compDate,
-            $d['delivery_status'],
-            $d['duration_hours'] ?? '-',
+            $o['order_no'],
+            $o['customer_name'],
+            $o['sales_rep'],
+            $o['total_amount'],
+            $o['status'],
+            $o['created_at']
         ]);
     }
 
@@ -493,44 +346,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
 // ── Page output (include header only after exports are handled) ─
 require_once __DIR__ . '/../../includes/header.php';
 
-// ── Chart data preparation ───────────────────────────────────
-$chartData = [
-    'labels' => array_column($rdcData, 'rdc_name'),
-    'on_time' => array_map('intval', array_column($rdcData, 'on_time')),
-    'delayed' => array_map('intval', array_column($rdcData, 'delayed')),
-    'pending' => array_map('intval', array_column($rdcData, 'pending')),
-    'efficiency' => array_map('floatval', array_column($rdcData, 'efficiency_pct')),
-    'avg_hours' => array_map('floatval', array_column($rdcData, 'avg_delivery_hours')),
-];
-
-// Map data for Sri Lanka regional view: rdc_code => { efficiency, rdc_name, on_time, delayed, pending, perf_class }
-$mapRdcData = [];
-foreach ($rdcData as $r) {
-    $eff = (float) ($r['efficiency_pct'] ?? 0);
-    $perfClass = $eff >= 80 ? 'good' : ($eff >= 50 ? 'medium' : 'bad');
-    $mapRdcData[$r['rdc_code'] ?? ''] = [
-        'rdc_name' => $r['rdc_name'] ?? '',
-        'efficiency' => $eff,
-        'on_time' => (int) ($r['on_time'] ?? 0),
-        'delayed' => (int) ($r['delayed'] ?? 0),
-        'pending' => (int) ($r['pending'] ?? 0),
-        'total' => (int) ($r['total_deliveries'] ?? 0),
-        'perf_class' => $perfClass,
-    ];
-}
-
-$statusBadge = [
-    'On-time' => 'bg-green-100 text-green-700',
-    'Delayed' => 'bg-red-100 text-red-700',
-    'Pending' => 'bg-yellow-100 text-yellow-700',
-];
-
-$rankedRdcData = $rdcData;
-usort($rankedRdcData, static function ($a, $b) {
-    return ((float) ($b['efficiency_pct'] ?? 0)) <=> ((float) ($a['efficiency_pct'] ?? 0));
-});
-$bestRdcUi = $rankedRdcData[0] ?? null;
-$worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1] : null;
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
@@ -566,7 +381,7 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                 $exportCsvQs = http_build_query(array_merge($_GET, ['export' => 'csv']));
                 $exportPdfQs = http_build_query(array_merge($_GET, ['export' => 'pdf']));
                 ?>
-                <a href="<?php echo BASE_PATH; ?>/index.php?<?php echo $exportPdfQs; ?>"
+                <a href=""
                     class="px-5 py-2.5 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-sm shadow-lg shadow-red-200/50 hover:scale-[1.02] transition flex items-center gap-2">
                     <span class="material-symbols-rounded text-lg">picture_as_pdf</span> Export PDF
                 </a>
@@ -581,7 +396,7 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
         <form method="GET" action="<?php echo BASE_PATH; ?>/index.php"
             class="glass-card rounded-2xl p-6 mb-8 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
 
-            <input type="hidden" name="page" value="delivery-report">
+            <input type="hidden" name="page" value="sales-report">
 
             <!-- From -->
             <div>
@@ -636,20 +451,34 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
             <!-- Total Revenue -->
             <div
                 class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-teal-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Sales</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">LKR 150,000
-                            <?php ?>
-                        </h3>
-                        <p class="text-teal-600 text-xs font-semibold mt-2 flex items-center">
-                            <span class="material-symbols-rounded text-sm mr-1">payments</span> All time sales
+                <div class="flex justify-between items-start gap-4">
+
+                    <!-- Text Section -->
+                    <div class="min-w-0 flex-1">
+
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            TOTAL SALES
                         </p>
+
+                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            LKR <?php echo number_format((float) ($salesSummary['total_sales'] ?? 0), 2); ?>
+                        </h3>
+
+                        <p class="text-teal-600 text-xs font-semibold mt-2 flex items-center">
+                            <span class="material-symbols-rounded text-sm mr-1">payments</span>
+                            All Order Sales
+                        </p>
+
                     </div>
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-teal-100/50 flex items-center justify-center text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+
+                    <!-- Icon Section -->
+                    <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-teal-100/50
+                    flex items-center justify-center text-teal-600
+                    group-hover:bg-teal-500 group-hover:text-white
+                    transition-colors duration-300 backdrop-blur-sm">
                         <span class="material-symbols-rounded">account_balance</span>
                     </div>
+
                 </div>
             </div>
             <!-- Total Orders -->
@@ -659,7 +488,7 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                     <div>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Orders</p>
                         <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
-                            1495
+                            <?php echo (int) ($salesSummary['order_count'] ?? 0); ?>
                         </h3>
                         <p class="text-blue-600 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">shopping_cart</span> Island-wide
@@ -672,82 +501,147 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                 </div>
             </div>
             <!-- Pending -->
-            <div
-                class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-yellow-400">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Payments Received</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
-                            LKR 125,000
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift
+            border border-gray-200 border-l-4 border-l-yellow-400">
+
+                <div class="flex justify-between items-start gap-4">
+
+                    <!-- Text Section -->
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Payments Received
+                        </p>
+
+                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            LKR <?php echo number_format((float) ($salesSummary['payment_received'] ?? 0), 2); ?>
                         </h3>
-                        <p class="text-gray-500 text-xs font-medium mt-2 flex items-center text-yellow-600">
-                            <span class="material-symbols-rounded text-sm mr-1">payment_arrow_down</span> Cash + Card
-                            Payments
+
+                        <p class="text-xs font-semibold mt-2 flex items-center text-yellow-600">
+                            <span class="material-symbols-rounded text-sm mr-1">payment_arrow_down</span>
+                            Cash + Card Payments
                         </p>
                     </div>
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-yellow-100/50 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-400 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
-                        <span class=" material-symbols-rounded">pending</span>
+
+                    <!-- Icon Section -->
+                    <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-yellow-100/50
+                    flex items-center justify-center text-yellow-600
+                    group-hover:bg-yellow-400 group-hover:text-white
+                    transition-colors duration-300 backdrop-blur-sm">
+                        <span class="material-symbols-rounded">pending</span>
                     </div>
+
                 </div>
             </div>
             <!-- Delivered -->
-            <div
-                class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-green-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Delivered</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
-                            360
-                        </h3>
-                        <p class="text-green-600 text-xs font-semibold mt-2 flex items-center">
-                            <span class="material-symbols-rounded text-sm mr-1">check_circle</span> Successfully
-                            Delivered
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift
+            border border-gray-200 border-l-4 border-l-green-500">
+
+                <div class="flex justify-between items-start gap-4">
+
+                    <!-- Text Section -->
+                    <div class="min-w-0 flex-1">
+
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Total Delivered
                         </p>
+
+                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            LKR <?php echo number_format((float) ($salesSummary['delivered_sum'] ?? 0), 2); ?>
+                        </h3>
+
+                        <p class="text-gray-800 mt-2 font-['Outfit']">
+                            Count: <?php echo (int) ($salesSummary['delivered_count'] ?? 0); ?>
+                        </p>
+
+                        <p class="text-green-600 text-xs font-semibold mt-2 flex items-center">
+                            <span class="material-symbols-rounded text-sm mr-1">check_circle</span>
+                            Successfully Delivered
+                        </p>
+
                     </div>
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-green-100/50 flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+
+                    <!-- Icon Section -->
+                    <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-green-100/50
+                    flex items-center justify-center text-green-600
+                    group-hover:bg-green-500 group-hover:text-white
+                    transition-colors duration-300 backdrop-blur-sm">
                         <span class="material-symbols-rounded">done_all</span>
                     </div>
+
                 </div>
             </div>
             <!-- Monthly Growth -->
-            <div
-                class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-purple-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Pending</p>
-                        <h3 class="text-3xl font-bold mt-2 font-['Outfit'] ">
-                            185
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift
+            border border-gray-200 border-l-4 border-l-purple-500">
+
+                <div class="flex justify-between items-start gap-4">
+
+                    <!-- Text Section -->
+                    <div class="min-w-0 flex-1">
+
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Total Pending
+                        </p>
+
+                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            LKR <?php echo number_format((float) ($salesSummary['pending_sum'] ?? 0), 2); ?>
                         </h3>
-                        <p class=" text-xs font-semibold mt-2 flex items-center">
+
+                        <p class="text-gray-800 mt-2 font-['Outfit']">
+                            Count: <?php echo (int) ($salesSummary['pending_count'] ?? 0); ?>
+                        </p>
+
+                        <p class="text-purple-600 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">hourglass_top</span>
                             Awaiting processing
                         </p>
+
                     </div>
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-purple-100/50 flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+
+                    <!-- Icon Section -->
+                    <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-purple-100/50
+                    flex items-center justify-center text-purple-500
+                    group-hover:bg-purple-500 group-hover:text-white
+                    transition-colors duration-300 backdrop-blur-sm">
                         <span class="material-symbols-rounded">clock_loader_60</span>
                     </div>
+
                 </div>
+
             </div>
             <!-- Low Stock -->
-            <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift border-l-4 border-red-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift
+            border border-gray-200 border-l-4 border-l-red-500">
 
-                            Total Cancelled</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
-                            52
+                <div class="flex justify-between items-start gap-4">
+
+                    <!-- Text Section -->
+                    <div class="min-w-0 flex-1">
+
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Total Cancelled
+                        </p>
+
+                        <h3 class="text-2xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            LKR <?php echo number_format((float) ($salesSummary['cancelled_sum'] ?? 0), 2); ?>
                         </h3>
+
+                        <p class="text-gray-800 mt-2 font-['Outfit']">
+                            Count: <?php echo (int) ($salesSummary['cancelled_count'] ?? 0); ?>
+                        </p>
+
                         <p class="text-red-500 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">warning</span>
                             Cancelled Orders
                         </p>
+
                     </div>
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-red-100/50 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300 backdrop-blur-sm">
+
+                    <!-- Icon Section -->
+                    <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-red-100/50
+                    flex items-center justify-center text-red-500
+                    group-hover:bg-red-500 group-hover:text-white
+                    transition-colors duration-300 backdrop-blur-sm">
                         <span class="material-symbols-rounded">cancel</span>
                     </div>
                 </div>
@@ -761,14 +655,11 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                     <span class="material-symbols-rounded text-emerald-600">grocery</span>
                     <p class="text-sm font-bold text-emerald-700 uppercase tracking-wide">Top Selling Product</p>
                 </div>
-                <?php if ($bestRdcUi): ?>
-                    <p class="text-lg font-bold text-gray-800">Basmati Rice 5kg</span></p>
-                    <p class="text-sm text-gray-600 mt-1">Category: <span
-                            class="font-semibold text-emerald-700"></span><span class="font-semibold">Grocery & Food
-                            Items</span> | Avg Sale: <span class="font-semibold">60</span></p>
-                <?php else: ?>
-                    <p class="text-sm text-gray-500">No RDC data available for current filters.</p>
-                <?php endif; ?>
+                <p class="text-lg font-bold text-gray-800"><?= $topProduct['product_name'] ?? 'No Data' ?></span></p>
+                <p class="text-sm text-gray-600 mt-1">Category: <span
+                        class="font-semibold text-emerald-700"></span><span
+                        class="font-semibold"><?= $topProduct['category_name'] ?? '-' ?></span> | Avg Sale: <span
+                        class="font-semibold"><?= (int) ($topProduct['avg_qty_per_order'] ?? 0) ?></span></p>
             </div>
             <div class="rounded-2xl border border-yellow-200 bg-yellow-50/50 p-5">
                 <div class="flex items-center gap-2 mb-2">
@@ -779,30 +670,34 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                     </p>
                 </div>
 
-                <p class="text-lg font-bold text-gray-800">Sunil Traders</p>
+                <p class="text-lg font-bold text-gray-800"><?= $topCustomer['customer_name'] ?? 'No Data' ?></p>
 
                 <p class="text-sm text-gray-600 mt-1">
                     RDC:
-                    <span class="font-semibold text-yellow-700">Southern</span>
+                    <span class="font-semibold text-yellow-700"><?= $topCustomer['rdc_name'] ?? '-' ?></span>
                     | Purchases:
-                    <span class="font-semibold">LKR 120,000</span>
+                    <span
+                        class="font-semibold"><?= number_format((float) ($topCustomer['total_purchased_amount'] ?? 0), 2) ?></span>
                 </p>
             </div>
             <div class="rounded-2xl border border-purple-200 bg-purple-50/80 p-5">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="material-symbols-rounded text-purple-600">person_celebrate</span>
+                    <span class="material-symbols-rounded text-purple-600">rewarded_ads</span>
                     <p class="text-sm font-bold text-purple-700 uppercase tracking-wide">
                         Top Performing Sales Rep.
                     </p>
                 </div>
 
-                <p class="text-lg font-bold text-gray-800"> Kamal Jayasuriya</p>
+                <p class="text-lg font-bold text-gray-800"><?= $topSalesRep['sales_ref_name'] ?? 'No Data' ?></p>
 
                 <p class="text-sm text-gray-600 mt-1">
-                    Orders:
-                    <span class="font-semibold text-purple-700">150</span>
+                    RDC:
+                    <span class="font-semibold text-purple-700"><?= $topSalesRep['rdc_name'] ?? '-' ?></span>
+                    | Orders:
+                    <span class="font-semibold text-purple-700"><?= (float) ($topSalesRep['order_count'] ?? 0) ?></span>
                     | Sales Amount:
-                    <span class="font-semibold">LKR 150,000</span>
+                    <span
+                        class="font-semibold"><?= number_format((float) ($topSalesRep['total_order_amount'] ?? 0), 2) ?></span>
                 </p>
             </div>
         </div>
@@ -833,9 +728,9 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                     <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">RDC wise Sales</h2>
                 </div>
             </div>
-            <?php if (empty($rdcData)): ?>
+            <?php if (empty($rdcSalesSummary)): ?>
                 <div class="text-center py-12">
-                    <p class="text-sm text-gray-400">No delivery data available for the selected filters.</p>
+                    <p class="text-sm text-gray-400">No sales data available for the selected filters.</p>
                 </div>
             <?php else: ?>
                 <div class="overflow-x-auto">
@@ -844,21 +739,19 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                             <tr
                                 class="text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200/50">
                                 <th class="pb-3 pr-4">RDC</th>
-                                <th class="pb-3 pr-4 text-center">Total</th>
-                                <th class="pb-3 pr-4 text-center">On-time</th>
-                                <th class="pb-3 pr-4 text-center">Delayed</th>
-                                <th class="pb-3 pr-4 text-center">Pending</th>
-                                <th class="pb-3 pr-4 text-center">Efficiency</th>
-                                <th class="pb-3 pr-4 text-center">Avg Hours</th>
-                                <th class="pb-3">Performance</th>
+                                <th class="pb-3 pr-4 text-right">Total Sales</th>
+                                <th class="pb-3 pr-4 text-right">Total Orders</th>
+                                <th class="pb-3 pr-4 text-right">Payments</th>
+                                <th class="pb-3 pr-4 text-right">Total Delivered</th>
+                                <th class="pb-3 pr-4 text-right">Delivered Count</th>
+                                <th class="pb-3 pr-4 text-right">Total Pending</th>
+                                <th class="pb-3 pr-4 text-right">Pendin Count</th>
+                                <th class="pb-3 pr-4 text-right">Total Cancelled</th>
+                                <th class="pb-3 pr-4 text-right">Cancelled Count</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100/50">
-                            <?php foreach ($rdcData as $r):
-                                $eff = $r['efficiency_pct'] ?? 0;
-                                $effColor = $eff >= 80 ? 'text-green-600' : ($eff >= 50 ? 'text-yellow-600' : 'text-red-600');
-                                $barColor = $eff >= 80 ? 'from-green-400 to-green-500' : ($eff >= 50 ? 'from-yellow-400 to-yellow-500' : 'from-red-400 to-red-500');
-                                ?>
+                            <?php foreach ($rdcSalesSummary as $rss): ?>
                                 <tr class="hover:bg-white/30 transition">
                                     <td class="py-4 pr-4">
                                         <div class="flex items-center gap-3">
@@ -868,33 +761,41 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                                             </div>
                                             <div>
                                                 <p class="font-semibold text-gray-800">
-                                                    <?php echo htmlspecialchars($r['rdc_name']); ?>
-                                                </p>
-                                                <p class="text-[10px] text-gray-400">
-                                                    <?php echo htmlspecialchars($r['rdc_code']); ?>
+                                                    <?php echo htmlspecialchars($rss['rdc_name']); ?>
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-bold text-gray-800">
-                                        <?php echo $r['total_deliveries']; ?>
+                                    <td class="py-4 pr-4 text-right font-bold text-blue-600">
+                                        <?php echo htmlspecialchars(number_format($rss['total_sales']), 0); ?>
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-semibold text-green-600"><?php echo $r['on_time']; ?>
+                                    <td class="py-4 pr-4 text-right font-semibold text-blue-600">
+                                        <?php echo htmlspecialchars($rss['total_orders']); ?>
+
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-semibold text-red-600"><?php echo $r['delayed']; ?>
+                                    <td class="py-4 pr-4 text-right font-semibold text-yellow-600">
+                                        <?php echo htmlspecialchars(number_format($rss['payment_received'], 2)); ?>
+
                                     </td>
-                                    <td class="py-4 pr-4 text-center text-yellow-600"><?php echo $r['pending']; ?></td>
-                                    <td class="py-4 pr-4 text-center font-bold <?php echo $effColor; ?>"><?php echo $eff; ?>%
+                                    <td class="py-4 pr-4 text-right text-green-600">
+                                        <?php echo htmlspecialchars(number_format($rss['total_delivered'], 2)); ?>
                                     </td>
-                                    <td class="py-4 pr-4 text-center text-gray-600">
-                                        <?php echo $r['avg_delivery_hours'] ?? '-'; ?>h
+                                    <td class="py-4 pr-4 text-right text-green-600">
+                                        <?php echo htmlspecialchars($rss['delivered_count']); ?>
                                     </td>
-                                    <td class="py-4 min-w-[120px]">
-                                        <div class="w-full bg-gray-100 rounded-full h-2.5">
-                                            <div class="bg-gradient-to-r <?php echo $barColor; ?> h-2.5 rounded-full transition-all duration-500"
-                                                style="width: <?php echo min(100, $eff); ?>%"></div>
-                                        </div>
+                                    <td class="py-4 pr-4 text-right text-purple-600">
+                                        <?php echo htmlspecialchars(number_format($rss['total_pending'], 2)); ?>
                                     </td>
+                                    <td class="py-4 pr-4 text-right text-purple-600">
+                                        <?php echo htmlspecialchars($rss['pending_count']); ?>
+                                    </td>
+                                    <td class="py-4 pr-4 text-right text-red-600">
+                                        <?php echo htmlspecialchars(number_format($rss['total_cancelled'], 2)); ?>
+                                    </td>
+                                    <td class="py-4 pr-4 text-right text-red-600">
+                                        <?php echo htmlspecialchars($rss['cancelled_count']); ?>
+                                    </td>
+
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -910,9 +811,9 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                     <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Top Selling Products</h2>
                 </div>
             </div>
-            <?php if (empty($rdcData)): ?>
+            <?php if (empty($topSellingItems)): ?>
                 <div class="text-center py-12">
-                    <p class="text-sm text-gray-400">No delivery data available for the selected filters.</p>
+                    <p class="text-sm text-gray-400">No sales records available for the selected filters.</p>
                 </div>
             <?php else: ?>
                 <div class="overflow-x-auto">
@@ -920,58 +821,48 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                         <thead>
                             <tr
                                 class="text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200/50">
-                                <th class="pb-3 pr-4">RDC</th>
-                                <th class="pb-3 pr-4 text-center">Total</th>
-                                <th class="pb-3 pr-4 text-center">On-time</th>
-                                <th class="pb-3 pr-4 text-center">Delayed</th>
-                                <th class="pb-3 pr-4 text-center">Pending</th>
-                                <th class="pb-3 pr-4 text-center">Efficiency</th>
-                                <th class="pb-3 pr-4 text-center">Avg Hours</th>
-                                <th class="pb-3">Performance</th>
+                                <th class="pb-3 pr-4 text-left">Product Name</th>
+                                <th class="pb-3 pr-4 text-right">Code</th>
+                                <th class="pb-3 pr-4 text-right">Category</th>
+                                <th class="pb-3 pr-4 text-right">Total Sales Count</th>
+                                <th class="pb-3 pr-4 text-right">Total Sales Amount</th>
+                                <th class="pb-3 pr-4 text-right">Avg. Sale</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100/50">
-                            <?php foreach ($rdcData as $r):
-                                $eff = $r['efficiency_pct'] ?? 0;
-                                $effColor = $eff >= 80 ? 'text-green-600' : ($eff >= 50 ? 'text-yellow-600' : 'text-red-600');
-                                $barColor = $eff >= 80 ? 'from-green-400 to-green-500' : ($eff >= 50 ? 'from-yellow-400 to-yellow-500' : 'from-red-400 to-red-500');
-                                ?>
+                            <?php foreach ($topSellingItems as $tsi): ?>
                                 <tr class="hover:bg-white/30 transition">
                                     <td class="py-4 pr-4">
                                         <div class="flex items-center gap-3">
                                             <div
                                                 class="w-9 h-9 rounded-xl bg-indigo-100/50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                                <span class="material-symbols-rounded text-base">warehouse</span>
+                                                <span class="material-symbols-rounded text-base">shopping_bag</span>
                                             </div>
                                             <div>
                                                 <p class="font-semibold text-gray-800">
-                                                    <?php echo htmlspecialchars($r['rdc_name']); ?>
-                                                </p>
-                                                <p class="text-[10px] text-gray-400">
-                                                    <?php echo htmlspecialchars($r['rdc_code']); ?>
+                                                    <?php echo htmlspecialchars($tsi['product_name']); ?>
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-bold text-gray-800">
-                                        <?php echo $r['total_deliveries']; ?>
+                                    <td class="py-4 pr-4 text-right font-bold text-blue-600">
+                                        <?php echo htmlspecialchars($tsi['product_code'], 0); ?>
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-semibold text-green-600"><?php echo $r['on_time']; ?>
+                                    <td class="py-4 pr-4 text-right font-semibold text-blue-600">
+                                        <?php echo htmlspecialchars($tsi['category']); ?>
+
                                     </td>
-                                    <td class="py-4 pr-4 text-center font-semibold text-red-600"><?php echo $r['delayed']; ?>
+                                    <td class="py-4 pr-4 text-right font-semibold text-yello-600">
+                                        <?php echo htmlspecialchars($tsi['total_sales_count']); ?>
+
                                     </td>
-                                    <td class="py-4 pr-4 text-center text-yellow-600"><?php echo $r['pending']; ?></td>
-                                    <td class="py-4 pr-4 text-center font-bold <?php echo $effColor; ?>"><?php echo $eff; ?>%
+                                    <td class="py-4 pr-4 text-right text-green-600">
+                                        <?php echo htmlspecialchars(number_format($tsi['total_sales_amount'], 2)); ?>
                                     </td>
-                                    <td class="py-4 pr-4 text-center text-gray-600">
-                                        <?php echo $r['avg_delivery_hours'] ?? '-'; ?>h
+                                    <td class="py-4 pr-4 text-right text-yellow-600">
+                                        <?php echo htmlspecialchars($tsi['average_sale']); ?>
                                     </td>
-                                    <td class="py-4 min-w-[120px]">
-                                        <div class="w-full bg-gray-100 rounded-full h-2.5">
-                                            <div class="bg-gradient-to-r <?php echo $barColor; ?> h-2.5 rounded-full transition-all duration-500"
-                                                style="width: <?php echo min(100, $eff); ?>%"></div>
-                                        </div>
-                                    </td>
+
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -981,15 +872,19 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
         </div>
 
         <!-- Detailed Delivery Records -->
-        <?php if (!empty($details)): ?>
-            <div class="glass-panel rounded-3xl p-6 sm:p-8 mb-10">
-                <div class="flex items-center space-x-3 mb-6">
-                    <span class="material-symbols-rounded text-orange-500 text-2xl">list_alt</span>
-                    <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Order Records</h2>
-                    <span
-                        class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full"><?php echo count($details); ?>
-                        records</span>
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 mb-10">
+            <div class="flex items-center space-x-3 mb-6">
+                <span class="material-symbols-rounded text-orange-500 text-2xl">list_alt</span>
+                <h2 class="text-lg font-bold text-gray-800 font-['Outfit']">Order Records</h2>
+                <span
+                    class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full"><?php echo count($orderRecords); ?>
+                    records</span>
+            </div>
+            <?php if (empty($orderRecords)): ?>
+                <div class="text-center py-12">
+                    <p class="text-sm text-gray-400">No sales records available for the selected filters.</p>
                 </div>
+            <?php else: ?>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
@@ -997,34 +892,35 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
                                 class="text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200/50">
                                 <th class="pb-3 pr-3">Order #</th>
                                 <th class="pb-3 pr-3">Customer</th>
-                                <th class="pb-3">RDC</th>
+                                <th class="pb-3 pr-3">Sales Rep.</th>
+                                <th class="pb-3 pr-3">RDC</th>
                                 <th class="pb-3 pr-3">Date</th>
                                 <th class="pb-3 pr-3">Amount</th>
-                                <th class="pb-3 pr-3">Delivery Date</th>
                                 <th class="pb-3 pr-3">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100/50">
-                            <?php foreach ($details as $d): ?>
+                            <?php foreach ($orderRecords as $or): ?>
                                 <tr class="hover:bg-white/30 transition">
                                     <td class="py-3 pr-3 font-semibold text-gray-800">
-                                        <?php echo htmlspecialchars($d['order_number']); ?>
+                                        <?php echo htmlspecialchars($or['order_number']); ?>
                                     </td>
-                                    <td class="py-3 pr-3 text-gray-600"><?php echo htmlspecialchars($d['rdc_name']); ?></td>
+                                    <td class="py-3 pr-3 text-gray-600"><?php echo htmlspecialchars($or['customer_name']); ?>
+                                    </td>
                                     <td class="py-3 pr-3 text-gray-600">
-                                        <?php echo htmlspecialchars($d['driver_name'] ?? '-'); ?>
+                                        <?php echo htmlspecialchars($or['sales_ref_name'] ?? '-'); ?>
                                     </td>
                                     <td class="py-3 pr-3 text-gray-500 text-xs">
-                                        <?php echo $d['scheduled_date'] ? date('M j, Y H:i', strtotime($d['scheduled_date'])) : '-'; ?>
+                                        <?php echo 'RDC' ?>
                                     </td>
                                     <td class="py-3 pr-3 text-gray-500 text-xs">
-                                        <?php echo $d['completed_date'] ? date('M j, Y H:i', strtotime($d['completed_date'])) : '-'; ?>
+                                        <?php echo $or['order_date'] ?>
                                     </td>
-                                    <td class="py-3 pr-3"><span
-                                            class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $statusBadge[$d['delivery_status']] ?? 'bg-gray-100 text-gray-600'; ?>"><?php echo $d['delivery_status']; ?></span>
+                                    <td class="py-3 pr-3 text-gray-500 text-xs">
+                                        <?php echo $or['amount'] ?>
                                     </td>
-                                    <td class="py-3 text-gray-600">
-                                        <?php echo $d['duration_hours'] !== null ? $d['duration_hours'] . 'h' : '-'; ?>
+                                    <td class="py-3 pr-3 text-gray-800 text-xs">
+                                        <?php echo ucwords($or['status']) ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1156,166 +1052,160 @@ $worstRdcUi = !empty($rankedRdcData) ? $rankedRdcData[count($rankedRdcData) - 1]
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const salesSeriesByRdc = {
+    document.addEventListener("DOMContentLoaded", async function () {
+        const chartCanvas = document.getElementById("rdcSalesWormChart");
 
-        "Northern RDC": [
-            { date: "2026-01-01", sales: 120000 },
-            { date: "2026-01-02", sales: 132000 },
-            { date: "2026-01-03", sales: 98000 },
-            { date: "2026-01-04", sales: 150000 },
-            { date: "2026-01-05", sales: 165000 },
-            { date: "2026-01-06", sales: 142000 },
-            { date: "2026-01-07", sales: 175000 },
-            { date: "2026-01-08", sales: 188000 },
-            { date: "2026-01-09", sales: 160000 },
-            { date: "2026-01-10", sales: 172000 }
-        ],
+        if (!chartCanvas) return;
 
-        "Southern RDC": [
-            { date: "2026-01-01", sales: 90000 },
-            { date: "2026-01-02", sales: 110000 },
-            { date: "2026-01-03", sales: 125000 },
-            { date: "2026-01-04", sales: 118000 },
-            { date: "2026-01-05", sales: 140000 },
-            { date: "2026-01-06", sales: 150000 },
-            { date: "2026-01-07", sales: 158000 },
-            { date: "2026-01-08", sales: 162000 },
-            { date: "2026-01-09", sales: 148000 },
-            { date: "2026-01-10", sales: 170000 }
-        ],
+        const rdcColors = {
+            "Northern RDC": "#ef4444",
+            "Southern RDC": "#8b5cf6",
+            "Central RDC": "#10b981",
+            "Western RDC": "#f59e0b",
+            "Eastern RDC": "#0ea5e9"
+        };
 
-        "Central RDC": [
-            { date: "2026-01-01", sales: 75000 },
-            { date: "2026-01-02", sales: 88000 },
-            { date: "2026-01-03", sales: 92000 },
-            { date: "2026-01-04", sales: 105000 },
-            { date: "2026-01-05", sales: 115000 },
-            { date: "2026-01-06", sales: 110000 },
-            { date: "2026-01-07", sales: 125000 },
-            { date: "2026-01-08", sales: 130000 },
-            { date: "2026-01-09", sales: 122000 },
-            { date: "2026-01-10", sales: 138000 }
-        ],
+        let salesChart = null;
 
-        "Western RDC": [
-            { date: "2026-01-01", sales: 60000 },
-            { date: "2026-01-02", sales: 85000 },
-            { date: "2026-01-03", sales: 78000 },
-            { date: "2026-01-04", sales: 92000 },
-            { date: "2026-01-05", sales: 101000 },
-            { date: "2026-01-06", sales: 108000 },
-            { date: "2026-01-07", sales: 112000 },
-            { date: "2026-01-08", sales: 120000 },
-            { date: "2026-01-09", sales: 118000 },
-            { date: "2026-01-10", sales: 130000 }
-        ],
+        async function loadSalesChart(startDate, endDate, rdcId = "") {
+            try {
+                const url = new URL("index.php", window.location.href);
+                url.searchParams.set("page", "sales-report");
+                url.searchParams.set("action", "chart");
+                url.searchParams.set("start_date", startDate);
+                url.searchParams.set("end_date", endDate);
 
-        "Eastern RDC": [
-            { date: "2026-01-01", sales: 55000 },
-            { date: "2026-01-02", sales: 62000 },
-            { date: "2026-01-03", sales: 70000 },
-            { date: "2026-01-04", sales: 76000 },
-            { date: "2026-01-05", sales: 83000 },
-            { date: "2026-01-06", sales: 90000 },
-            { date: "2026-01-07", sales: 95000 },
-            { date: "2026-01-08", sales: 99000 },
-            { date: "2026-01-09", sales: 102000 },
-            { date: "2026-01-10", sales: 108000 }
-        ]
-
-    };
-
-    const rdcColors = {
-        "Northern RDC": "#ef4444",
-        "Southern RDC": "#8b5cf6",
-        "Central RDC": "#10b981",
-        "Western RDC": "#f59e0b",
-        "Eastern RDC": "#0ea5e9"
-    };
-
-    const labels = salesSeriesByRdc["Northern RDC"].map(p => p.date);
-
-    const datasets = Object.entries(salesSeriesByRdc).map(([rdc, points]) => ({
-        label: rdc,
-        data: points.map(p => p.sales),
-        borderColor: rdcColors[rdc],
-        backgroundColor: rdcColors[rdc],
-        tension: 0.45,
-        borderWidth: 3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointRadius: 4,
-        pointBorderWidth: 2,
-        fill: false
-    }));
-
-    const ctx = document.getElementById("rdcSalesWormChart");
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: "top",
-                    labels: {
-                        usePointStyle: true,
-                        pointStyle: "circle",
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        padding: 18,
-                        font: {
-                            size: 12,
-                            weight: "600"
-                        }
-                    }
-                }
-            },
-            scales: {
-
-                x: {
-                    title: {
-                        display: true,
-                        text: "Date",
-                        color: "#334155",
-                        font: {
-                            weight: "bold",
-                            size: 13
-                        }
-                    },
-                    grid: {
-                        color: "rgba(15,23,42,0.06)"
-                    }
-                },
-
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Sales Amount (LKR)",
-                        color: "#334155",
-                        font: {
-                            weight: "bold",
-                            size: 13
-                        }
-                    },
-                    ticks: {
-                        stepSize: 20000,
-                        callback: function (value) {
-                            return "Rs. " + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: "rgba(15,23,42,0.06)"
-                    }
+                if (rdcId) {
+                    url.searchParams.append("rdc_id", rdcId);
                 }
 
+                const response = await fetch(url.toString(), {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch chart data.");
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || "Unable to load chart data.");
+                }
+
+                const salesSeriesByRdc = result.data || {};
+
+                const allDates = [...new Set(
+                    Object.values(salesSeriesByRdc)
+                        .flat()
+                        .map(item => item.date)
+                )].sort();
+
+                const datasets = Object.entries(salesSeriesByRdc).map(([rdc, points]) => {
+                    const salesMap = {};
+                    points.forEach(p => {
+                        salesMap[p.date] = Number(p.sales);
+                    });
+
+                    return {
+                        label: rdc,
+                        data: allDates.map(date => salesMap[date] ?? null),
+                        borderColor: rdcColors[rdc] || "#64748b",
+                        backgroundColor: rdcColors[rdc] || "#64748b",
+                        tension: 0.45,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBorderWidth: 2,
+                        fill: false,
+                        spanGaps: true
+
+                    };
+                });
+
+                if (salesChart) {
+                    salesChart.destroy();
+                }
+
+                salesChart = new Chart(chartCanvas, {
+                    type: "line",
+                    data: {
+                        labels: allDates,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: "top",
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: "circle",
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    padding: 18,
+                                    font: {
+                                        size: 12,
+                                        weight: "600"
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Date",
+                                    color: "#334155",
+                                    font: {
+                                        weight: "bold",
+                                        size: 13
+                                    }
+                                },
+                                grid: {
+                                    color: "rgba(15,23,42,0.06)"
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: "Sales Amount (LKR)",
+                                    color: "#334155",
+                                    font: {
+                                        weight: "bold",
+                                        size: 13
+                                    }
+                                },
+                                ticks: {
+                                    stepSize: 20000,
+                                    callback: function (value) {
+                                        return "Rs. " + Number(value).toLocaleString();
+                                    }
+                                },
+                                grid: {
+                                    color: "rgba(15,23,42,0.06)"
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Chart load error:", error);
             }
         }
+
+        const startDate = <?= json_encode($filters['start_date'] ?? '') ?>;
+        const endDate = <?= json_encode($filters['end_date'] ?? '') ?>;
+        const rdcId = <?= json_encode($filters['rdc_id'] ?? '') ?>;
+        console.log(startDate);
+        console.log(endDate);
+
+        await loadSalesChart(startDate, endDate, rdcId);
     });
 </script>
 

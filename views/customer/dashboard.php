@@ -1,10 +1,18 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../models/Profile.php';
+require_once __DIR__ . '/../../models/RetailCustomer.php';
+require_once __DIR__ . '/../../models/SalesOrder.php';
 $role = current_user_role();
 $userId = (int) $_SESSION['user_id'];
 $profileModel = new Profile($pdo);
+$retailCustomer = new RetailCustomer($pdo);
 $profile = $profileModel->getProfile($userId, $role);
+$customerId = $retailCustomer->findByUserId($userId);
+$customer_ordrs = $retailCustomer->getCustomerOrderStatusCounts($customerId['id']);
+//get orders by customers
+$orderModel = new SalesOrder($pdo);
+$userOrders = $orderModel->getCustomerOrders($customerId['id']);
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
@@ -36,7 +44,9 @@ $profile = $profileModel->getProfile($userId, $role);
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Orders</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">124</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            <?= (int) ($customer_ordrs['total_orders'] ?? 0); ?>
+                        </h3>
                         <p class="text-green-600 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">trending_up</span> 12% from last month
                         </p>
@@ -54,7 +64,9 @@ $profile = $profileModel->getProfile($userId, $role);
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">8</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            <?= (int) ($customer_ordrs['pending_count'] ?? 0); ?>
+                        </h3>
                         <p class="text-gray-500 text-xs font-medium mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">hourglass_top</span> Awaiting processing
                         </p>
@@ -72,7 +84,9 @@ $profile = $profileModel->getProfile($userId, $role);
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">In Transit</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">15</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            <?= (int) ($customer_ordrs['in_transit_count'] ?? 0); ?>
+                        </h3>
                         <p class="text-purple-600 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">local_shipping</span> On the way
                         </p>
@@ -90,7 +104,9 @@ $profile = $profileModel->getProfile($userId, $role);
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Delivered</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">101</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2 font-['Outfit']">
+                            <?= (int) ($customer_ordrs['delivered_count'] ?? 0) ?>
+                        </h3>
                         <p class="text-green-600 text-xs font-semibold mt-2 flex items-center">
                             <span class="material-symbols-rounded text-sm mr-1">check_circle</span> Successfully
                             delivered
@@ -123,91 +139,89 @@ $profile = $profileModel->getProfile($userId, $role);
 
                     <div class="space-y-4">
                         <!-- Order Item 1 -->
-                        <div
-                            class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div class="flex items-center space-x-4">
-                                    <div
-                                        class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-blue-100">
-                                        <span class="material-symbols-rounded">inventory_2</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-001</h3>
-                                        <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                            <span>15 items</span>
-                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                            <span>Rs. 45,250.00</span>
+                        <?php
+                        $counter = 0;
+                        foreach ($userOrders as $order):
+                            if ($counter >= 5) {
+                                break;
+                            }
+                            ?>
+                            <div
+                                class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center space-x-4">
+                                        <div
+                                            class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-blue-100">
+                                            <span class="material-symbols-rounded">inventory_2</span>
                                         </div>
-                                        <div class="flex items-center text-xs text-gray-500 mt-1">
-                                            <span class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                            Jan 10, 2025
+                                        <div>
+                                            <h3 class="font-bold text-gray-800 font-['Outfit']">
+                                                <?= htmlspecialchars($order['order_number'] ?? '') ?>
+                                            </h3>
+                                            <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
+                                                <span><?= (int) ($order['item_count'] ?? 0) ?> Items</span>
+                                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                <span>Rs.
+                                                    <?= number_format((float) ($order['total_amount'] ?? 0), 2) ?></span>
+                                            </div>
+                                            <div class="flex items-center text-xs text-gray-500 mt-1">
+                                                <span class="material-symbols-rounded text-sm mr-1">calendar_today</span>
+                                                <?= htmlspecialchars($order['order_date'] ?? '') ?>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <span
-                                    class="px-4 py-2 rounded-xl bg-green-100/60 border border-green-200 text-green-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                    <span class="material-symbols-rounded text-sm mr-2">check_circle</span> Delivered
-                                </span>
-                            </div>
-                        </div>
 
-                        <!-- Order Item 2 -->
-                        <div
-                            class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div class="flex items-center space-x-4">
-                                    <div
-                                        class="w-12 h-12 rounded-xl bg-purple-100/50 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-purple-100">
-                                        <span class="material-symbols-rounded">checkroom</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-002</h3>
-                                        <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                            <span>8 items</span>
-                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                            <span>Rs. 28,900.00</span>
-                                        </div>
-                                        <div class="flex items-center text-xs text-gray-500 mt-1">
-                                            <span class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                            Jan 12, 2025
-                                        </div>
-                                    </div>
-                                </div>
-                                <span
-                                    class="px-4 py-2 rounded-xl bg-purple-100/60 border border-purple-200 text-purple-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                    <span class="material-symbols-rounded text-sm mr-2">local_shipping</span> In Transit
-                                </span>
-                            </div>
-                        </div>
+                                    <?php
+                                    $orderStatus = strtolower(trim($order['status'] ?? ''));
 
-                        <!-- Order Item 3 -->
-                        <div
-                            class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div class="flex items-center space-x-4">
-                                    <div
-                                        class="w-12 h-12 rounded-xl bg-yellow-100/50 text-yellow-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-yellow-100">
-                                        <span class="material-symbols-rounded">smartphone</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-003</h3>
-                                        <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                            <span>22 items</span>
-                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                            <span>Rs. 67,400.00</span>
-                                        </div>
-                                        <div class="flex items-center text-xs text-gray-500 mt-1">
-                                            <span class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                            Jan 13, 2025
-                                        </div>
-                                    </div>
+                                    $statusStyles = [
+                                        'pending' => [
+                                            'container' => 'bg-purple-100 text-purple-700 border border-purple-200',
+                                            'dot' => 'bg-purple-500'
+                                        ],
+                                        'processing' => [
+                                            'container' => 'bg-blue-100 text-blue-700 border border-blue-200',
+                                            'dot' => 'bg-blue-500'
+                                        ],
+                                        'delivered' => [
+                                            'container' => 'bg-green-100 text-green-700 border border-green-200',
+                                            'dot' => 'bg-green-500'
+                                        ],
+                                        'in transit' => [
+                                            'container' => 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                                            'dot' => 'bg-yellow-500'
+                                        ],
+                                        'cancelled' => [
+                                            'container' => 'bg-red-100 text-red-700 border border-red-200',
+                                            'dot' => 'bg-red-500'
+                                        ],
+                                        'paid' => [
+                                            'container' => 'bg-green-100 text-green-700 border border-green-200',
+                                            'dot' => 'bg-green-500'
+                                        ],
+                                        'unpaid' => [
+                                            'container' => 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                                            'dot' => 'bg-yellow-500'
+                                        ]
+                                    ];
+
+                                    $orderStyle = $statusStyles[$orderStatus] ?? [
+                                        'container' => 'bg-gray-100 text-gray-700 border border-gray-200',
+                                        'dot' => 'bg-gray-500'
+                                    ];
+                                    ?>
+
+                                    <span
+                                        class="px-4 py-2 rounded-xl <?= $orderStyle['container']; ?> text-sm font-bold flex items-center justify-center self-start sm:self-center">
+                                        <span class="w-2 h-2 rounded-full <?= $orderStyle['dot']; ?> mr-2"></span>
+                                        <?= htmlspecialchars(ucwords($orderStatus)) ?>
+                                    </span>
                                 </div>
-                                <span
-                                    class="px-4 py-2 rounded-xl bg-yellow-100/60 border border-yellow-200 text-yellow-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                    <span class="material-symbols-rounded text-sm mr-2">schedule</span> Processing
-                                </span>
                             </div>
-                        </div>
+                            <?php
+                            $counter++;
+                        endforeach;
+                        ?>
                     </div>
                 </div>
             </div>

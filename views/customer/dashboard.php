@@ -3,16 +3,21 @@ require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../models/Profile.php';
 require_once __DIR__ . '/../../models/RetailCustomer.php';
 require_once __DIR__ . '/../../models/SalesOrder.php';
+$customer_ordrs = [];
+$userOrders = [];
 $role = current_user_role();
 $userId = (int) $_SESSION['user_id'];
 $profileModel = new Profile($pdo);
 $retailCustomer = new RetailCustomer($pdo);
 $profile = $profileModel->getProfile($userId, $role);
 $customerId = $retailCustomer->findByUserId($userId);
+if($customerId !=null){
 $customer_ordrs = $retailCustomer->getCustomerOrderStatusCounts($customerId['id']);
-//get orders by customers
 $orderModel = new SalesOrder($pdo);
 $userOrders = $orderModel->getCustomerOrders($customerId['id']);
+}
+
+
 ?>
 
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">

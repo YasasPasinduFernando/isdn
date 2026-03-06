@@ -15,7 +15,9 @@
             <div class="rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
                 <h1 class="text-2xl font-bold tracking-tight">Payment Details</h1>
                 <p class="mt-1 text-sm text-slate-500">Enter your card details to complete the payment.</p>
-
+                <?php
+                $selectedMethod = strtolower($checkout_info['payment_method'] ?? '');
+                ?>
                 <form id="paymentForm" class="mt-6 space-y-6" method="POST" action="" autocomplete="on" novalidate>
                     <!-- CSRF token (server-side: replace value) -->
                     <input type="hidden" name="csrf_token"
@@ -27,14 +29,14 @@
                         <div class="mt-2 grid grid-cols-2 gap-3">
                             <label
                                 class="cursor-pointer rounded-xl border border-slate-200 p-4 flex items-center gap-3 hover:border-slate-300">
-                                <input type="radio" name="card_type" value="VISA" class="h-4 w-4" required>
+                                <input type="radio" name="card_type" value="VISA" class="h-4 w-4" required <?= $selectedMethod === 'visa' ? 'checked' : ''; ?>>
                                 <span class="font-semibold">Visa</span>
                                 <img src="<?php echo BASE_PATH . '/assets/images/cards/visa_card.jpg'; ?>" alt="Visa"
                                     class="h-8 mr-3">
                             </label>
                             <label
                                 class="cursor-pointer rounded-xl border border-slate-200 p-4 flex items-center gap-3 hover:border-slate-300">
-                                <input type="radio" name="card_type" value="MASTERCARD" class="h-4 w-4" required>
+                                <input type="radio" name="card_type" value="MASTERCARD" class="h-4 w-4" required <?= $selectedMethod === 'mastercard' ? 'checked' : ''; ?>>
                                 <span class="font-semibold">Mastercard</span>
                                 <img src="<?php echo BASE_PATH . '/assets/images/cards/master_card.png' ?>"
                                     alt="MasterCard" class="h-8 mr-3">

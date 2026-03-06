@@ -21,6 +21,7 @@ class Mailsender
     $order_info = $invoiceData['order_info'];
     $order_items = $invoiceData['order_items'];
     $order_totals = $invoiceData['order_totals'];
+    $sender_email = $invoiceData['sender_email'] ?? '';
 
 
     $mail = new PHPMailer(true);
@@ -36,8 +37,13 @@ class Mailsender
 
     //Recipients
     $mail->setFrom('sales@isdn.lk', 'ISDN - IslandLink');
-
-    $mail->addAddress('shdinesh.99@gmail.com');     //Add a recipient email  
+    $recipient = trim($sender_email ?? '');
+    //Validate and Add a recipient email  
+    if (!empty($recipient) && filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+      $mail->addAddress($recipient);
+    } else {
+      $mail->addAddress('cl.shdinesh@gmail.com');
+    }
     $mail->addReplyTo('info@isdn.lk', 'ISDN - IslandLink'); // reply to sender email
 
     //Content
@@ -49,6 +55,15 @@ class Mailsender
       $invoicePath,
       "ISDN-Invoice-{$order_info['order_number']}.pdf"
     );
+    $logoPath = __DIR__ . '/../assets/images/icons/icon-192.png';
+    $logoCid = 'isdn_logo_cid'; // any unique id
+
+    if (!file_exists($logoPath)) {
+      throw new Exception("Logo file not found: {$logoPath}");
+    }
+
+    // Add embedded image
+    $mail->addEmbeddedImage($logoPath, $logoCid, 'icon-192.png');
 
     $items_content = '';
     foreach ($order_items as $item) {
@@ -89,7 +104,6 @@ class Mailsender
   <tr>
     <td align="center">
 
-```
   <!-- Container -->
   <table width="680" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.08);">
 
@@ -99,7 +113,7 @@ class Mailsender
         <table width="100%">
           <tr>
             <td style="vertical-align:middle;">
-              <img src="http://localhost:82/phpmailer/dompdf/dompdf/src/Image/icon-192.svg" alt="ISDN" height="42" style="display:block;">
+               <img src="cid:' . $logoCid . '"  alt="ISDN" height="42" style="display:block;">
             </td>
             <td align="right" style="font-size:13px;color:#6b7280;">
               <strong>ISDN</strong><br>
@@ -131,7 +145,7 @@ class Mailsender
             <td><strong>Order Date:</strong></td><td>' . htmlspecialchars($orderDate) . '</td>
           </tr>
           <tr>
-            <td><strong>Customer:</strong></td><td>' . $order_info['name'] . '</td>
+            <td><strong>Customer:</strong></td><td>' . $order_info['customer'] . '</td>
             <td><strong>Sales Ref:</strong></td><td>N/A</td>
           </tr>
           <tr>
@@ -193,7 +207,7 @@ class Mailsender
     <tr>
       <td style="padding:0 28px 24px;font-size:13px;color:#374151;">
         <strong>Delivery Address:</strong><br>
-        ' . $order_info['address'] . '
+        ' . $order_info['address'] . '<br>
         <strong>Delivery Notes:</strong><br>
         ' . $deliveryNotes . '
       </td>
@@ -202,7 +216,7 @@ class Mailsender
     <!-- CTA Buttons -->
     <tr>
       <td align="center" style="padding:10px 28px 30px;">
-        <a href="#" style="background:#0ea5a4;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:bold;margin-right:10px;">
+        <a href="' . APP_URL . '/index.php?page=tracking&order_id=' . $order_info['order_number'] . '" style="background:#0ea5a4;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:bold;margin-right:10px;">
           Track Order
         </a>
         <a href="mailto:info@isdn.lk" style="background:#e5e7eb;color:#111827;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:bold;">
@@ -231,7 +245,6 @@ class Mailsender
   </table>
 
 </td>
-```
   </tr>
 </table>
 

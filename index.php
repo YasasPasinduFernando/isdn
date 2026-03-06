@@ -48,6 +48,7 @@ if (in_array($page, $protected_pages) && is_logged_in()) {
 }
 
 // RDC gate: if user has no rdc_id, redirect to select-rdc before accessing protected pages
+$role = current_user_role();
 $rdc_exempt_pages = ['select-rdc'];
 $needs_rdc = in_array($page, $protected_pages) && !in_array($page, $rdc_exempt_pages);
 if ($needs_rdc && is_logged_in()) {
@@ -104,13 +105,23 @@ switch ($page) {
         require __DIR__ . '/views/customer/tracking.php';
         break;
     case 'payment':
-        require __DIR__ . '/controllers/PaymentController.php';
+        $controllerPath = ($role === 'customer')
+            ? '/controllers/PaymentController.php'
+            : '/controllers/sales-ref/PaymentController.php';
+        require __DIR__ . $controllerPath;
+
         break;
     case 'payment-gateway':
-        require __DIR__ . '/controllers/PaymentController.php';
+        $controllerPath = ($role === 'customer')
+            ? '/controllers/PaymentController.php'
+            : '/controllers/sales-ref/PaymentController.php';
+        require __DIR__ . $controllerPath;
         break;
     case 'payment-success':
-        require __DIR__ . '/controllers/PaymentController.php';
+        $controllerPath = ($role === 'customer')
+            ? '/controllers/PaymentController.php'
+            : '/controllers/sales-ref/PaymentController.php';
+        require __DIR__ . $controllerPath;
         break;
     case 'profile':
         require __DIR__ . '/views/shared/profile_edit.php';
@@ -170,7 +181,7 @@ switch ($page) {
         require __DIR__ . '/views/reports/delivery_efficiency.php';
         break;
     case 'sales-report':
-        require __DIR__ . '/views/reports/sales_report.php';
+        require __DIR__ . '/controllers/reports/SalesReportController.php';
         break;
     case 'request-product-units':
         require_once __DIR__ . '/controllers/stock-management/RequestProductUnitController.php';
@@ -188,10 +199,10 @@ switch ($page) {
         require __DIR__ . '/controllers/SalesOrderController.php';
         break;
     case 'rdc-sales-ref-sales-orders':
-        require __DIR__ . '/controllers/SalesOrderController.php';
+        require __DIR__ . '/controllers/sales-ref/SalesOrderController.php';
         break;
     case 'rdc-clerk-sales-orders':
-        require __DIR__ . '/controllers/SalesOrderController.php';
+        require __DIR__ . '/controllers/rdc-clerk/SalesOrderController.php';
         break;
     case 'head-office-manager-sales-orders':
         require __DIR__ . '/controllers/SalesOrderController.php';
@@ -206,7 +217,10 @@ switch ($page) {
         require_once __DIR__ . '/controllers/ProductController.php';
         break;
     case 'checkout':
-        require __DIR__ . '/controllers/CheckoutController.php';
+        $controllerPath = ($role === 'customer')
+            ? '/controllers/CheckoutController.php'
+            : '/controllers/sales-ref/CheckoutController.php';
+        require __DIR__ . $controllerPath;
         break;
     case 'rdc-sales-ref-checkout':
         require __DIR__ . '/views/rdc-sales-ref/order_checkout.php';

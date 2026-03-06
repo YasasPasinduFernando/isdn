@@ -74,7 +74,7 @@ class InvoiceGenerator
                 <!-- Bill To (Left Side) -->
                 <td width='50%' valign='top'>
                     <strong>Bill To:</strong><br>
-                    {$order_info['name']}<br>
+                    {$order_info['customer']}<br>
                     {$order_info['address']}
                 </td>
 

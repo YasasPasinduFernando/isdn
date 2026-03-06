@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/SalesOrder.php';
-require_once __DIR__ . '/../models/ShoppingCart.php';
-require_once __DIR__ . '/../models/RetailCustomer.php';
-require_once __DIR__ . '/../models/OrderItem.php';
-require_once __DIR__ . '/../includes/MailSender.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../models/SalesOrder.php';
+require_once __DIR__ . '/../../models/ShoppingCart.php';
+require_once __DIR__ . '/../../models/RetailCustomer.php';
+require_once __DIR__ . '/../../models/OrderItem.php';
+require_once __DIR__ . '/../../includes/MailSender.php';
 
 $page = $_GET['page'] ?? '';
 $userId = $_SESSION['user_id'] ?? 1;
@@ -12,7 +12,7 @@ $userId = $_SESSION['user_id'] ?? 1;
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? '';
 $action = $_GET['action'] ?? '';
 
-if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place') {
+if ($requestMethod === 'POST' && $page === 'rdc-sales-ref-sales-orders' && $action === 'place') {
 
     $method = $_GET['method'] ?? '';
 
@@ -25,6 +25,7 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     if ($method === 'cash') {
         $input = json_decode(file_get_contents('php://input'), true) ?: [];
         $deliveryNotes = $input['delivery_notes'] ?? '';
+        $customer_id = (int) $input['customer_id'];
         $payment_date_label = 'Payment Due Date';
 
         $date = new DateTime();
@@ -34,7 +35,6 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     } else if ($method === 'card') {
         $deliveryNotes = $_SESSION['delivery_notes'] ?? '';
         $payment_date_label = 'Payment Date';
-
         $payment_date = (new DateTime())->format('d M, Y');
     }
 
@@ -44,7 +44,7 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     $orderItem = new OrderItem($pdo);
 
     $userCartItems = $shopping_cart->getUserCart($userId);
-    $customer_info = $retail_customer->findByUserId($userId);
+    $customer_info = $retail_customer->findByCustomerId($customer_id);
 
 
     $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
@@ -80,17 +80,19 @@ if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place'
     ]);
     exit;
 
-} else if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'pay') {
+} else if ($requestMethod === 'POST' && $page === 'rdc-sales-ref-sales-orders' && $action === 'pay') {
 
     $input = json_decode(file_get_contents('php://input'), true) ?: [];
     $deliveryNotes = $input['delivery_notes'] ?? '';
+    $customer_id = (int) $input['customer_id'];
+
 
     $retail_customer = new RetailCustomer(pdo: $pdo);
     $shopping_cart = new ShoppingCart($pdo);
     $orderModel = new SalesOrder($pdo);
     $orderItem = new OrderItem($pdo);
 
-    $customer_info = $retail_customer->findByUserId($userId);
+    $customer_info = $retail_customer->findByCustomerId($customer_id);
     $userCartItems = $shopping_cart->getUserCart($userId);
     $cartAmount = $shopping_cart->getUserCartAmount($userId);
 
@@ -117,44 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $page = $_GET['page'] ?? '';
     $method = $_GET['method'] ?? '';
-    $userOrders = [];
-    if ($page === 'customer-sales-orders') {
+
+    if ($page === 'rdc-sales-ref-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $retail_customer = new RetailCustomer(pdo: $pdo);
         $customer_info = $retail_customer->findByUserId($userId);
-        if ($customer_info != null) {
-            $orderModel = new SalesOrder($pdo);
-            $userOrders = $orderModel->getCustomerOrders($customer_info['id']);
-        }
-        require_once __DIR__ . '/../views/customer/orders.php';
-    } else if ($page === 'rdc-sales-ref-sales-orders') {
-        $userId = $_SESSION['user_id'] ?? 1;
+        //get orders by customers
         $orderModel = new SalesOrder($pdo);
-        $userOrders = $refOrders;//$orderModel->getUserOrders($userId);
-        require_once __DIR__ . '/../views/rdc-sales-ref/orders.php';
-    } else if ($page === 'rdc-clerk-sales-orders') {
-        $userId = $_SESSION['user_id'] ?? 1;
-        $orderModel = new SalesOrder($pdo);
-        $userOrders = $clerkOrders;//$orderModel->getUserOrders($userId);
-        require_once __DIR__ . '/../views/rdc-clerk/orders.php';
-    } else if ($page === 'head-office-manager-sales-orders') {
-        $userId = $_SESSION['user_id'] ?? 1;
-        $orderModel = new SalesOrder($pdo);
-        $userOrders = $headOfficeOrders;//$orderModel->getUserOrders($userId);
-        require_once __DIR__ . '/../views/head-office-manager/orders.php';
+        $userOrders = $orderModel->getSalesRepOrders( $userId);
+        require_once __DIR__ . '/../../views/rdc-sales-ref/orders.php';
     }
-    /*else if ($page === 'sales-orders' && $method === 'cash') {
-        $cash_payment_info = [
-            "invoice_no" => "INV-ORD-RDCS-260213-1025",
-            "customer_name" => "Vijya Stores",
-            "payment_amount" => "18,750.00",
-            "payment_date_label" => "Payment Due Date",
-            "payment_date" => "15 Feb, 2026",
-        ];
-        /// save order and display success page
-        require_once __DIR__ . '/../views/shared/payment_success.php';
-    } else if ($page === 'sales-orders' && $method === 'card') {
-
-        require_once __DIR__ . '/../views/customer/payment.php';
-    }*/
 }

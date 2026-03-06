@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../../includes/header.php';
 ?>
-
+<div id="toastContainer" class="mx-auto max-w-6xl px-4 mt-3"></div>
 <div class="min-h-screen py-8">
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div class="flex items-center gap-3 mb-8">
-                <a href="<?php echo BASE_PATH; ?>/index.php?page=customer-sales-orders"
+                <a href="<?php echo BASE_PATH; ?>/index.php?page=rdc-clerk-sales-orders"
                     class="w-10 h-10 rounded-xl bg-white/50 border border-white/60 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-white/70 transition">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </a>
@@ -26,10 +26,10 @@ require_once __DIR__ . '/../../includes/header.php';
                     class="px-4 py-2 bg-white border rounded-xl shadow-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
                     <i class="fa-solid fa-file-pdf"></i> Invoice
                 </a>
-                <button
+                <a href="index.php?page=tracking&order_id=<?php echo urlencode($customer_order_info['order_number']); ?>"
                     class="px-4 py-2 bg-teal-600 text-white rounded-xl shadow hover:bg-teal-700 flex items-center gap-2">
                     <span class="material-symbols-rounded">location_on</span> Track
-                </button>
+                </a>
             </div>
         </div>
 
@@ -37,19 +37,18 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <div class="bg-white rounded-3xl shadow-lg p-6 border">
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 
                 <div>
+                    <span id="order_id" data-order-id="<?= (int) $customer_order_info['id']; ?>" class="hidden"></span>
                     <p class="text-xs text-gray-500 uppercase">Order Number</p>
                     <p class="font-bold text-gray-800"><?php echo $customer_order_info['order_number']; ?></p>
                 </div>
 
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Date</p>
-                    <p class="font-semibold text-gray-800">
-                        <?= (new DateTime($customer_order_info['order_date']))->format('d M, Y')
-                            ?>
-                    </p>
+                    <p class="font-semibold text-gray-800"><?= (new DateTime($customer_order_info['order_date']))->format('d M, Y')
+                        ?></p>
                 </div>
 
                 <div>
@@ -59,14 +58,14 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Sales Ref</p>
-                    <p class="font-semibold text-gray-800"><?php echo $customer_order_info['sales_ref']; ?></p>
+                    <p class="font-semibold text-gray-800"><?= $customer_order_info['sales_ref']; ?></p>
                 </div>
 
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Total Amount</p>
-                    <p class="font-bold text-teal-600 text-lg">Rs.
-                        <?php
-                        echo number_format($customer_order_info['total_amount'], 2);
+                    <p class="font-bold text-teal-600 text-lg">
+                        <?=
+                            number_format($customer_order_info['total_amount'], 2);
                         ?>
                     </p>
                 </div>
@@ -81,9 +80,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Last Updated</p>
-                    <p class="font-semibold text-gray-800">
-                        <?= (new DateTime($customer_order_info['updated_at']))->format('d M, Y h:i A');
-                        ?>
+                    <p class="font-semibold text-gray-800"> <?= (new DateTime($customer_order_info['updated_at']))->format('d M, Y h:i A');
+                    ?></p>
                 </div>
                 <div>
                     <?php
@@ -147,7 +145,8 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="col-span-2">Category</div>
                 <div class="col-span-2">Selling Price</div>
                 <div class="col-span-1">Qty</div>
-                <div class="col-span-2">Discount</div>
+                <div class="col-span-1">RDC Stocks</div>
+                <div class="col-span-1">Discount</div>
                 <div class="col-span-1">Line Total</div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-5 border-t items-center hover:bg-gray-50">
@@ -162,8 +161,10 @@ require_once __DIR__ . '/../../includes/header.php';
 
                     <div class="font-semibold text-gray-800 col-span-2">Rs. <?php echo $order_item['unit_price']; ?></div>
                     <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['quantity']; ?></div>
+                    <div class="font-semibold text-gray-800 col-span-1"><?php echo $order_item['available_quantity']; ?>
+                    </div>
 
-                    <div class="text-red-500 font-semibold col-span-2">Rs. <?php echo $order_item['discount_amount']; ?>
+                    <div class="text-red-500 font-semibold col-span-1">Rs. <?php echo $order_item['discount_amount']; ?>
                     </div>
                     <div class="font-semibold text-gray-800 col-span-1">Rs.
                         <?php echo number_format($order_item['discounted_line_amount'], 2); ?>
@@ -171,7 +172,68 @@ require_once __DIR__ . '/../../includes/header.php';
                 <?php endforeach; ?>
             </div>
         </div>
+        <div class="mt-10 glass-panel rounded-3xl border border-white/50 shadow-xl p-8">
+            <h2 class="text-xl font-bold text-gray-800 font-['Outfit'] mb-6 flex items-center gap-2">
+                <span class="material-symbols-rounded text-teal-600">sync</span>
+                Update Order Status
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+
+                <!-- Status Dropdown -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">
+                        Select New Status
+                    </label>
+
+                    <select <?php $order_status = $customer_order_info['status'];
+                    if ($order_status == 'delivered' || $order_status == 'cancelled') {
+                        echo 'disabled';
+                    }
+                    ?> id="order_status"
+                        class="w-full bg-white/70 backdrop-blur border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="">-- Choose Status --</option>
+                        <option value="processing">Processing</option>
+                        <option value="in_transit">In transit</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Changing the status will update order tracking for the customer.
+                    </p>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex md:justify-end">
+                    <button type="button" id="changeStatusBtn"
+                        class="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-teal-500/30 hover:from-teal-600 hover:to-emerald-700 transition flex items-center gap-2">
+                        <span class="material-symbols-rounded">published_with_changes</span>
+                        Change Status
+                    </button>
+                </div>
+
+            </div>
+        </div>
     </div>
 </div>
-
+<?php if (!empty($_SESSION['flash_success'])): ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const msg = <?= json_encode($_SESSION['flash_success']); ?>;
+            const container = document.getElementById("toastContainer");
+            if (container) {
+                const el = document.createElement("div");
+                el.className = "mt-3 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 shadow-sm";
+                el.innerHTML = `
+          <span class="material-symbols-rounded text-emerald-600">check_circle</span>
+          <div class="flex-1"><p class="text-sm font-semibold">${msg}</p></div>
+        `;
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 5000);
+            }
+        });
+    </script>
+    <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -76,7 +76,7 @@ class ShoppingCart
             GROUP BY user_id; 
         ");
         $stmt->execute(['user_id' => $userId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getUserCartAmount($userId)

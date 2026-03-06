@@ -5,12 +5,16 @@ ob_start();
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../models/Profile.php';
+require_once __DIR__ . '/../../models/SalesOrder.php';
 
 
 $role = current_user_role();
 $userId = (int) $_SESSION['user_id'];
 $profileModel = new Profile($pdo);
 $profile = $profileModel->getProfile($userId, $role);
+$orderModel = new SalesOrder($pdo);
+$userOrders = $orderModel->getSalesRepOrders($userId);
+
 
 // Include the main header which handles session start and navigation
 require_once __DIR__ . '/../../includes/header.php';
@@ -330,96 +334,90 @@ function getStatusBadge($status)
 
                         <div class="space-y-4">
                             <!-- Order Item 1 -->
-                            <div
-                                class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div
-                                            class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-blue-100">
-                                            <span class="material-symbols-rounded">inventory_2</span>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-001</h3>
-                                            <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                                <span>15 items</span>
-                                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                <span>Rs. 45,250.00</span>
+                            <?php
+                            $counter = 0;
+                            foreach ($userOrders as $order):
+                                if ($counter >= 5) {
+                                    break;
+                                }
+                                ?>
+                                <div
+                                    class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-blue-100">
+                                                <span class="material-symbols-rounded">inventory_2</span>
                                             </div>
-                                            <div class="flex items-center text-xs text-gray-500 mt-1">
-                                                <span
-                                                    class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                                Jan 10, 2025
+                                            <div>
+                                                <h3 class="font-bold text-gray-800 font-['Outfit']">
+                                                    <?= htmlspecialchars($order['order_number'] ?? '') ?>
+                                                </h3>
+                                                <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
+                                                    <span><?= (int) ($order['item_count'] ?? 0) ?> Items</span>
+                                                    <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                    <span>Rs.
+                                                        <?= number_format((float) ($order['total_amount'] ?? 0), 2) ?></span>
+                                                </div>
+                                                <div class="flex items-center text-xs text-gray-500 mt-1">
+                                                    <span
+                                                        class="material-symbols-rounded text-sm mr-1">calendar_today</span>
+                                                    <?= htmlspecialchars($order['order_date'] ?? '') ?>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <span
-                                        class="px-4 py-2 rounded-xl bg-green-100/60 border border-green-200 text-green-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                        <span class="material-symbols-rounded text-sm mr-2">check_circle</span>
-                                        Delivered
-                                    </span>
-                                </div>
-                            </div>
 
-                            <!-- Order Item 2 -->
-                            <div
-                                class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div
-                                            class="w-12 h-12 rounded-xl bg-purple-100/50 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-purple-100">
-                                            <span class="material-symbols-rounded">checkroom</span>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-002</h3>
-                                            <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                                <span>8 items</span>
-                                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                <span>Rs. 28,900.00</span>
-                                            </div>
-                                            <div class="flex items-center text-xs text-gray-500 mt-1">
-                                                <span
-                                                    class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                                Jan 12, 2025
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        class="px-4 py-2 rounded-xl bg-purple-100/60 border border-purple-200 text-purple-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                        <span class="material-symbols-rounded text-sm mr-2">local_shipping</span> In
-                                        Transit
-                                    </span>
-                                </div>
-                            </div>
+                                        <?php
+                                        $orderStatus = strtolower(trim($order['status'] ?? ''));
 
-                            <!-- Order Item 3 -->
-                            <div
-                                class="bg-white/40 border border-white/60 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/60 transition duration-300 group shadow-sm">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div
-                                            class="w-12 h-12 rounded-xl bg-yellow-100/50 text-yellow-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition duration-300 border border-yellow-100">
-                                            <span class="material-symbols-rounded">smartphone</span>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-gray-800 font-['Outfit']">Order #ORD-2025-003</h3>
-                                            <div class="flex items-center text-xs text-gray-600 mt-1 space-x-3">
-                                                <span>22 items</span>
-                                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                <span>Rs. 67,400.00</span>
-                                            </div>
-                                            <div class="flex items-center text-xs text-gray-500 mt-1">
-                                                <span
-                                                    class="material-symbols-rounded text-sm mr-1">calendar_today</span>
-                                                Jan 13, 2025
-                                            </div>
-                                        </div>
+                                        $statusStyles = [
+                                            'pending' => [
+                                                'container' => 'bg-purple-100 text-purple-700 border border-purple-200',
+                                                'dot' => 'bg-purple-500'
+                                            ],
+                                            'processing' => [
+                                                'container' => 'bg-blue-100 text-blue-700 border border-blue-200',
+                                                'dot' => 'bg-blue-500'
+                                            ],
+                                            'delivered' => [
+                                                'container' => 'bg-green-100 text-green-700 border border-green-200',
+                                                'dot' => 'bg-green-500'
+                                            ],
+                                            'in transit' => [
+                                                'container' => 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                                                'dot' => 'bg-yellow-500'
+                                            ],
+                                            'cancelled' => [
+                                                'container' => 'bg-red-100 text-red-700 border border-red-200',
+                                                'dot' => 'bg-red-500'
+                                            ],
+                                            'paid' => [
+                                                'container' => 'bg-green-100 text-green-700 border border-green-200',
+                                                'dot' => 'bg-green-500'
+                                            ],
+                                            'unpaid' => [
+                                                'container' => 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                                                'dot' => 'bg-yellow-500'
+                                            ]
+                                        ];
+
+                                        $orderStyle = $statusStyles[$orderStatus] ?? [
+                                            'container' => 'bg-gray-100 text-gray-700 border border-gray-200',
+                                            'dot' => 'bg-gray-500'
+                                        ];
+                                        ?>
+
+                                        <span
+                                            class="px-4 py-2 rounded-xl <?= $orderStyle['container']; ?> text-sm font-bold flex items-center justify-center self-start sm:self-center">
+                                            <span class="w-2 h-2 rounded-full <?= $orderStyle['dot']; ?> mr-2"></span>
+                                            <?= htmlspecialchars(ucwords($orderStatus)) ?>
+                                        </span>
                                     </div>
-                                    <span
-                                        class="px-4 py-2 rounded-xl bg-yellow-100/60 border border-yellow-200 text-yellow-700 text-sm font-bold flex items-center justify-center self-start sm:self-center">
-                                        <span class="material-symbols-rounded text-sm mr-2">schedule</span> Processing
-                                    </span>
                                 </div>
-                            </div>
+                                <?php
+                                $counter++;
+                            endforeach;
+                            ?>
                         </div>
                     </div>
                     <div class="lg:col-span-1 glass-card rounded-3xl overflow-hidden flex flex-col h-[500px]">
@@ -436,225 +434,227 @@ function getStatusBadge($status)
                     </div>
 
                 </div>
+            </div>
+            <!-- END OVERVIEW TAB -->
 
-                <!-- CUSTOMERS TAB -->
-                <div id="tab-customers" class="tab-content hidden space-y-6">
-                    <div class="glass-panel rounded-3xl p-6 mb-6 flex justify-between items-center">
-                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
-                            <span class="material-symbols-rounded text-teal-500 mr-2">groups</span> My Customers
-                        </h3>
-                        <button onclick="toggleModal('modal-customer')"
-                            class="bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-teal-700 hover:shadow-teal-200 transition flex items-center">
-                            <span class="material-symbols-rounded text-lg mr-2">add</span> Add Customer
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <?php 
-                        foreach ($customers as $c): ?>
-                            <div class="glass-card p-6 rounded-3xl hover-lift">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div
-                                        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-600 text-lg shadow-inner">
-                                        <?= strtoupper(substr($c['name'], 0, 2)) ?>
-                                    </div>
-                                    <span
-                                        class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">Active</span>
+            <!-- CUSTOMERS TAB -->
+            <div id="tab-customers" class="tab-content hidden space-y-6">
+                <div class="glass-panel rounded-3xl p-6 mb-6 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <span class="material-symbols-rounded text-teal-500 mr-2">groups</span> My Customers
+                    </h3>
+                    <button onclick="toggleModal('modal-customer')"
+                        class="bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-teal-700 hover:shadow-teal-200 transition flex items-center">
+                        <span class="material-symbols-rounded text-lg mr-2">add</span> Add Customer
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php
+                    foreach ($customers as $c): ?>
+                        <div class="glass-card p-6 rounded-3xl hover-lift">
+                            <div class="flex items-start justify-between mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-600 text-lg shadow-inner">
+                                    <?= strtoupper(substr($c['name'], 0, 2)) ?>
                                 </div>
-                                <h4 class="font-bold text-gray-800 text-lg mb-1 leading-tight">
-                                    <?= htmlspecialchars($c['name']) ?>
-                                </h4>
-                                <p class="text-sm text-gray-500 mb-5 flex items-center">
-                                    <span class="material-symbols-rounded text-sm mr-1">mail</span>
-                                    <?= htmlspecialchars(string: $c['email']) ?>
-                                </p>
-
-                                <div class="border-t border-gray-100/50 pt-4 flex justify-between items-center">
-                                    <div>
-                                        <p class="text-[10px] uppercase text-gray-400 font-bold">LIFETIME VALUE</p>
-                                        <p class="text-lg font-bold text-gray-800">Rs. 45k</p>
-                                    </div>
-                                    <button
-                                        class="text-teal-600 text-xs font-bold hover:text-teal-800 transition bg-teal-50/80 px-3 py-2 rounded-lg">View
-                                        History</button>
-                                </div>
+                                <span
+                                    class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">Active</span>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
+                            <h4 class="font-bold text-gray-800 text-lg mb-1 leading-tight">
+                                <?= htmlspecialchars($c['name']) ?>
+                            </h4>
+                            <p class="text-sm text-gray-500 mb-5 flex items-center">
+                                <span class="material-symbols-rounded text-sm mr-1">mail</span>
+                                <?= htmlspecialchars(string: $c['email']) ?>
+                            </p>
 
-                <!-- VISITS TAB -->
-                <div id="tab-visits" class="tab-content hidden h-full">
-                    <div class="glass-panel p-6 rounded-3xl mb-6 flex justify-between items-center">
-                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
-                            <span class="material-symbols-rounded text-teal-500 mr-2">share_location</span> Visits &
-                            Route
-                        </h3>
-                    </div>
-                    <div
-                        class="glass-card h-[500px] w-full rounded-3xl overflow-hidden border border-gray-200/50 relative p-1">
-                        <div id="routeMap" class="w-full h-full rounded-2xl z-0"></div>
-                    </div>
-
-                    <!-- Scheduled Visits List -->
-                    <div class="glass-card rounded-3xl p-6 mt-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-gray-800 flex items-center">
-                                <span class="material-symbols-rounded text-orange-500 mr-2">list_alt</span> Scheduled
-                                Visits Today
-                            </h3>
-                            <span class="text-sm text-gray-500"><?= count($todayVisits) ?>
-                                Visit<?= count($todayVisits) !== 1 ? 's' : '' ?></span>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <?php if (!empty($todayVisits)): ?>
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr class="text-xs font-bold text-gray-500 border-b border-gray-100">
-                                            <th class="py-3 px-2">Time</th>
-                                            <th class="py-3 px-2">Customer</th>
-                                            <th class="py-3 px-2">Location</th>
-                                            <th class="py-3 px-2">Contact</th>
-                                            <th class="py-3 px-2">Status</th>
-                                            <th class="py-3 px-2">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-sm">
-                                        <?php foreach ($todayVisits as $index => $visit): ?>
-                                            <tr class="hover:bg-gray-50/50 transition border-b border-gray-100/50">
-                                                <td class="py-4 px-2 font-bold text-gray-700">
-                                                    <?= date('h:i A', strtotime($visit['created_at'])) ?>
-                                                </td>
-                                                <td class="py-4 px-2 font-medium text-gray-800">
-                                                    <?= htmlspecialchars($visit['name']) ?>
-                                                </td>
-                                                <td class="py-4 px-2 text-gray-500">
-                                                    <?= htmlspecialchars($visit['address'] ?? 'N/A') ?>
-                                                </td>
-                                                <td class="py-4 px-2 text-gray-500">
-                                                    <?= htmlspecialchars($visit['contact_number'] ?? 'N/A') ?>
-                                                </td>
-                                                <td class="py-4 px-2">
-                                                    <?php if ($index === 0): ?>
-                                                        <span class="text-teal-500 font-bold text-xs flex items-center"><span
-                                                                class="w-1.5 h-1.5 rounded-full bg-teal-500 mr-1"></span>
-                                                            Active</span>
-                                                    <?php else: ?>
-                                                        <span class="text-gray-400 font-bold text-xs flex items-center"><span
-                                                                class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1"></span>
-                                                            Pending</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="py-4 px-2">
-                                                    <?php if ($index === 0): ?>
-                                                        <button
-                                                            class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-teal-700">Check-In</button>
-                                                    <?php else: ?>
-                                                        <button
-                                                            class="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">Wait</button>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php else: ?>
-                                <div class="text-center py-10">
-                                    <div
-                                        class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                                        <span class="material-symbols-rounded text-3xl">event_busy</span>
-                                    </div>
-                                    <h4 class="text-lg font-bold text-gray-700 mb-2">No Visits Scheduled</h4>
-                                    <p class="text-gray-500 text-sm">No customer visits planned for today.</p>
+                            <div class="border-t border-gray-100/50 pt-4 flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] uppercase text-gray-400 font-bold">LIFETIME VALUE</p>
+                                    <p class="text-lg font-bold text-gray-800">Rs. 45k</p>
                                 </div>
-                            <?php endif; ?>
+                                <button
+                                    class="text-teal-600 text-xs font-bold hover:text-teal-800 transition bg-teal-50/80 px-3 py-2 rounded-lg">View
+                                    History</button>
+                            </div>
                         </div>
-                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- VISITS TAB -->
+            <div id="tab-visits" class="tab-content hidden h-full">
+                <div class="glass-panel p-6 rounded-3xl mb-6 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <span class="material-symbols-rounded text-teal-500 mr-2">share_location</span> Visits &
+                        Route
+                    </h3>
+                </div>
+                <div
+                    class="glass-card h-[500px] w-full rounded-3xl overflow-hidden border border-gray-200/50 relative p-1">
+                    <div id="routeMap" class="w-full h-full rounded-2xl z-0"></div>
                 </div>
 
-                <!-- ORDERS TAB -->
-                <div id="tab-orders" class="tab-content hidden space-y-6">
-                    <div class="glass-panel p-6 rounded-3xl mb-6 flex justify-between items-center">
-                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
-                            <span class="material-symbols-rounded text-teal-500 mr-2">shopping_cart</span> Manage Orders
+                <!-- Scheduled Visits List -->
+                <div class="glass-card rounded-3xl p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-gray-800 flex items-center">
+                            <span class="material-symbols-rounded text-orange-500 mr-2">list_alt</span> Scheduled
+                            Visits Today
                         </h3>
-                        <button onclick="toggleModal('modal-order')"
-                            class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-emerald-700 hover:shadow-emerald-200 transition flex items-center">
-                            <span class="material-symbols-rounded text-lg mr-2">add_shopping_cart</span> Place Order
-                        </button>
+                        <span class="text-sm text-gray-500"><?= count($todayVisits) ?>
+                            Visit<?= count($todayVisits) !== 1 ? 's' : '' ?></span>
                     </div>
 
-                    <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
-                        <table class="w-full text-left">
-                            <thead
-                                class="bg-teal-50/40 text-gray-500 text-xs uppercase font-bold border-b border-gray-100/50">
-                                <tr>
-                                    <th class="p-5">Order ID</th>
-                                    <th class="p-5">Customer</th>
-                                    <th class="p-5">Date</th>
-                                    <th class="p-5">Amount</th>
-                                    <th class="p-5">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100/50 text-sm">
-                                <?php if (empty($orders)): ?>
-                                    <tr>
-                                        <td colspan="5" class="p-5 text-center text-gray-500">No orders found.</td>
+                    <div class="overflow-x-auto">
+                        <?php if (!empty($todayVisits)): ?>
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs font-bold text-gray-500 border-b border-gray-100">
+                                        <th class="py-3 px-2">Time</th>
+                                        <th class="py-3 px-2">Customer</th>
+                                        <th class="py-3 px-2">Location</th>
+                                        <th class="py-3 px-2">Contact</th>
+                                        <th class="py-3 px-2">Status</th>
+                                        <th class="py-3 px-2">Action</th>
                                     </tr>
-                                <?php else: ?>
-                                    <?php foreach ($orders as $o): ?>
-                                        <tr class="hover:bg-white/40 transition">
-                                            <td class="p-5 font-bold text-gray-700"><?= $o['order_number'] ?></td>
-                                            <td class="p-5 font-medium text-gray-800"><?= htmlspecialchars($o['username']) ?>
+                                </thead>
+                                <tbody class="text-sm">
+                                    <?php foreach ($todayVisits as $index => $visit): ?>
+                                        <tr class="hover:bg-gray-50/50 transition border-b border-gray-100/50">
+                                            <td class="py-4 px-2 font-bold text-gray-700">
+                                                <?= date('h:i A', strtotime($visit['created_at'])) ?>
                                             </td>
-                                            <td class="p-5 text-gray-500"><?= date('M d, Y', strtotime($o['created_at'])) ?>
+                                            <td class="py-4 px-2 font-medium text-gray-800">
+                                                <?= htmlspecialchars($visit['name']) ?>
                                             </td>
-                                            <td class="p-5 font-bold text-gray-800">Rs. <?= number_format($o['total_amount']) ?>
+                                            <td class="py-4 px-2 text-gray-500">
+                                                <?= htmlspecialchars($visit['address'] ?? 'N/A') ?>
                                             </td>
-                                            <td class="p-5">
-                                                <?= getStatusBadge($o['status']) ?>
+                                            <td class="py-4 px-2 text-gray-500">
+                                                <?= htmlspecialchars($visit['contact_number'] ?? 'N/A') ?>
+                                            </td>
+                                            <td class="py-4 px-2">
+                                                <?php if ($index === 0): ?>
+                                                    <span class="text-teal-500 font-bold text-xs flex items-center"><span
+                                                            class="w-1.5 h-1.5 rounded-full bg-teal-500 mr-1"></span>
+                                                        Active</span>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400 font-bold text-xs flex items-center"><span
+                                                            class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1"></span>
+                                                        Pending</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="py-4 px-2">
+                                                <?php if ($index === 0): ?>
+                                                    <button
+                                                        class="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-teal-700">Check-In</button>
+                                                <?php else: ?>
+                                                    <button
+                                                        class="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">Wait</button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <div class="text-center py-10">
+                                <div
+                                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                    <span class="material-symbols-rounded text-3xl">event_busy</span>
+                                </div>
+                                <h4 class="text-lg font-bold text-gray-700 mb-2">No Visits Scheduled</h4>
+                                <p class="text-gray-500 text-sm">No customer visits planned for today.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
-
-                <!-- PERFORMANCE TAB -->
-                <div id="tab-performance" class="tab-content hidden h-full text-center py-20">
-                    <div class="glass-card rounded-3xl p-10 max-w-2xl mx-auto">
-                        <div
-                            class="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600">
-                            <span class="material-symbols-rounded text-5xl">leaderboard</span>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Performance Analytics</h3>
-                        <p class="text-gray-500 mb-6">Sales targets, efficient routes, and customer growth insights will
-                            serve here.</p>
-
-                        <div class="grid grid-cols-2 gap-4 text-left">
-                            <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
-                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Monthly Target</div>
-                                <div class="text-xl font-bold text-gray-800">85%</div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                    <div class="bg-teal-500 h-1.5 rounded-full shadow-lg shadow-teal-500/30"
-                                        style="width: 85%"></div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
-                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Customer Retention</div>
-                                <div class="text-xl font-bold text-gray-800">92%</div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                    <div class="bg-blue-500 h-1.5 rounded-full shadow-lg shadow-blue-500/30"
-                                        style="width: 92%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            <!-- ORDERS TAB -->
+            <div id="tab-orders" class="tab-content hidden space-y-6">
+                <div class="glass-panel p-6 rounded-3xl mb-6 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <span class="material-symbols-rounded text-teal-500 mr-2">shopping_cart</span> Manage Orders
+                    </h3>
+                    <button onclick="toggleModal('modal-order')"
+                        class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-emerald-700 hover:shadow-emerald-200 transition flex items-center">
+                        <span class="material-symbols-rounded text-lg mr-2">add_shopping_cart</span> Place Order
+                    </button>
+                </div>
+
+                <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left">
+                        <thead
+                            class="bg-teal-50/40 text-gray-500 text-xs uppercase font-bold border-b border-gray-100/50">
+                            <tr>
+                                <th class="p-5">Order ID</th>
+                                <th class="p-5">Customer</th>
+                                <th class="p-5">Date</th>
+                                <th class="p-5">Amount</th>
+                                <th class="p-5">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100/50 text-sm">
+                            <?php if (empty($orders)): ?>
+                                <tr>
+                                    <td colspan="5" class="p-5 text-center text-gray-500">No orders found.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($orders as $o): ?>
+                                    <tr class="hover:bg-white/40 transition">
+                                        <td class="p-5 font-bold text-gray-700"><?= $o['order_number'] ?></td>
+                                        <td class="p-5 font-medium text-gray-800"><?= htmlspecialchars($o['username']) ?>
+                                        </td>
+                                        <td class="p-5 text-gray-500"><?= date('M d, Y', strtotime($o['created_at'])) ?>
+                                        </td>
+                                        <td class="p-5 font-bold text-gray-800">Rs. <?= number_format($o['total_amount']) ?>
+                                        </td>
+                                        <td class="p-5">
+                                            <?= getStatusBadge($o['status']) ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE TAB -->
+            <div id="tab-performance" class="tab-content hidden h-full text-center py-20">
+                <div class="glass-card rounded-3xl p-10 max-w-2xl mx-auto">
+                    <div
+                        class="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600">
+                        <span class="material-symbols-rounded text-5xl">leaderboard</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Performance Analytics</h3>
+                    <p class="text-gray-500 mb-6">Sales targets, efficient routes, and customer growth insights will
+                        serve here.</p>
+
+                    <div class="grid grid-cols-2 gap-4 text-left">
+                        <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
+                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Monthly Target</div>
+                            <div class="text-xl font-bold text-gray-800">85%</div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                                <div class="bg-teal-500 h-1.5 rounded-full shadow-lg shadow-teal-500/30"
+                                    style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
+                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Customer Retention</div>
+                            <div class="text-xl font-bold text-gray-800">92%</div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                                <div class="bg-blue-500 h-1.5 rounded-full shadow-lg shadow-blue-500/30"
+                                    style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </main>
 
     <!-- Modal: Add Customer -->

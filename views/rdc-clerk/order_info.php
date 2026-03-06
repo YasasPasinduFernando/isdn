@@ -21,18 +21,15 @@ require_once __DIR__ . '/../../includes/header.php';
                     class="px-4 py-2 bg-white border rounded-xl shadow-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
                     <i class="fa-solid fa-print"></i> Print
                 </button>
-                <button
+                <a href="<?php echo BASE_PATH . '/invoices/ISDN-Invoice-' . $customer_order_info['order_number'] . '.pdf'; ?>"
+                    download
                     class="px-4 py-2 bg-white border rounded-xl shadow-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
                     <i class="fa-solid fa-file-pdf"></i> Invoice
-                </button>
-                <button
-                    class="px-4 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 flex items-center gap-2">
-                    <i class="fa-solid fa-xmark"></i> Cancel
-                </button>
-                <button
+                </a>
+                <a href="index.php?page=tracking&order_id=<?php echo urlencode($customer_order_info['order_number']); ?>"
                     class="px-4 py-2 bg-teal-600 text-white rounded-xl shadow hover:bg-teal-700 flex items-center gap-2">
                     <span class="material-symbols-rounded">location_on</span> Track
-                </button>
+                </a>
             </div>
         </div>
 

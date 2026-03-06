@@ -117,14 +117,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $page = $_GET['page'] ?? '';
     $method = $_GET['method'] ?? '';
-
+    $userOrders = [];
     if ($page === 'customer-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $retail_customer = new RetailCustomer(pdo: $pdo);
         $customer_info = $retail_customer->findByUserId($userId);
-        //get orders by customers
-        $orderModel = new SalesOrder($pdo);
-        $userOrders = $orderModel->getCustomerOrders($customer_info['id']);
+        if ($customer_info != null) {
+            $orderModel = new SalesOrder($pdo);
+            $userOrders = $orderModel->getCustomerOrders($customer_info['id']);
+        }
         require_once __DIR__ . '/../views/customer/orders.php';
     } else if ($page === 'rdc-sales-ref-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;

@@ -167,6 +167,36 @@ if ($current_user['role'] === 'HEAD_OFFICE_MANAGER') {
     $all_rdcs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Determine current RDC to view/manage
+// HEAD_OFFICE_MANAGER can pass ?rdc_id= to switch context; otherwise use their session or default to first RDC.
+$currentRdc = (int)$current_user['rdc_id'];
+if ($current_user['role'] === 'HEAD_OFFICE_MANAGER') {
+    // If rdc_id provided via GET, validate and use it
+    $selectedRdc = isset($_GET['rdc_id']) && (int)$_GET['rdc_id'] > 0 ? (int)$_GET['rdc_id'] : null;
+    if (!$selectedRdc && !empty($all_rdcs)) {
+        // default to first RDC in the list
+        $selectedRdc = (int)$all_rdcs[0]['rdc_id'];
+    }
+    if ($selectedRdc) {
+        $currentRdc = $selectedRdc;
+        // Update display values in current_user for the view
+        try {
+            $stmt = $pdo->prepare('SELECT rdc_name, rdc_code FROM rdcs WHERE rdc_id = :id');
+            $stmt->execute(['id' => $currentRdc]);
+            $r2 = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($r2) {
+                $current_user['rdc_name'] = $r2['rdc_name'];
+                $current_user['rdc_code'] = $r2['rdc_code'];
+                $current_user['rdc_id'] = $currentRdc;
+            }
+        } catch (Exception $e) {
+            // Ignore and keep previous values
+        }
+    }
+} else {
+    $currentRdc = (int)$current_user['rdc_id'];
+}
+
 // Products for the selected RDC
 $products = $productStock->getStocksByRdc($currentRdc);
 

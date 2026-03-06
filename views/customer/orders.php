@@ -72,51 +72,70 @@ require_once __DIR__ . '/../../includes/header.php';
                             <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
                             Rs. <?php echo number_format($userOrder['total_amount'], 2) ?>
                         </div>
+                        <?php
+                        $orderStatus = strtolower($userOrder['status'] ?? '');
+                        $paymentStatus = strtolower($userOrder['payment_status'] ?? '');
 
+                        $statusStyles = [
+                            'pending' => [
+                                'container' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                'dot' => 'bg-purple-500'
+                            ],
+                            'processing' => [
+                                'container' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                'dot' => 'bg-blue-500'
+                            ],
+                            'delivered' => [
+                                'container' => 'bg-green-100 text-green-700 border-green-200',
+                                'dot' => 'bg-green-500'
+                            ],
+                            'in transit' => [
+                                'container' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                'dot' => 'bg-yellow-500'
+                            ],
+                            'cancelled' => [
+                                'container' => 'bg-red-100 text-red-700 border-red-200',
+                                'dot' => 'bg-red-500'
+                            ],
+                            'paid' => [
+                                'container' => 'bg-green-100 text-green-700 border-green-200',
+                                'dot' => 'bg-green-500'
+                            ],
+                            'unpaid' => [
+                                'container' => 'bg-gray-100 text-gray-700 border-gray-200',
+                                'dot' => 'bg-gray-500'
+                            ]
+                        ];
+
+                        $orderStyle = $statusStyles[$orderStatus] ?? [
+                            'container' => 'bg-gray-100 text-gray-700 border-gray-200',
+                            'dot' => 'bg-gray-500'
+                        ];
+
+                        $paymentStyle = $statusStyles[$paymentStatus] ?? [
+                            'container' => 'bg-gray-100 text-gray-700 border-gray-200',
+                            'dot' => 'bg-gray-500'
+                        ];
+                        ?>
                         <div class="col-span-1">
                             <span class="md:hidden font-semibold mr-2 text-gray-600">Payment:</span>
                             <span
-                                class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">Paid</span>
-                        </div>
-                        <?php if ($userOrder['status'] === 'Pending') {
-                            $bg_color = 'bg-purple-100';
-                            $text_color = 'text-purple-700';
-                            $border_color = 'border-purple-200';
-                            $span_bg_color = 'bg-purple-500';
-
-                        } else if ($userOrder['status'] === 'Processing') {
-                            $bg_color = 'bg-blue-100';
-                            $text_color = 'text-blue-700';
-                            $border_color = 'border-blue-200';
-                            $span_bg_color = 'bg-blue-500';
-                        } else if ($userOrder['status'] === 'Delivered') {
-                            $bg_color = 'bg-green-100';
-                            $text_color = 'text-green-700';
-                            $border_color = 'border-green-200';
-                            $span_bg_color = 'bg-green-500';
-                        } else if ($userOrder['status'] === 'In Transit') {
-                            $bg_color = 'bg-yellow-100';
-                            $text_color = 'text-yellow-700';
-                            $border_color = 'border-yellow-200';
-                            $span_bg_color = 'bg-yellow-500';
-                        } else if ($userOrder['status'] === 'Cancelled') {
-                            $bg_color = 'bg-red-100';
-                            $text_color = 'text-red-700';
-                            $border_color = 'border-red-200';
-                            $span_bg_color = 'bg-red-500';
-                        }
-
-                        ?>
-
-                        <div class="col-span-1">
-                            <span class="md:hidden font-semibold mr-2 text-gray-600">Status:</span>
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold <?php echo $bg_color; ?> <?php echo $text_color; ?> border <?php echo $border_color; ?>">
-                                <span class="w-2 h-2 mr-2 <?php echo $span_bg_color; ?> rounded-full"></span>
-                                <?php echo $userOrder['status']; ?>
+                                class="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full border <?= $paymentStyle['container']; ?>">
+                                <span class="w-2 h-2 <?= $paymentStyle['dot']; ?> rounded-full"></span>
+                                <?= ucwords($paymentStatus); ?>
                             </span>
                         </div>
 
+
+                        <div class="col-span-1">
+                            <span class="md:hidden font-semibold mr-2 text-gray-600">Status:</span>
+
+                            <span
+                                class="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold rounded-full border <?= $orderStyle['container']; ?>">
+                                <span class="w-2 h-2 <?= $orderStyle['dot']; ?> rounded-full"></span>
+                                <?= ucwords($orderStatus); ?>
+                            </span>
+                        </div>
 
                         <div class="col-span-1 text-sm text-gray-600 font-medium">
                             <span class="md:hidden font-semibold mr-2 text-gray-500 font-normal">Amount:</span>
@@ -124,12 +143,12 @@ require_once __DIR__ . '/../../includes/header.php';
                         </div>
 
                         <div class="col-span-1 flex md:justify-center">
-                            <a href="index.php?page=tracking&order_id=ORD-2025-001"
+                            <a href="index.php?page=tracking&order_id=<?php echo urlencode($userOrder['order_number']); ?>"
                                 class="text-teal-600 hover:text-teal-800 hover:bg-teal-50 p-2 rounded-full transition relative group/icon"
                                 title="Track Order">
                                 <span class="material-symbols-rounded">location_on</span>
                             </a>
-                            <a href="#"
+                            <a href="index.php?page=order-info&id=<?= $userOrder['order_id']; ?>"
                                 class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition ml-2"
                                 title="View Details">
                                 <span class="material-symbols-rounded">visibility</span>
@@ -139,7 +158,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 </div>
             </div>
-            
+
 
             <!-- Pagination -->
             <div

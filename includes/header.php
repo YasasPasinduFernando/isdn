@@ -127,8 +127,8 @@ if (!headers_sent()) {
                         $currentTab = $_GET['tab'] ?? '';
                         $role = current_user_role();
                         $navItems = get_nav_items_for_role($role);
-                        
-                        foreach ($navItems as $page => $item): 
+                        ?>
+                        <?php foreach ($navItems as $page => $item): 
                             $isActive = false;
                             
                             // Check for complex keys (e.g., page&tab=val)

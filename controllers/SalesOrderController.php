@@ -1,73 +1,154 @@
 <?php
-
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/SalesOrder.php';
 require_once __DIR__ . '/../models/ShoppingCart.php';
-require_once __DIR__ . '/../dummydata/Orders.php';
+require_once __DIR__ . '/../models/RetailCustomer.php';
+require_once __DIR__ . '/../models/OrderItem.php';
+require_once __DIR__ . '/../includes/MailSender.php';
 
+$page = $_GET['page'] ?? '';
+$userId = $_SESSION['user_id'] ?? 1;
 
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST'
-    && isset($_GET['action'])
-    && $_GET['action'] === 'place'
-) {
+$requestMethod = $_SERVER['REQUEST_METHOD'] ?? '';
+$action = $_GET['action'] ?? '';
 
-    $data = json_decode(file_get_contents("php://input"), true);
+if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'place') {
 
-    if (!$data || empty($data['items'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid cart data']);
-        exit;
+    $method = $_GET['method'] ?? '';
+
+    $deliveryNotes = '';
+    $payment_date_label = '';
+    $payment_date = '';
+
+    $input = null;
+
+    if ($method === 'cash') {
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $deliveryNotes = $input['delivery_notes'] ?? '';
+        $payment_date_label = 'Payment Due Date';
+
+        $date = new DateTime();
+        $date->modify('+2 days');
+        $payment_date = $date->format('d M, Y');
+
+    } else if ($method === 'card') {
+        $deliveryNotes = $_SESSION['delivery_notes'] ?? '';
+        $payment_date_label = 'Payment Date';
+
+        $payment_date = (new DateTime())->format('d M, Y');
     }
 
-    $userId = $_SESSION['user_id'] ?? 1; // demo user
+    $orderModel = new SalesOrder($pdo);
+    $retail_customer = new RetailCustomer(pdo: $pdo);
+    $shopping_cart = new ShoppingCart($pdo);
+    $orderItem = new OrderItem($pdo);
 
+    $userCartItems = $shopping_cart->getUserCart($userId);
+    $customer_info = $retail_customer->findByUserId($userId);
 
-    try {
-        $orderModel = new SalesOrder($pdo);
-        $userCartItems = new ShoppingCart($pdo);
-        $userCartItems = $userCartItems->getUserCart($userId);
+    $orderId = $orderModel->placeOrder($customer_info['id'], $userId, $userCartItems);
 
-        $orderId = $orderModel->placeOrder($userId, $userId, $userCartItems);
+    $order_info   = $orderModel->getOrderbyId($orderId);
+    $order_items  = $orderItem->getOrderItems($orderId);
+    $order_totals = $orderItem->calculateOrderTotals($orderId);
 
-        echo json_encode([
-            'success' => true,
-            'order_id' => $orderId
-        ]);
-        exit;
+    $invoice_location = '/invoices/ISDN-Invoice-' . $order_info['order_number'] . '.pdf';
 
-    } catch (Exception $e) {
-        echo $e;
-        echo json_encode([
-            'success' => false,
-            'message' => 'Order processing failed'
-        ]);
-        exit;
-    }
+    Mailsender::sendMailAndGenerateInvoice([
+        'delivery_notes' => $deliveryNotes,
+        'order_info'     => $order_info,
+        'order_items'    => $order_items,
+        'order_totals'   => $order_totals
+    ]);
+
+    $_SESSION['cash_payment_info'] = [
+        'invoice_no'         => 'INV-' . $order_info['order_number'],
+        'customer_name'      => $order_info['name'],
+        'payment_amount'     => number_format($order_info['total_amount'], 2),
+        'payment_date_label' => $payment_date_label,
+        'payment_date'       => $payment_date,
+        'invoice_path'       => $invoice_location,
+    ];
+
+    $shopping_cart->clearCart($userId);
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success'  => true,
+        'redirect' => 'index.php?page=payment-success'
+    ]);
+    exit;
+
+} else if ($requestMethod === 'POST' && $page === 'sales-orders' && $action === 'pay') {
+
+    $input = json_decode(file_get_contents('php://input'), true) ?: [];
+    $deliveryNotes = $input['delivery_notes'] ?? '';
+
+    $shopping_cart = new ShoppingCart($pdo);
+    $cartAmount = $shopping_cart->getUserCartAmount($userId);
+
+    $tax_percentage = 15;
+    $delivery_fee = 1450;
+
+    $cartTotal = (float) ($cartAmount['cart_total'] ?? 0);
+
+    $cartTax = round($cartTotal * ((float)$tax_percentage) / 100, 2);
+    $cartGrandTotal = round($cartTotal + $cartTax + (float)$delivery_fee, 2);
+
+    $_SESSION['checkout'] = [
+        'delivery_notes'   => $deliveryNotes,
+        'cart_grand_total' => $cartGrandTotal
+    ];
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success'  => true,
+        'redirect' => 'index.php?page=payment'
+    ]);
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $page = $_GET['page'] ?? '';
+    $method = $_GET['method'] ?? '';
 
     if ($page === 'customer-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
+        $retail_customer = new RetailCustomer(pdo: $pdo);
+        $customer_info = $retail_customer->findByUserId($userId);
+        //get orders by customers
         $orderModel = new SalesOrder($pdo);
-        $userOrders = $orders;//$orderModel->getUserOrders($userId);
+        $userOrders = $orderModel->getCustomerOrders($customer_info['id']);
         require_once __DIR__ . '/../views/customer/orders.php';
     } else if ($page === 'rdc-sales-ref-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $orderModel = new SalesOrder($pdo);
         $userOrders = $refOrders;//$orderModel->getUserOrders($userId);
         require_once __DIR__ . '/../views/rdc-sales-ref/orders.php';
-    }else if ($page === 'rdc-clerk-sales-orders') {
+    } else if ($page === 'rdc-clerk-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $orderModel = new SalesOrder($pdo);
         $userOrders = $clerkOrders;//$orderModel->getUserOrders($userId);
         require_once __DIR__ . '/../views/rdc-clerk/orders.php';
-    }else if ($page === 'head-office-manager-sales-orders') {
+    } else if ($page === 'head-office-manager-sales-orders') {
         $userId = $_SESSION['user_id'] ?? 1;
         $orderModel = new SalesOrder($pdo);
         $userOrders = $headOfficeOrders;//$orderModel->getUserOrders($userId);
         require_once __DIR__ . '/../views/head-office-manager/orders.php';
     }
+    /*else if ($page === 'sales-orders' && $method === 'cash') {
+        $cash_payment_info = [
+            "invoice_no" => "INV-ORD-RDCS-260213-1025",
+            "customer_name" => "Vijya Stores",
+            "payment_amount" => "18,750.00",
+            "payment_date_label" => "Payment Due Date",
+            "payment_date" => "15 Feb, 2026",
+        ];
+        /// save order and display success page
+        require_once __DIR__ . '/../views/shared/payment_success.php';
+    } else if ($page === 'sales-orders' && $method === 'card') {
+
+        require_once __DIR__ . '/../views/customer/payment.php';
+    }*/
 }

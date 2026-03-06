@@ -54,11 +54,6 @@ $role_permissions = [
         'reports' => ['current_stock'],
         'view_scope' => 'own_rdc',
         'can_export' => false
-    ],
-    'system_admin' => [
-        'reports' => ['current_stock', 'low_stock_alerts', 'transfer_summary'],
-        'view_scope' => 'all_rdcs',
-        'can_export' => true
     ]
 ];
 

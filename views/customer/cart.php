@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div
                         class="p-6 border-b border-gray-100/50 flex justify-between items-center bg-white/30 backdrop-blur-sm">
                         <h2 class="font-bold text-gray-700 font-['Outfit'] text-lg">Cart Items
-                            (<?php echo $cart_info['cart_items']; ?>) </h2>
+                            (<?php echo $cart_count; ?>) </h2>
                         <button onclick="clearCart()"
                             class="text-red-500 hover:text-red-700 text-sm font-semibold transition flex items-center group">
                             <span
@@ -31,12 +31,13 @@ require_once __DIR__ . '/../../includes/header.php';
                             $subtotal += $itemTotal;
                             ?>
                             <div class="p-6 hover:bg-white/40 transition duration-200 group cart-item"
-                                data-id="<?= $item['product_id'] ?>" data-discount="<?= $item['discount'] ?>" data-price="<?= $item['unit_price'] ?>">
+                                data-id="<?= $item['product_id'] ?>" data-discount="<?= $item['discount_percentage'] ?>"
+                                data-price="<?= $item['unit_price'] ?>" data-discount-qty="<?= $item['product_count'] ?>">
 
                                 <div class="flex items-center gap-6">
                                     <div
                                         class="w-24 h-24 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 border border-blue-100">
-                                        <img src="<?php echo BASE_PATH . $item['image_url'] ?>"
+                                        <img src="<?php echo APP_URL . $item['image_url'] ?>"
                                             alt="<?php echo $item['product_name']; ?>"
                                             class="max-h-48 w-auto object-contain transition duration-500">
 
@@ -59,19 +60,19 @@ require_once __DIR__ . '/../../includes/header.php';
                                             <!-- Promotion Badge -->
                                             <?php $promotion_bg = '';
                                             $promotion_label = '';
-                                            if (!empty($item['discount'])) {
+                                            if (!empty($item['is_promotional'])) {
                                                 $promotion_bg = 'bg-yellow-500/90';
                                             } ?>
 
                                             <span
-                                                class="<?php echo $promotion_bg; ?> backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                                <?php echo $item['promotion_label']; ?>
+                                                class="promotion-badge <?php echo $promotion_bg; ?> backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                                <?php echo rtrim(rtrim(number_format($item['discount_percentage'], 2, '.', ''), '0'), '.') . "% OFF" ?>
                                             </span>
 
                                         </div>
                                         <div class="flex items-center justify-between mt-4">
                                             <div class="font-bold text-teal-600 text-xl item-total">
-                                                Rs. <?= number_format($item['unit_price'], 2) ?>
+                                                Rs. <?= number_format($item['discounted_line_amount'], 2) ?>
                                             </div>
 
                                             <div class="flex items-center gap-4">
@@ -130,7 +131,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <span class="order-total font-medium text-gray-800">Rs. 0.00</span>
                         </div>
                         <div class="flex justify-between text-gray-600">
-                            <span>Shipping estimate</span>
+                            <span>Delivery Estimate</span>
                             <span class="shipping-charges font-medium text-gray-800">Rs. 1450.00</span>
                         </div>
                         <div class="flex justify-between text-gray-600">
@@ -140,11 +141,11 @@ require_once __DIR__ . '/../../includes/header.php';
                         <div class="h-px bg-gray-200/60 my-4"></div>
                         <div class="flex justify-between text-lg font-bold">
                             <span class="text-gray-800">Order Total</span>
-                            <span class="order-final-total text-teal-600 text-2xl">Rs. 33,950.00</span>
+                            <span class="order-final-total text-teal-600 text-2xl">Rs. 0.00</span>
                         </div>
                     </div>
 
-                    <button id="checkoutBtn"
+                    <button id="checkoutBtn1" onclick="window.location.href='index.php?page=checkout'"
                         class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-teal-500/30 hover:shadow-xl transform hover:scale-[1.02] transition duration-300">
                         Proceed to Checkout
                     </button>

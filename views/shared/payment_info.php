@@ -28,7 +28,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     <label class="text-sm font-semibold text-gray-600">
                         Total Payment Amount (Rs.)
                     </label>
-                    <input type="text" value="Rs. 45,000.00" readonly
+                    <input type="text"
+                        value="<?= htmlspecialchars(number_format($checkout_info['cart_grand_total'], 2)) ?>" readonly
                         class="w-full border rounded-xl px-4 py-3 mt-1 bg-gray-100 font-semibold text-gray-800 focus:outline-none">
                 </div>
 
@@ -63,7 +64,8 @@ require_once __DIR__ . '/../../includes/header.php';
                             <input type="radio" name="payment_method" value="visa" class="hidden peer">
                             <div
                                 class="border rounded-2xl p-4 flex items-center justify-center font-semibold text-gray-700 bg-white hover:border-teal-500 peer-checked:border-teal-600 peer-checked:ring-2 peer-checked:ring-teal-500 transition">
-                                <img src="<?php echo BASE_PATH . '/assets/images/cards/visa_card.jpg'; ?>" alt="Visa" class="h-8 mr-3">
+                                <img src="<?php echo BASE_PATH . '/assets/images/cards/visa_card.jpg'; ?>" alt="Visa"
+                                    class="h-8 mr-3">
                                 Visa
                             </div>
                         </label>
@@ -73,7 +75,8 @@ require_once __DIR__ . '/../../includes/header.php';
                             <input type="radio" name="payment_method" value="mastercard" class="hidden peer">
                             <div
                                 class="border rounded-2xl p-4 flex items-center justify-center font-semibold text-gray-700 bg-white hover:border-teal-500 peer-checked:border-teal-600 peer-checked:ring-2 peer-checked:ring-teal-500 transition">
-                                <img src="<?php echo BASE_PATH . '/assets/images/cards/master_card.png' ?>" alt="MasterCard" class="h-8 mr-3">
+                                <img src="<?php echo BASE_PATH . '/assets/images/cards/master_card.png' ?>"
+                                    alt="MasterCard" class="h-8 mr-3">
                                 MasterCard
                             </div>
                         </label>
@@ -83,6 +86,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <!-- Payment Button -->
                 <button
+                id="proceedToPayBtn"
                     class="w-full bg-teal-600 px-6 py-4 rounded-xl shadow-lg shadow-teal-500/30 text-white font-semibold hover:bg-teal-700 transition flex items-center justify-center">
                     <span class="material-symbols-rounded mr-2">payments</span>
                     Proceed to Payment

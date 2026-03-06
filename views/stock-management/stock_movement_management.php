@@ -183,8 +183,8 @@ $movement_types = [
             </div>
         </div>
 
-        <!-- RDC Selector (for HEAD_OFFICE_MANAGER only) -->
-        <?php if ($current_user['role'] === 'head_office_manager'): ?>
+    <!-- RDC Selector (for HEAD_OFFICE_MANAGER only) -->
+    <?php if ($view_role === 'head_office_manager'): ?>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <label class="block text-sm font-semibold text-blue-900 mb-2">Select RDC to Manage</label>
             <select id="rdc-selector" class="w-full md:w-1/2 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
@@ -525,6 +525,17 @@ $movement_types = [
 
 <!-- JavaScript -->
 <script>
+// RDC selector: when HEAD_OFFICE_MANAGER changes selection, reload page scoped to that RDC
+<?php if ($view_role === 'head_office_manager'): ?>
+document.getElementById('rdc-selector')?.addEventListener('change', function() {
+    var val = this.value;
+    if (!val) return;
+    // Use BASE_PATH for correct base; redirect to page with rdc_id param so controller reloads scoped data
+    var base = '<?php echo rtrim((string) BASE_PATH, '/'); ?>';
+    window.location.href = base + '/index.php?page=stock-movement-management&rdc_id=' + encodeURIComponent(val);
+});
+<?php endif; ?>
+
 const movementTypes = <?php echo json_encode($movement_types); ?>;
 const products = <?php echo json_encode($products); ?>;
 let selectedType = null;

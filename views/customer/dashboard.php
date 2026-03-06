@@ -102,7 +102,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <span class="material-symbols-rounded text-gray-500 text-2xl">history</span>
                             <h2 class="text-xl font-bold text-gray-800 font-['Outfit']">Recent Orders</h2>
                         </div>
-                        <a href="index.php?page=orders" class="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center transition">
+                        <a href="index.php?page=customer-sales-orders" class="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center transition">
                             View All <span class="material-symbols-rounded text-sm ml-1">arrow_forward</span>
                         </a>
                     </div>
@@ -206,7 +206,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             </div>
                         </a>
 
-                        <a href="<?php echo BASE_PATH; ?>/index.php?page=orders" 
+                        <a href="<?php echo BASE_PATH; ?>/index.php?page=customer-sales-orders" 
                            class="flex items-center p-4 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-200/50 transform hover:scale-[1.02] transition duration-300 group border border-white/20">
                             <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mr-4 group-hover:bg-white/30 transition backdrop-blur-sm">
                                 <span class="material-symbols-rounded">receipt_long</span>

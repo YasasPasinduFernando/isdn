@@ -32,6 +32,16 @@ if (!isset($low_stock_products) || !is_array($low_stock_products)) {
 if (!isset($pending_transfers) || !is_array($pending_transfers)) {
     $pending_transfers = [];
 }
+
+$actualPendingTransfers = 0;
+if(count($pending_transfers) > 0) {
+    // Filter to only count transfers that are still active (exclude rejected, cancelled, received)
+    foreach ($pending_transfers as $transfer) {
+        if (in_array($transfer['status'], ['CLERK_REQUESTED', 'PENDING'])) {
+            $actualPendingTransfers++;
+        }
+    }
+}
 ?>
 
 
@@ -335,7 +345,7 @@ if (!isset($pending_transfers) || !is_array($pending_transfers)) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Pending Requests</p>
-                        <p class="text-2xl font-bold text-blue-600"><?php echo count($pending_transfers); ?></p>
+                        <p class="text-2xl font-bold text-blue-600"><?php echo $actualPendingTransfers; ?></p>
                     </div>
                     <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <i class="fas fa-clock text-blue-600 text-xl"></i>

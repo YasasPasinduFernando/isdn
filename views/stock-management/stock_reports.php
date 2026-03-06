@@ -442,7 +442,7 @@ if (!isset($categories)) {
                     <div id="alert-out" class="text-2xl font-bold text-red-600">2</div>
                 </div>
                 <div class="bg-white rounded-lg p-4 border border-orange-200">
-                    <div class="text-xs text-orange-600 uppercase tracking-wider mb-1">Critical (< 30%)</div>
+                    <div class="text-xs text-orange-600 uppercase tracking-wider mb-1">Critical (< 50%)</div>
                     <div id="alert-critical" class="text-2xl font-bold text-orange-600">4</div>
                 </div>
                 <div class="bg-white rounded-lg p-4 border border-yellow-200">
